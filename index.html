@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EVAD, la carte vivante</title>
+<meta name="description" content="Démo cliquable d'EVAD : du rêve à la preuve, et la preuve rouvre le rêve.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M5 27C5 13 13 5 27 5c0 14-8 22-22 22z' fill='%235F7F52'/%3E%3C/svg%3E">
+</head>
+<body data-page="index">
+<a class="skip" href="#main">Aller au contenu</a>
+<header id="topbar"></header>
+<div class="shell no-deva">
+  <main id="main" class="stage">
+    <div class="map-stage">
+      <div id="map"></div>
+
+      <section class="hero" id="hero" aria-labelledby="hero-title">
+        <button type="button" class="link-btn hero-toggle" id="hero-toggle" aria-expanded="true" aria-controls="hero">Réduire</button>
+        <p class="kicker">La vision EVAD 2030</p>
+        <h1 id="hero-title">Un monde régénératif désirable, déjà en train de pousser</h1>
+        <p class="sub">Du rêve à la preuve, et la preuve rouvre le rêve.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-lg" href="rever.html">Créer mon projet régénératif</a>
+          <a class="btn btn-ghost" href="commun.html">Parcourir le Commun</a>
+        </div>
+        <p class="hero-loop" id="hero-loop" hidden>La Friche des Tanneurs vient de passer au vert : ses preuves sont vérifiées.</p>
+      </section>
+
+      <div class="map-filters" role="group" aria-label="Filtres de la carte">
+        <p class="f-title">Avancement</p>
+        <div class="row">
+          <button type="button" class="chip" data-fstat="reve" aria-pressed="true"><span class="dot st-reve" aria-hidden="true"></span>Rêvés</button>
+          <button type="button" class="chip" data-fstat="encours" aria-pressed="true"><span class="dot st-encours" aria-hidden="true"></span>En cours</button>
+          <button type="button" class="chip" data-fstat="prouve" aria-pressed="true"><span class="dot st-prouve" aria-hidden="true"></span>Prouvés</button>
+        </div>
+        <label class="f-title" for="f-famille">Famille</label>
+        <select id="f-famille"></select>
+        <button type="button" class="chip" id="f-near" aria-pressed="false">Autour de moi</button>
+      </div>
+
+      <div class="legend" aria-label="Légende">
+        <span><span class="dot st-reve" aria-hidden="true"></span>Rêvé</span>
+        <span><span class="dot st-encours" aria-hidden="true"></span>En cours</span>
+        <span><span class="dot st-prouve" aria-hidden="true"></span>Prouvé</span>
+      </div>
+
+      <aside class="fiche" id="fiche" aria-label="Fiche projet" aria-hidden="true"></aside>
+    </div>
+  </main>
+</div>
+<footer id="footer"></footer>
+<script src="assets/data.js"></script>
+<script src="assets/scene.js"></script>
+<script src="assets/deva.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Générer, EVAD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M5 27C5 13 13 5 27 5c0 14-8 22-22 22z' fill='%235F7F52'/%3E%3C/svg%3E">
+</head>
+<body data-page="generer">
+<a class="skip" href="#main">Aller au contenu</a>
+<header id="topbar"></header>
+<div class="shell">
+  <main id="main" class="stage">
+    <div class="page-head">
+      <div>
+        <p class="kicker">Étape 3 sur 5</p>
+        <h1>Générer</h1>
+        <p>Pose tes solutions sur la maquette du lieu. Tout ce que tu poses est d'abord prévu, en gris.</p>
+      </div>
+    </div>
+
+    <div class="gen-grid">
+      <div>
+        <section class="panel to-place-bar" aria-labelledby="bar-title">
+          <h2 id="bar-title">Mes solutions à poser</h2>
+          <div id="to-place"></div>
+          <p class="place-hint" id="place-hint" aria-live="polite" hidden></p>
+        </section>
+
+        <section class="scene-wrap" id="scene-wrap" aria-label="Maquette du lieu">
+          <div id="scene"></div>
+          <div class="popmenu" id="item-menu" role="menu" aria-label="Actions sur l'élément" hidden></div>
+          <div class="scene-legend" aria-label="Légende">
+            <span><span class="lg-swatch lg-prevu" aria-hidden="true"></span>Prévu</span>
+            <span><span class="lg-swatch lg-encours" aria-hidden="true"></span>En cours</span>
+            <span><span class="lg-swatch lg-verifie" aria-hidden="true"></span>Vérifié</span>
+          </div>
+        </section>
+
+        <div class="gen-actions">
+          <button type="button" class="btn btn-ghost" id="luanti">Visiter en 3D dans Luanti</button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a class="btn btn-ghost" href="explorer.html">Revenir à Explorer</a>
+            <a class="btn btn-primary" href="entreprendre.html">Passer à Entreprendre</a>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel vadance-panel" aria-labelledby="vad-title">
+        <p class="kicker">Impact prévu</p>
+        <h2 id="vad-title">Vadance</h2>
+        <p>Elle ne bouge que quand tu poses une solution. Jamais de calcul à ta place.</p>
+        <div id="vadance" aria-live="polite"></div>
+        <div class="vad-key" aria-label="Légende des feuilles">
+          <span><svg class="leaf on-grey" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17C3 8.5 8.5 3 17 3c0 8.5-5.5 14-14 14z"/></svg>prévu</span>
+          <span><svg class="leaf on-amber" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17C3 8.5 8.5 3 17 3c0 8.5-5.5 14-14 14z"/></svg>en cours</span>
+          <span><svg class="leaf on-green" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17C3 8.5 8.5 3 17 3c0 8.5-5.5 14-14 14z"/></svg>vérifié (Vadité)</span>
+        </div>
+      </aside>
+    </div>
+  </main>
+  <aside id="deva" class="deva" aria-label="Deva, ton assistante"></aside>
+</div>
+<footer id="footer"></footer>
+<script src="assets/data.js"></script>
+<script src="assets/scene.js"></script>
+<script src="assets/deva.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

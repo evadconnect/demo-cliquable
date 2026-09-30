@@ -1,0 +1,289 @@
+/* EVAD, démo cliquable : toutes les données de démo.
+   Modifier ici les projets, solutions, ICI, quêtes et répliques de Deva.
+   Rien n'est envoyé nulle part : tout est fictif. */
+window.EVAD_DATA = {
+  steps: [
+    { id: "rever", label: "Rêver", href: "rever.html", deva: "orientation" },
+    { id: "explorer", label: "Explorer", href: "explorer.html", deva: "solutions" },
+    { id: "generer", label: "Générer", href: "generer.html", deva: "modelisation" },
+    { id: "entreprendre", label: "Entreprendre", href: "entreprendre.html", deva: "plan" },
+    { id: "nourrir", label: "Nourrir", href: "nourrir.html", deva: "verification" }
+  ],
+
+  statuts: {
+    reve: { label: "Rêvé", couleur: "#CBC6B4" },
+    encours: { label: "En cours", couleur: "#D9A03F" },
+    prouve: { label: "Prouvé", couleur: "#5F7F52" }
+  },
+
+  /* Projet fil rouge : celui que le visiteur fait vivre */
+  projet: {
+    id: "friche",
+    nom: "La Friche des Tanneurs",
+    lieu: "Bords de l'Isle, Dordogne",
+    surface: "ancienne tannerie de 1,2 ha",
+    collectif: "Collectif de 8 personnes : maraîchère, menuisier, cuisinière, deux voisins retraités, une animatrice, un électricien, une étudiante",
+    promesse: "Un tiers-lieu nourricier où l'on cultive, répare et partage, là où l'on tannait autrefois le cuir.",
+    reveExemple: "des familles qui viennent chercher leurs légumes à pied, un atelier où l'on répare au lieu de jeter, et un café où tout le quartier se croise.",
+    statutInitial: "encours",
+    pos: { x: 585, y: 395 }
+  },
+
+  familles: [
+    { id: "eau", label: "Eau" },
+    { id: "sol", label: "Sol" },
+    { id: "energie", label: "Énergie" },
+    { id: "reemploi", label: "Réemploi" },
+    { id: "alimentation", label: "Alimentation" },
+    { id: "gouvernance", label: "Gouvernance" }
+  ],
+
+  /* ICI : indicateurs de changement d'impact */
+  iciFamilles: [
+    { id: "ecologie", label: "Écologie" },
+    { id: "social", label: "Social" },
+    { id: "economie", label: "Économie locale" }
+  ],
+
+  ici: [
+    { id: "ici-sol", nom: "Vie du sol", famille: "ecologie", observe: "Le sol redevient grumeleux, les vers de terre reviennent, l'eau s'infiltre au lieu de ruisseler." },
+    { id: "ici-bio", nom: "Biodiversité accueillie", famille: "ecologie", observe: "Oiseaux, insectes et plantes spontanées trouvent refuge sur le lieu, saison après saison." },
+    { id: "ici-lien", nom: "Liens entre voisins", famille: "social", observe: "Des personnes qui ne se parlaient pas se retrouvent, s'entraident et reviennent." },
+    { id: "ici-acces", nom: "Ouverture à toutes et tous", famille: "social", observe: "Le lieu accueille des publics variés, y compris celles et ceux qu'on n'attendait pas." },
+    { id: "ici-local", nom: "Achats faits près d'ici", famille: "economie", observe: "Ce qui est mangé, réparé ou construit vient de plus en plus du territoire proche." },
+    { id: "ici-emploi", nom: "Activités créées sur place", famille: "economie", observe: "De nouvelles activités naissent sur le lieu et font vivre des personnes du coin." }
+  ],
+
+  /* Le Commun : 12 solutions, 6 familles.
+     difficulte : 1 accessible, 2 demande de l'organisation, 3 exigeante
+     cout : 1 modeste, 2 moyen, 3 important
+     effets : poids qualitatif par famille d'ICI, utilisé seulement pour faire bouger les jauges
+     scene : forme dessinée sur la maquette 2.5D */
+  solutions: [
+    { id: "recup-eau", nom: "Récupération d'eau de pluie", famille: "eau", difficulte: 1, cout: 1, eprouve: 14, ici: ["ici-sol", "ici-bio"], effets: { ecologie: 2, social: 0, economie: 1 }, scene: "citerne",
+      change: "Les toits remplissent des cuves : on arrose le jardin sans puiser dans le réseau, même en été.", mesureExemple: "Deux cuves raccordées à la gouttière de l'atelier" },
+    { id: "mare", nom: "Mare pédagogique", famille: "eau", difficulte: 2, cout: 2, eprouve: 9, ici: ["ici-bio", "ici-lien"], effets: { ecologie: 2, social: 1, economie: 0 }, scene: "mare",
+      change: "Un coin d'eau qui attire grenouilles et libellules, et où les écoles viennent observer.", mesureExemple: "Mare creusée, premières libellules observées" },
+    { id: "haie", nom: "Haie fruitière", famille: "sol", difficulte: 1, cout: 1, eprouve: 21, ici: ["ici-bio", "ici-local"], effets: { ecologie: 2, social: 0, economie: 1 }, scene: "haie",
+      change: "Une haie de petits fruits qui coupe le vent, abrite les oiseaux et nourrit les passants.", mesureExemple: "Haie plantée sur tout le bord nord avec l'école" },
+    { id: "compost", nom: "Compost partagé", famille: "sol", difficulte: 1, cout: 1, eprouve: 26, ici: ["ici-sol", "ici-lien"], effets: { ecologie: 1, social: 2, economie: 0 }, scene: "compost",
+      change: "Les voisins déposent leurs épluchures, le jardin récupère un sol vivant.", mesureExemple: "Trois bacs en service, deux référents formés" },
+    { id: "solaire", nom: "Panneaux solaires citoyens", famille: "energie", difficulte: 3, cout: 3, eprouve: 7, ici: ["ici-local", "ici-emploi"], effets: { ecologie: 1, social: 1, economie: 2 }, scene: "solaire",
+      change: "Les habitants financent ensemble une centrale sur le lieu et gardent l'énergie au pays.", mesureExemple: "Centrale posée et raccordée, collectif citoyen constitué" },
+    { id: "four", nom: "Four à pain au bois de taille", famille: "energie", difficulte: 2, cout: 2, eprouve: 6, ici: ["ici-lien", "ici-local"], effets: { ecologie: 0, social: 2, economie: 1 }, scene: "four",
+      change: "Le bois des tailles de haies chauffe un four où l'on cuit ensemble le pain du quartier.", mesureExemple: "Première fournée partagée avec le quartier" },
+    { id: "ressourcerie", nom: "Ressourcerie de quartier", famille: "reemploi", difficulte: 2, cout: 2, eprouve: 11, ici: ["ici-emploi", "ici-acces"], effets: { ecologie: 1, social: 1, economie: 2 }, scene: "ressourcerie",
+      change: "Ce qui allait à la benne trouve une deuxième vie et un petit emploi local se crée.", mesureExemple: "Permanence de collecte ouverte chaque mercredi" },
+    { id: "repair", nom: "Repair café", famille: "reemploi", difficulte: 1, cout: 1, eprouve: 18, ici: ["ici-lien", "ici-acces"], effets: { ecologie: 1, social: 2, economie: 0 }, scene: "repair",
+      change: "Un samedi par mois, on apprend à réparer ensemble grille-pain, vélos et vêtements.", mesureExemple: "Premier repair café tenu, trois bénévoles réparateurs" },
+    { id: "planches", nom: "Planches de culture en lasagnes", famille: "alimentation", difficulte: 1, cout: 1, eprouve: 23, ici: ["ici-sol", "ici-local"], effets: { ecologie: 1, social: 0, economie: 2 }, scene: "planches",
+      change: "On cultive sur une ancienne dalle en empilant carton, broyat et compost : pas besoin de bon sol au départ.", mesureExemple: "Planches montées, premières salades récoltées" },
+    { id: "poulailler", nom: "Poulailler partagé", famille: "alimentation", difficulte: 2, cout: 1, eprouve: 8, ici: ["ici-sol", "ici-lien"], effets: { ecologie: 1, social: 1, economie: 1 }, scene: "poulailler",
+      change: "Quelques poules mangent les restes, donnent des œufs et un prétexte pour passer tous les jours.", mesureExemple: "Poulailler habité, planning de soin partagé entre voisins" },
+    { id: "conseil", nom: "Conseil de lieu ouvert", famille: "gouvernance", difficulte: 2, cout: 1, eprouve: 12, ici: ["ici-acces", "ici-lien"], effets: { ecologie: 0, social: 2, economie: 0 }, scene: "agora",
+      change: "Chaque mois, toute personne qui fréquente le lieu peut proposer et décider avec le collectif.", mesureExemple: "Premier conseil tenu, compte rendu affiché" },
+    { id: "budget", nom: "Budget participatif du lieu", famille: "gouvernance", difficulte: 2, cout: 1, eprouve: 5, ici: ["ici-acces", "ici-emploi"], effets: { ecologie: 0, social: 1, economie: 1 }, scene: "panneau",
+      change: "Une part du budget est décidée par les usagers : ils choisissent les prochains chantiers.", mesureExemple: "Premier vote tenu, projet retenu affiché" }
+  ],
+
+  /* 10 quêtes types, reliées aux solutions */
+  quetes: [
+    { id: "q-recup", solution: "recup-eau", titre: "Raccorder la gouttière de l'atelier à une cuve", aide: "Un après-midi à deux, avec l'électricien pour la pompe." },
+    { id: "q-mare", solution: "mare", titre: "Creuser la mare en chantier participatif", aide: "Prévoir bâche, pelles et un goûter pour les voisins." },
+    { id: "q-haie", solution: "haie", titre: "Planter la haie avec l'école voisine", aide: "Plants à commander en pépinière locale avant novembre." },
+    { id: "q-compost", solution: "compost", titre: "Installer les bacs et former deux référents", aide: "Le syndicat de collecte prête souvent les bacs." },
+    { id: "q-solaire", solution: "solaire", titre: "Réunir le collectif citoyen pour le toit solaire", aide: "Une réunion publique au café pour ouvrir le projet." },
+    { id: "q-four", solution: "four", titre: "Bâtir le four avec un artisan du coin", aide: "Deux week-ends de chantier ouvert." },
+    { id: "q-ressourcerie", solution: "ressourcerie", titre: "Ouvrir la première permanence de collecte", aide: "Un créneau fixe, une affiche chez les commerçants." },
+    { id: "q-repair", solution: "repair", titre: "Lancer le premier repair café du samedi", aide: "Trouver trois bénévoles bricoleurs et une caisse à outils." },
+    { id: "q-planches", solution: "planches", titre: "Monter les planches de culture sur l'ancienne dalle", aide: "Collecter cartons et broyat auprès des voisins." },
+    { id: "q-conseil", solution: "conseil", titre: "Tenir le premier conseil de lieu ouvert", aide: "Choisir un jour fixe et afficher l'ordre du jour au café." }
+  ],
+
+  /* Espaces pré-remplis de la carte mentale (étape Explorer) */
+  espaces: [
+    { id: "jardin", nom: "Jardin nourricier" },
+    { id: "atelier", nom: "Atelier réemploi" },
+    { id: "cafe", nom: "Café associatif" },
+    { id: "gouvernance", nom: "Gouvernance partagée" }
+  ],
+
+  /* Suggestions de Deva par espace (l'humain valide en cliquant) */
+  suggestionsParEspace: {
+    jardin: ["haie", "planches", "recup-eau"],
+    atelier: ["repair", "ressourcerie", "solaire"],
+    cafe: ["four", "compost"],
+    gouvernance: ["conseil", "budget"]
+  },
+
+  /* Maquette 2.5D du lieu fil rouge : grille 9 x 9, chemins en croix sur la ligne et la colonne 4.
+     i va vers la droite-bas, j vers la gauche-bas. */
+  scene: {
+    grille: 9,
+    chemin: 4,
+    structures: [
+      { type: "atelier", i: 0, j: 0, w: 3, d: 2 },
+      { type: "serre", i: 6, j: 0, w: 3, d: 1 },
+      { type: "planches", i: 6, j: 2 }, { type: "planches", i: 7, j: 2 }, { type: "planches", i: 8, j: 2 },
+      { type: "planches", i: 7, j: 3 }, { type: "planches", i: 8, j: 3 },
+      { type: "preau", i: 0, j: 6, w: 2, d: 2 },
+      { type: "mare", i: 2, j: 7, w: 2, d: 2 },
+      { type: "maison", i: 8, j: 6 }, { type: "maison", i: 6, j: 8 },
+      { type: "fruitier", i: 5, j: 5 }, { type: "fruitier", i: 7, j: 5 }, { type: "fruitier", i: 5, j: 7 }, { type: "fruitier", i: 6, j: 6 },
+      { type: "arbre", i: 3, j: 0 }, { type: "arbre", i: 0, j: 3 }, { type: "arbre", i: 8, j: 8 }, { type: "arbre", i: 0, j: 8 }
+    ],
+    personnages: [
+      { i: 4, j: 1, c: "#C06848" }, { i: 2, j: 4, c: "#2C5234" }, { i: 4, j: 6, c: "#D9A03F" }, { i: 6, j: 4, c: "#5F7F52" }
+    ]
+  },
+
+  /* 8 projets voisins fictifs en Nouvelle-Aquitaine.
+     jauges : impact vérifié qualitatif de 0 à 4 (affiché en feuilles, jamais en chiffres) */
+  projets: [
+    { id: "darwin", nom: "Les Serres de Darwin", lieu: "Rive droite, Bordeaux", statut: "prouve", pos: { x: 330, y: 430 },
+      promesse: "Des serres abandonnées devenues pépinière urbaine et école du vivant.", collectif: "Association de 14 jardiniers et deux lycées agricoles",
+      jauges: { ecologie: 4, social: 3, economie: 3 }, preset: "serres",
+      solutions: [["planches", "prouve"], ["recup-eau", "prouve"], ["compost", "prouve"], ["mare", "encours"]] },
+    { id: "moulin", nom: "Le Moulin des Possibles", lieu: "Vallée de la Charente", statut: "encours", pos: { x: 470, y: 300 },
+      promesse: "Un moulin qui refait tourner l'eau, le pain et les idées du village.", collectif: "Coopérative de 6 habitants et un meunier",
+      jauges: { ecologie: 2, social: 2, economie: 1 }, preset: "moulin",
+      solutions: [["four", "prouve"], ["solaire", "encours"], ["conseil", "encours"]] },
+    { id: "boisjoli", nom: "La Ferme du Bois Joli", lieu: "Lisière des Landes", statut: "prouve", pos: { x: 290, y: 570 },
+      promesse: "Une ferme en agroforesterie qui nourrit trois villages et forme de jeunes paysans.", collectif: "Famille paysanne et 20 adhérents",
+      jauges: { ecologie: 4, social: 2, economie: 4 }, preset: "ferme",
+      solutions: [["haie", "prouve"], ["poulailler", "prouve"], ["planches", "prouve"], ["solaire", "prouve"]] },
+    { id: "millemains", nom: "Le Jardin des Mille Mains", lieu: "Quartier des Aubiers, Limoges", statut: "encours", pos: { x: 730, y: 330 },
+      promesse: "Un jardin au pied des immeubles, cultivé par celles et ceux qui y habitent.", collectif: "Collectif d'habitants, centre social",
+      jauges: { ecologie: 2, social: 3, economie: 1 }, preset: "jardin",
+      solutions: [["planches", "prouve"], ["compost", "encours"], ["budget", "encours"]] },
+    { id: "atelier-dordogne", nom: "L'Atelier de la Dordogne", lieu: "Bergerac", statut: "reve", pos: { x: 500, y: 490 },
+      promesse: "Un grand atelier partagé pour réparer, fabriquer et transmettre les gestes.", collectif: "Trois artisans et une association d'insertion",
+      jauges: { ecologie: 0, social: 1, economie: 0 }, preset: "atelier",
+      solutions: [["repair", "reve"], ["ressourcerie", "reve"]] },
+    { id: "saintseve", nom: "Les Communs de Saint-Sève", lieu: "Entre-deux-Mers", statut: "reve", pos: { x: 420, y: 470 },
+      promesse: "Une ancienne école rendue aux habitants pour décider ensemble de l'avenir du bourg.", collectif: "Conseil citoyen de 11 personnes",
+      jauges: { ecologie: 0, social: 1, economie: 0 }, preset: "ecole",
+      solutions: [["conseil", "reve"], ["budget", "reve"], ["four", "reve"]] },
+    { id: "semences", nom: "La Cour des Semences", lieu: "Marais poitevin", statut: "prouve", pos: { x: 290, y: 290 },
+      promesse: "Une grainothèque vivante qui garde les variétés du marais et les partage.", collectif: "Maison de quartier et réseau de 40 jardiniers",
+      jauges: { ecologie: 3, social: 4, economie: 2 }, preset: "jardin",
+      solutions: [["planches", "prouve"], ["mare", "prouve"], ["conseil", "prouve"]] },
+    { id: "quai", nom: "Le Quai des Réparateurs", lieu: "Port de Pauillac", statut: "encours", pos: { x: 245, y: 370 },
+      promesse: "Un ancien hangar du port où l'on répare vélos, bateaux et objets du quotidien.", collectif: "Association de 9 bénévoles et un chantier d'insertion",
+      jauges: { ecologie: 1, social: 2, economie: 2 }, preset: "atelier",
+      solutions: [["repair", "prouve"], ["ressourcerie", "encours"], ["solaire", "reve"]] }
+  ],
+
+  /* Maquettes simplifiées des projets voisins */
+  presets: {
+    serres: [{ type: "serre", i: 0, j: 0, w: 3, d: 1 }, { type: "serre", i: 5, j: 0, w: 3, d: 1 }, { type: "planches", i: 1, j: 2 }, { type: "planches", i: 2, j: 2 }, { type: "planches", i: 6, j: 2 }, { type: "mare", i: 6, j: 6, w: 2, d: 2 }, { type: "arbre", i: 0, j: 7 }, { type: "arbre", i: 2, j: 6 }, { type: "fruitier", i: 7, j: 3 }],
+    moulin: [{ type: "atelier", i: 0, j: 0, w: 2, d: 2 }, { type: "mare", i: 0, j: 5, w: 3, d: 2 }, { type: "maison", i: 6, j: 1 }, { type: "maison", i: 7, j: 2 }, { type: "arbre", i: 2, j: 2 }, { type: "arbre", i: 7, j: 7 }, { type: "fruitier", i: 6, j: 6 }],
+    ferme: [{ type: "maison", i: 0, j: 0 }, { type: "maison", i: 1, j: 0 }, { type: "serre", i: 6, j: 0, w: 2, d: 1 }, { type: "fruitier", i: 0, j: 6 }, { type: "fruitier", i: 1, j: 7 }, { type: "fruitier", i: 2, j: 6 }, { type: "fruitier", i: 6, j: 6 }, { type: "fruitier", i: 7, j: 7 }, { type: "planches", i: 6, j: 2 }, { type: "planches", i: 7, j: 2 }, { type: "arbre", i: 3, j: 0 }],
+    jardin: [{ type: "planches", i: 0, j: 0 }, { type: "planches", i: 1, j: 0 }, { type: "planches", i: 0, j: 1 }, { type: "planches", i: 5, j: 6 }, { type: "planches", i: 6, j: 6 }, { type: "maison", i: 7, j: 0 }, { type: "maison", i: 8, j: 1 }, { type: "arbre", i: 2, j: 7 }, { type: "fruitier", i: 6, j: 2 }],
+    atelier: [{ type: "atelier", i: 0, j: 0, w: 3, d: 2 }, { type: "preau", i: 6, j: 0, w: 2, d: 2 }, { type: "arbre", i: 0, j: 6 }, { type: "arbre", i: 7, j: 7 }],
+    ecole: [{ type: "maison", i: 0, j: 0 }, { type: "atelier", i: 5, j: 0, w: 3, d: 2 }, { type: "preau", i: 0, j: 6, w: 2, d: 2 }, { type: "arbre", i: 6, j: 6 }, { type: "arbre", i: 2, j: 2 }]
+  },
+
+  /* Retours d'expérience affichés à l'étape Nourrir */
+  temoignage: {
+    texte: "Au début on pensait qu'il fallait tout savoir avant de commencer. En fait, chaque preuve posée nous a donné envie d'aller plus loin, et les voisins sont venus d'eux-mêmes.",
+    auteur: "Maryse, maraîchère du collectif"
+  },
+
+  /* Correspondances pour l'aperçu d'export (étape Nourrir) */
+  exports: {
+    odd: { titre: "Objectifs de développement durable (ODD)", intro: "Chaque preuve vérifiée est rattachée aux objectifs qu'elle sert.",
+      parFamille: { eau: "ODD 6 Eau propre", sol: "ODD 15 Vie terrestre", energie: "ODD 7 Énergie propre", reemploi: "ODD 12 Consommation responsable", alimentation: "ODD 2 Faim zéro", gouvernance: "ODD 16 Institutions efficaces" } },
+    csrd: { titre: "CSRD, normes ESRS", intro: "Pour les partenaires soumis au reporting de durabilité : preuves de terrain rattachées aux thèmes ESRS.",
+      parFamille: { eau: "ESRS E3 Eau", sol: "ESRS E4 Biodiversité", energie: "ESRS E1 Climat", reemploi: "ESRS E5 Ressources", alimentation: "ESRS S3 Communautés", gouvernance: "ESRS G1 Conduite" } },
+    pcaet: { titre: "Plan climat territorial (PCAET)", intro: "Contribution du lieu aux axes du plan climat de la collectivité.",
+      parFamille: { eau: "Adaptation au changement climatique", sol: "Séquestration et biodiversité", energie: "Énergies renouvelables locales", reemploi: "Économie circulaire", alimentation: "Alimentation locale", gouvernance: "Mobilisation des habitants" } },
+    rse: { titre: "Responsabilité sociétale (RSE)", intro: "Pour les entreprises partenaires qui soutiennent le lieu.",
+      parFamille: { eau: "Environnement", sol: "Environnement", energie: "Environnement", reemploi: "Ancrage territorial", alimentation: "Ancrage territorial", gouvernance: "Dialogue avec les parties prenantes" } }
+  },
+
+  /* Deva : un seul visage, cinq modes. Réponses scriptées, jamais de chiffres d'impact. */
+  deva: {
+    modes: {
+      orientation: {
+        label: "Orientation",
+        intro: "Bonjour, je suis Deva. On commence par rêver ton lieu. Regarde les projets autour de toi, épingle ceux qui te parlent, puis donne un nom à ton projet.",
+        suggestions: [
+          { q: "Par où commencer ?", a: "Clique sur un projet vert de la carte : il a déjà fait ses preuves. Épingle-le s'il ressemble à ce que tu veux faire naître." },
+          { q: "Comment écrire ma promesse ?", a: "Une phrase simple, qu'un voisin comprend du premier coup. Dis ce que le lieu change pour les gens, pas ce qu'il contient." },
+          { q: "Et si je ne sais pas encore ?", a: "C'est normal. Le rêve se précise en chemin, tu pourras le reprendre à tout moment." },
+          { q: "Qui peut voir mon projet ?", a: "Pour l'instant, toi seulement. Tu choisiras plus tard d'ouvrir l'accès au collectif ou au territoire." }
+        ]
+      },
+      solutions: {
+        label: "Solutions",
+        intro: "Découpons ton lieu en espaces. Clique un espace, puis ajoute des solutions du Commun : elles ont déjà été éprouvées ailleurs.",
+        suggestions: [
+          { q: "Que proposes-tu pour le jardin ?", a: "Pour un jardin sur une ancienne dalle, le Commun propose les planches en lasagnes, une haie fruitière et la récupération d'eau de pluie. À toi de choisir." },
+          { q: "Comment choisir entre deux solutions ?", a: "Regarde sur combien de projets elles ont été éprouvées, et quels ICI elles nourrissent. Vérifié bat généré." },
+          { q: "Je ne trouve pas ce que je cherche", a: "Alors le Commun ne l'a pas encore. Je préfère te le dire plutôt qu'inventer : tu peux proposer ta solution depuis la page Le Commun." },
+          { q: "C'est quoi un ICI ?", a: "Un indicateur de changement d'impact : ce qu'on observe concrètement sur le lieu quand ça marche, comme le retour des vers de terre ou des voisins qui s'entraident." }
+        ]
+      },
+      modelisation: {
+        label: "Modélisation",
+        intro: "Voici ton lieu en maquette. Glisse tes solutions sur une case libre : elles apparaissent en gris, c'est ce qui est prévu.",
+        suggestions: [
+          { q: "Où poser les panneaux solaires ?", a: "Une case bien dégagée côté sud, loin des grands arbres, évite l'ombre de l'après-midi. Le bas de la maquette est le plus ensoleillé." },
+          { q: "Pourquoi tout est gris ?", a: "Gris veut dire prévu. Ça passera en ambre quand le chantier démarre, et en vert seulement quand une preuve de terrain le confirme." },
+          { q: "Les jauges bougent toutes seules ?", a: "Non. Elles ne bougent que quand tu poses une solution. Je ne calcule jamais d'impact à ta place." },
+          { q: "Je peux changer d'avis ?", a: "Bien sûr. Clique un élément posé pour le retirer ou le marquer en cours." }
+        ]
+      },
+      plan: {
+        label: "Plan d'action",
+        intro: "Chaque solution posée devient une quête. Je te propose un premier pas, tu décides si on y va.",
+        suggestions: [
+          { q: "Par quoi commencer ?", a: "Par la quête la plus simple et la plus visible : elle donne confiance au collectif et attire les voisins." },
+          { q: "Comment passer une quête en vérifié ?", a: "Avec une preuve de terrain : une photo, une mesure, une date. C'est l'étape Nourrir." },
+          { q: "Et si on bloque ?", a: "Regarde dans le Commun les projets qui ont déjà éprouvé cette solution : leurs retours sont souvent le meilleur déblocage." },
+          { q: "Qui fait quoi ?", a: "Répartissez les quêtes en conseil de lieu. Je peux proposer, c'est le collectif qui décide." }
+        ]
+      },
+      verification: {
+        label: "Vérification",
+        intro: "C'est le moment de prouver. Choisis un élément du lieu, ajoute une photo et une mesure : s'il est confirmé, il passe au vert.",
+        suggestions: [
+          { q: "Qu'est-ce qu'une bonne preuve ?", a: "Quelque chose qu'une autre personne peut vérifier : une photo datée, une mesure simple, un témoignage signé." },
+          { q: "Pourquoi une date ?", a: "Pour suivre le changement dans le temps. Une preuve datée aide le territoire à reconnaître ce qui a vraiment bougé." },
+          { q: "À quoi servent les exports ?", a: "À réutiliser tes preuves pour tes financeurs et partenaires, sans tout réécrire : ODD, CSRD, PCAET, RSE." },
+          { q: "Que se passe-t-il ensuite ?", a: "Le projet prouvé passe au vert sur la carte et inspire d'autres collectifs. La preuve rouvre le rêve." }
+        ]
+      }
+    },
+    generiques: [
+      "Merci, bonne question.",
+      "Je t'entends, prenons ça pas à pas.",
+      "Bien vu, c'est une vraie question de terrain.",
+      "Merci de me le dire, je garde ça en tête pour ton projet."
+    ],
+    reactions: {
+      "nom": "Joli nom. Ton projet existe déjà un peu plus. Quand tu es prêt, passe à Explorer.",
+      "pin": "Épinglé. Tu pourras t'appuyer sur ses preuves quand tu choisiras tes solutions.",
+      "unpin": "Retiré de tes inspirations.",
+      "espace": "Nouvel espace ajouté. Clique-le pour y accrocher des solutions.",
+      "add": "Ajouté à ton projet. Tu la retrouveras dans la barre de l'étape Générer.",
+      "add:haie": "Bon choix, la haie fruitière est l'une des solutions les plus éprouvées du Commun.",
+      "add:solaire": "Les panneaux citoyens demandent du temps et un collectif. Ils se prévoient tôt, c'est bien de les poser dès maintenant.",
+      "place": "Posé en gris : c'est prévu. Clique dessus quand le chantier démarre.",
+      "place:haie": "Ta haie protégerait le jardin du vent d'ouest, essaie le bord nord.",
+      "place:solaire": "Côté sud et bien dégagé, les panneaux seront à l'aise. Évite l'ombre des grands arbres.",
+      "place:recup-eau": "Près d'un toit, c'est idéal : la gouttière de l'atelier ou de la serre peut la remplir.",
+      "place:mare": "Une mare près du verger attirera les insectes pollinisateurs.",
+      "place:compost": "Près du jardin et du café, le compost sera sur le chemin de tout le monde.",
+      "place:four": "Près du préau, le four pourra accueillir les fournées partagées même quand il pleut.",
+      "encours": "En ambre : le chantier a démarré. Il passera au vert avec une preuve de terrain.",
+      "retire": "Retiré de la maquette. Tu peux le reposer quand tu veux.",
+      "quest-start": "C'est parti. Quand ce sera fait, apporte une preuve à l'étape Nourrir.",
+      "quest-proof": "Pour passer en vérifié, il me faut une preuve de terrain. Je t'emmène à l'étape Nourrir ?",
+      "proof": "Preuve reçue et reliée à ton lieu. Regarde : il passe au vert.",
+      "proof3": "Trois preuves posées : La Friche des Tanneurs passe au vert sur la carte. Elle peut maintenant inspirer d'autres collectifs.",
+      "export": "Voici un aperçu construit uniquement à partir de tes preuves vérifiées. Rien n'est inventé."
+    }
+  }
+};
