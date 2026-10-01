@@ -135,9 +135,10 @@
       "<p class=\"deva-vision-sub\">Du rêve à la preuve, et la preuve rouvre le rêve.</p></div>");
   }
 
-  // Navigation dans la sidebar (parcours + Le Commun) : mon lieu, parcours REGEN, Le Commun, déconnexion.
+  // Navigation « espace de travail » (pages du parcours, une fois le projet lancé) :
+  // mon lieu, parcours REGEN, Le Commun, déconnexion. Pas sur les pages publiques (accueil, Commun).
   function renderSidebarNav(page) {
-    if (!D.steps.some(function (s) { return s.id === page; }) && page !== "commun") return;
+    if (!D.steps.some(function (s) { return s.id === page; })) return;
     var inner = document.querySelector("#deva .deva-inner"); if (!inner) return;
     var st = fricheStatut();
     var steps = D.steps.map(function (s, n) {
@@ -915,7 +916,7 @@
     var step = D.steps.find(function (s) { return s.id === page; });
     if (window.Deva) {
       if (page === "index") { Deva.init("accueil"); renderHomeVision(); }
-      else if (page === "commun") { Deva.init("commun"); renderSidebarNav(page); }
+      else if (page === "commun") { Deva.init("commun"); }
       else if (step) { Deva.init(step.deva); renderSidebarNav(page); }
     }
     if (PAGES[page]) PAGES[page]();

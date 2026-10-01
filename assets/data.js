@@ -223,6 +223,10 @@ window.EVAD_DATA = {
       commun: {
         label: "Le Commun",
         intro: "Voici le Commun : une bibliothèque libre de solutions éprouvées sur le terrain, reliées à leurs preuves. Cherche par mot ou par famille. Si tu as éprouvé quelque chose, propose-le.",
+        actions: [
+          { label: "Créer mon projet", href: "rever.html", primary: true },
+          { label: "Retour à la carte", href: "index.html" }
+        ],
         suggestions: [
           { q: "Comment choisir une solution ?", a: "Regarde sur combien de projets elle a déjà été éprouvée et quels ICI elle nourrit. Vérifié bat généré." },
           { q: "C'est quoi un ICI ?", a: "Un indicateur de changement d'impact : ce qu'on observe concrètement quand ça marche, comme le retour des vers de terre ou des voisins qui s'entraident." },
