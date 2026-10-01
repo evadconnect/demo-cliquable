@@ -36,5 +36,6 @@ En ligne de commande : `npx vercel` depuis ce dossier.
 
 - L'état (nom du projet, solutions choisies et posées, quêtes, preuves) vit dans le `localStorage` du navigateur. Le bouton « Réinitialiser la démo » en pied de page remet tout à zéro.
 - Deva ne produit jamais de chiffre d'impact : les jauges et les barres ne bougent que par les actions du visiteur.
+- La carte de l'accueil (et de Rêver) est une vraie carte open source : Leaflet + tuiles OpenStreetMap. Chaque lieu a de vraies coordonnées (`lat`/`lng` dans `data.js`), et sur Rêver on situe son propre lieu en cliquant la carte ou en glissant son marqueur. Hors-ligne, la démo retombe automatiquement sur une carte stylisée en SVG.
 - Le projet passe au vert sur la carte à partir de 3 preuves saisies à l'étape Nourrir.
 - Parcours type : accueil → « Créer mon projet régénératif » → « Utiliser l'exemple » → ajouter 3 ou 4 solutions → les poser sur la maquette → « C'est parti » → saisir 3 preuves → « Voir la carte ».
