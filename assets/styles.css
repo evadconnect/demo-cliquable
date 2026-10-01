@@ -2,6 +2,8 @@
 :root {
   --encre: #22301F;
   --foret: #2C5234;
+  --vert-logo: #048262;
+  --vert-logo-fonce: #036B51;
   --mousse: #5F7F52;
   --fougere: #A9C48A;
   --creme: #FAF6EA;
@@ -66,8 +68,8 @@ svg :focus-visible { outline: none; }
 }
 .btn svg { width: 18px; height: 18px; flex: none; }
 .btn:active { transform: translateY(1px); }
-.btn-primary { background: var(--foret); color: var(--blanc); }
-.btn-primary:hover { background: #22432A; color: var(--blanc); }
+.btn-primary { background: var(--vert-logo); color: var(--blanc); }
+.btn-primary:hover { background: var(--vert-logo-fonce); color: var(--blanc); }
 .btn-amber { background: var(--ambre); color: var(--encre); }
 .btn-amber:hover { background: #E4B259; color: var(--encre); }
 .btn-ghost { background: var(--blanc); color: var(--foret); border-color: var(--bord); }
@@ -189,7 +191,7 @@ body.deva-closed .shell { grid-template-columns: minmax(0, 1fr) 72px; }
 .chip-sug { font-size: .8rem; min-height: 32px; padding: 5px 12px; background: var(--creme); text-align: left; }
 .deva-form { display: flex; gap: 8px; padding: 10px 16px 6px; }
 .deva-form input { flex: 1; min-width: 0; min-height: 42px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--bord); background: var(--creme); }
-.deva-send { background: var(--foret); color: var(--blanc); border-color: var(--foret); }
+.deva-send { background: var(--vert-logo); color: var(--blanc); border-color: var(--vert-logo); }
 .deva-rule { font-size: .74rem; color: var(--texte-2); padding: 0 16px 12px; margin: 0; }
 .deva-fab { display: none; }
 .deva.is-closed .deva-inner { display: none; }
