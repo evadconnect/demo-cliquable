@@ -1,5 +1,7 @@
 # EVAD, démo cliquable
 
+**En ligne : https://evadconnect.github.io/demo-cliquable/**
+
 Parcours complet en 3 minutes, du rêve à la preuve : carte vivante, le Commun, puis les 5 étapes REGEN (Rêver, Explorer, Générer, Entreprendre, Nourrir).
 Front uniquement : HTML, CSS et JavaScript sans framework ni build, sans backend, sans compte, sans API.
 
