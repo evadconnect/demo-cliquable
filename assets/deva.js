@@ -31,6 +31,7 @@
       '<input id="deva-input" type="text" autocomplete="off" placeholder="Écrire à Deva…">' +
       '<button type="submit" class="icon-btn deva-send" aria-label="Envoyer à Deva"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
       '</form>' +
+      '<button type="button" class="deva-carbone" aria-label="Empreinte carbone estimée de tes échanges avec Deva"></button>' +
       '<div class="deva-foot"><span class="deva-avatar">' + LEAF + '</span><p class="deva-rule">Deva propose, tu décides. Elle ne calcule jamais d\'impact à ta place.</p></div>' +
       '</div></div>' +
       '<button type="button" class="deva-fab" aria-label="Ouvrir le panneau de Deva">' + LEAF + '<span>Deva</span></button>';
@@ -47,13 +48,20 @@
       if (!txt) return;
       input.value = "";
       user(txt);
+      countQuestion();
       var gen = D.generiques[Math.floor(Math.random() * D.generiques.length)];
       var sugs = mode.suggestions || [];
       if (sugs.length) { var sug = sugs[rot % sugs.length]; rot++; say(gen + " Une piste : " + sug.a.charAt(0).toLowerCase() + sug.a.slice(1)); }
       else say(gen);
     });
+    root.querySelector(".deva-carbone").addEventListener("click", function () {
+      var c = D.carbone || {};
+      Deva.say("Empreinte de nos échanges : tu as posé " + carbonCount() + " question(s), soit environ " + fmtCarbon() + ". " + (c.note || ""), { instant: true });
+      if (root.classList.contains("is-closed")) setOpen(true);
+    });
 
     renderDoors();
+    renderCarbone();
     say(mode.intro, { instant: true });
   }
 
@@ -73,6 +81,24 @@
       });
       box.appendChild(b);
     });
+  }
+
+  /* Calculateur d'empreinte carbone des questions posées à Deva (estimation, cf. D.carbone). */
+  function carbonCount() { var ui = uiGet(); return ui.devaQuestions || 0; }
+  function fmtCarbon() {
+    var c = D.carbone || { parQuestion: 0, unite: "g CO₂e" };
+    var total = carbonCount() * (c.parQuestion || 0);
+    var s = (Math.round(total * 100) / 100).toString().replace(".", ",");
+    return "~" + s + " " + (c.unite || "g CO₂e");
+  }
+  function countQuestion() { var ui = uiGet(); ui.devaQuestions = (ui.devaQuestions || 0) + 1; uiSet(ui); renderCarbone(); }
+  function renderCarbone() {
+    var el = root.querySelector(".deva-carbone");
+    if (!el || !D.carbone) return;
+    var n = carbonCount();
+    el.innerHTML = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 14a3.5 3.5 0 0 1-.4-7A4.5 4.5 0 0 1 14 7.3 3.2 3.2 0 0 1 14.5 14H6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>' +
+      "<span>Empreinte : <strong>" + fmtCarbon() + "</strong>" + (n ? " · " + n + " question" + (n > 1 ? "s" : "") : " · échanges sobres") + "</span>";
+    el.title = D.carbone.note || "";
   }
 
   function setOpen(open, silent) {

@@ -259,6 +259,10 @@ body.deva-closed .shell { grid-template-columns: 72px minmax(0, 1fr); }
 .deva-foot .deva-avatar { flex: none; }
 .deva-foot .deva-avatar .deva-face { height: 58px; }
 .deva-rule { flex: 1; font-size: .74rem; color: var(--texte-2); padding: 0; margin: 0; }
+.deva-carbone { display: flex; align-items: center; gap: 6px; width: 100%; margin: 4px 0 0; padding: 7px 16px; border: 0; border-top: 1px solid var(--bord); background: #EEF3E6; color: var(--texte-2); font: inherit; font-size: .74rem; text-align: left; cursor: pointer; }
+.deva-carbone:hover { color: var(--encre); }
+.deva-carbone svg { width: 15px; height: 15px; flex: none; color: var(--mousse); }
+.deva-carbone strong { color: var(--foret); }
 .deva-fab { display: none; }
 .deva.is-closed .deva-inner { display: none; }
 .deva.is-closed .deva-fab { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; padding: 16px 0; border: 0; background: none; cursor: pointer; font-weight: 600; font-size: .78rem; color: var(--foret); }

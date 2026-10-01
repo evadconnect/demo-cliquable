@@ -285,6 +285,14 @@ window.EVAD_DATA = {
         ]
       }
     },
+    /* Empreinte carbone estimée d'une question posée à Deva (paramétrable).
+       Deva répond localement, par règles, sans IA lourde ni serveur distant : empreinte volontairement faible.
+       Repères publics : requête vers un grand modèle d'IA ~ 2 à 5 g CO₂e, mail court ~ 4 g. */
+    carbone: {
+      parQuestion: 0.05,
+      unite: "g CO₂e",
+      note: "Estimation. Deva répond localement, par règles, sans IA lourde : son empreinte reste minime. Une requête vers un grand modèle d'IA pèse environ 2 à 5 g CO₂e."
+    },
     generiques: [
       "Merci, bonne question.",
       "Je t'entends, prenons ça pas à pas.",
