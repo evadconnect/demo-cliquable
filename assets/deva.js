@@ -8,7 +8,7 @@
   function uiGet() { try { return JSON.parse(localStorage.getItem(UI_KEY)) || {}; } catch (e) { return {}; } }
   function uiSet(v) { try { localStorage.setItem(UI_KEY, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
 
-  var LEAF = '<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="16" fill="#2C5234"/><path d="M9 22c0-8 5-13 14-13 0 9-5 14-13 14" fill="#A9C48A"/><path d="M10 22c3-4 6-7 10-9" stroke="#2C5234" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>';
+  var LEAF = '<img class="deva-face" src="assets/deva-avatar.png" alt="" aria-hidden="true">';
 
   function init(modeId) {
     root = document.getElementById("deva");
