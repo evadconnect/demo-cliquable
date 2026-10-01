@@ -8,7 +8,7 @@
   function uiGet() { try { return JSON.parse(localStorage.getItem(UI_KEY)) || {}; } catch (e) { return {}; } }
   function uiSet(v) { try { localStorage.setItem(UI_KEY, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
 
-  var LEAF = '<img class="deva-face" src="assets/deva-flat.svg" alt="" aria-hidden="true">';
+  var LEAF = '<img class="deva-face" src="assets/deva-avatar.png" alt="" aria-hidden="true">';
 
   function init(modeId) {
     root = document.getElementById("deva");
