@@ -12,6 +12,7 @@
   function defaultState() {
     return {
       v: 1,
+      session: null,
       project: { name: "", promesse: "", reve: "", loc: null },
       pinned: [],
       spaces: D.espaces.map(function (e) { return { id: e.id, nom: e.nom }; }),
@@ -101,13 +102,81 @@
     return dlg;
   }
 
+  /* ================= Accès (bêta, sans backend) ================= */
+  function hasSession() { return !!(state.session && state.session.name); }
+
+  // Point de bascule connexion / créer un accès avant d'entrer dans l'espace de travail.
+  function openGate(mode, redirect, blocking) {
+    mode = mode || "creer";
+    var g = $("#gate");
+    if (!g) { g = document.createElement("div"); g.id = "gate"; g.className = "gate"; document.body.appendChild(g); }
+    var copy = {
+      creer: { title: "Créer mon accès", sub: "Choisis un prénom pour entrer dans ton espace et lancer ton projet.", submit: "Créer mon accès" },
+      connecter: { title: "Se connecter", sub: "Entre le prénom de ton accès pour retrouver ton espace.", submit: "Se connecter" }
+    };
+    g.innerHTML =
+      '<div class="gate-card" role="dialog" aria-modal="true" aria-labelledby="gate-title">' +
+      '<div class="gate-brand"><img src="assets/logo-evad.svg" alt="EVAD" height="30"></div>' +
+      '<div class="gate-tabs" role="tablist">' +
+      '<button type="button" class="gate-tab" role="tab" data-mode="creer">Créer un accès</button>' +
+      '<button type="button" class="gate-tab" role="tab" data-mode="connecter">J\'ai déjà un accès</button>' +
+      '</div>' +
+      '<h2 id="gate-title"></h2><p class="gate-sub"></p>' +
+      '<form id="gate-form" novalidate>' +
+      '<div class="field"><label for="gate-nom">Prénom</label><input id="gate-nom" type="text" autocomplete="given-name" aria-describedby="gate-err"></div>' +
+      '<div class="field"><label for="gate-email">Email <span class="hint">facultatif</span></label><input id="gate-email" type="email" autocomplete="email"></div>' +
+      '<p class="err" id="gate-err" hidden>Donne un prénom pour continuer.</p>' +
+      '<button type="submit" class="btn btn-primary btn-lg" id="gate-submit" style="width:100%"></button>' +
+      '</form>' +
+      '<p class="gate-note">Bêta : pas de mot de passe. Ton accès et ton projet restent sur cet appareil.</p>' +
+      '<a class="gate-back link-btn" href="index.html">Revenir à la carte</a>';
+
+    function setMode(m) {
+      mode = m;
+      $all(".gate-tab", g).forEach(function (t) { var on = t.dataset.mode === m; t.classList.toggle("is-active", on); t.setAttribute("aria-selected", String(on)); });
+      $("#gate-title", g).textContent = copy[m].title;
+      $(".gate-sub", g).textContent = copy[m].sub;
+      $("#gate-submit", g).textContent = copy[m].submit;
+    }
+    $all(".gate-tab", g).forEach(function (t) { t.addEventListener("click", function () { setMode(t.dataset.mode); $("#gate-nom", g).focus(); }); });
+    $("#gate-form", g).addEventListener("submit", function (e) {
+      e.preventDefault();
+      var nom = $("#gate-nom", g).value.trim();
+      if (!nom) { $("#gate-err", g).hidden = false; $("#gate-nom", g).setAttribute("aria-invalid", "true"); $("#gate-nom", g).focus(); return; }
+      state.session = { name: nom, email: $("#gate-email", g).value.trim() || null, since: Date.now() };
+      save();
+      if (blocking) location.reload(); else location.href = redirect || "rever.html";
+    });
+    setMode(mode);
+    g.classList.add("open");
+    document.body.classList.add("gate-open");
+    setTimeout(function () { $("#gate-nom", g).focus(); }, 40);
+  }
+
+  function logout() {
+    state.session = null; save();
+    location.href = "index.html";
+  }
+
   /* ================= Barre du haut et pied de page ================= */
   var BRAND = '<a class="brand" href="index.html" aria-label="EVAD, retour à la carte vivante"><img class="brand-logo" src="assets/logo-evad.svg" alt="EVAD" width="92" height="30"></a>';
 
   function renderTopbar(page) {
     var top = $("#topbar"); if (!top) return;
-    // Pages du parcours : navigation déplacée dans la sidebar, barre du haut réduite au logo.
-    if (document.getElementById("deva")) { top.className = "topbar topbar-slim"; top.innerHTML = BRAND; return; }
+    // Pages avec sidebar : barre du haut réduite au logo (+ accès sur les pages publiques).
+    if (document.getElementById("deva")) {
+      top.className = "topbar topbar-slim";
+      var isWorkspace = D.steps.some(function (s) { return s.id === page; });
+      var right = "";
+      if (!isWorkspace) {
+        right = hasSession()
+          ? '<a class="btn btn-primary btn-sm" href="rever.html">Mon espace</a>'
+          : '<button type="button" class="btn btn-ghost btn-sm" id="login-btn">Se connecter</button>';
+      }
+      top.innerHTML = BRAND + (right ? '<div class="top-right">' + right + "</div>" : "");
+      var lb = $("#login-btn"); if (lb) lb.addEventListener("click", function () { openGate("connecter", "rever.html", false); });
+      return;
+    }
     var steps = D.steps.map(function (s, n) {
       var active = s.id === page, done = stepDone(s.id);
       var cls = active ? "is-active" : done ? "is-done" : "is-todo";
@@ -159,7 +228,11 @@
     if (existing) existing.outerHTML = html; else inner.insertAdjacentHTML("afterbegin", html);
     var foot = inner.querySelector(".deva-foot");
     if (foot && !foot.querySelector(".snav-logout")) {
-      foot.insertAdjacentHTML("beforeend", '<a class="snav-logout" href="index.html">' + ICON.logout + "<span>Déconnexion</span></a>");
+      foot.insertAdjacentHTML("beforeend",
+        (hasSession() ? '<p class="snav-user">Connecté : <strong>' + esc(state.session.name) + "</strong></p>" : "") +
+        '<button type="button" class="snav-logout">' + ICON.logout + "<span>Déconnexion</span></button>");
+      var lo = foot.querySelector(".snav-logout");
+      if (lo) lo.addEventListener("click", logout);
     }
   }
   function renderFooter() {
@@ -914,6 +987,8 @@
     renderTopbar(page);
     renderFooter();
     var step = D.steps.find(function (s) { return s.id === page; });
+    // Garde-fou : l'espace de travail (parcours) demande un accès.
+    if (step && !hasSession()) { openGate("creer", page + ".html", true); return; }
     if (window.Deva) {
       if (page === "index") { Deva.init("accueil"); renderHomeVision(); }
       else if (page === "commun") { Deva.init("commun"); }
