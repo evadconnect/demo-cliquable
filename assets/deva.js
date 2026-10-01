@@ -3,7 +3,7 @@
 (function () {
   var D = window.EVAD_DATA.deva;
   var UI_KEY = "evad-demo-ui";
-  var mode = null, log = null, sugBox = null, root = null, rot = 0;
+  var mode = null, log = null, root = null, rot = 0;
 
   function uiGet() { try { return JSON.parse(localStorage.getItem(UI_KEY)) || {}; } catch (e) { return {}; } }
   function uiSet(v) { try { localStorage.setItem(UI_KEY, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
@@ -27,7 +27,6 @@
       '<div class="deva-body" id="deva-body">' +
       '<div class="deva-log" role="log" aria-live="polite" aria-label="Conversation avec Deva"></div>' +
       '<div class="deva-doors" aria-label="Que veux-tu faire"></div>' +
-      '<div class="deva-sugs" aria-label="Questions suggérées"></div>' +
       '<form class="deva-form"><label for="deva-input" class="sr-only">Écrire à Deva</label>' +
       '<input id="deva-input" type="text" autocomplete="off" placeholder="Écrire à Deva…">' +
       '<button type="submit" class="icon-btn deva-send" aria-label="Envoyer à Deva"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
@@ -37,7 +36,6 @@
       '<button type="button" class="deva-fab" aria-label="Ouvrir le panneau de Deva">' + LEAF + '<span>Deva</span></button>';
 
     log = root.querySelector(".deva-log");
-    sugBox = root.querySelector(".deva-sugs");
     setOpen(open, true);
 
     root.querySelector(".deva-toggle").addEventListener("click", function () { setOpen(false); });
@@ -49,13 +47,13 @@
       if (!txt) return;
       input.value = "";
       user(txt);
-      var sug = mode.suggestions[rot % mode.suggestions.length]; rot++;
       var gen = D.generiques[Math.floor(Math.random() * D.generiques.length)];
-      say(gen + " Une piste : " + sug.a.charAt(0).toLowerCase() + sug.a.slice(1));
+      var sugs = mode.suggestions || [];
+      if (sugs.length) { var sug = sugs[rot % sugs.length]; rot++; say(gen + " Une piste : " + sug.a.charAt(0).toLowerCase() + sug.a.slice(1)); }
+      else say(gen);
     });
 
     renderDoors();
-    renderSugs();
     say(mode.intro, { instant: true });
   }
 
@@ -89,16 +87,6 @@
       if (open) root.querySelector("#deva-input").focus({ preventScroll: true });
       else root.querySelector(".deva-fab").focus({ preventScroll: true });
     }
-  }
-
-  function renderSugs() {
-    sugBox.innerHTML = "";
-    mode.suggestions.forEach(function (s) {
-      var b = document.createElement("button");
-      b.type = "button"; b.className = "chip chip-sug"; b.textContent = s.q;
-      b.addEventListener("click", function () { user(s.q); say(s.a); });
-      sugBox.appendChild(b);
-    });
   }
 
   function bubble(cls, text) {
