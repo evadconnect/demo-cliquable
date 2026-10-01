@@ -64,7 +64,9 @@
     back: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M16 10H5M9 6l-4 4 4 4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     pin: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 18s-5.5-5.2-5.5-9.2a5.5 5.5 0 0 1 11 0C15.5 12.8 10 18 10 18z" fill="currentColor"/><circle cx="10" cy="8.6" r="2" fill="#FFFDF7"/></svg>',
     photo: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="6" width="18" height="13" rx="3" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="12" cy="12.5" r="3.4" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M8.5 6l1.5-2h4l1.5 2" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>',
-    search: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+    search: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    commun: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 5.5C8.5 4 6.5 3.7 4 4v10c2.5-.3 4.5 0 6 1.5 1.5-1.5 3.5-1.8 6-1.5V4c-2.5-.3-4.5 0-6 1.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 5.5v10" stroke="currentColor" stroke-width="1.6"/></svg>',
+    logout: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M8 17H4.5A1.5 1.5 0 0 1 3 15.5v-11A1.5 1.5 0 0 1 4.5 3H8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 13l3-3-3-3M15 10H8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
   };
   var BRAND_LEAF = '<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 27C5 13 13 5 27 5c0 14-8 22-22 22z" fill="#5F7F52"/><path d="M7 25C12 19 17 14 23 9.5" stroke="#FAF6EA" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M13 19.5l-1-5M17.5 15l-.5-4.5M13 19.5l5 .5M17.5 15l4.5.2" stroke="#FAF6EA" stroke-width="1.4" stroke-linecap="round"/></svg>';
 
@@ -100,8 +102,12 @@
   }
 
   /* ================= Barre du haut et pied de page ================= */
+  var BRAND = '<a class="brand" href="index.html" aria-label="EVAD, retour à la carte vivante"><img class="brand-logo" src="assets/logo-evad.svg" alt="EVAD" width="92" height="30"></a>';
+
   function renderTopbar(page) {
     var top = $("#topbar"); if (!top) return;
+    // Pages du parcours : navigation déplacée dans la sidebar, barre du haut réduite au logo.
+    if (document.getElementById("deva")) { top.className = "topbar topbar-slim"; top.innerHTML = BRAND; return; }
     var steps = D.steps.map(function (s, n) {
       var active = s.id === page, done = stepDone(s.id);
       var cls = active ? "is-active" : done ? "is-done" : "is-todo";
@@ -111,13 +117,38 @@
     }).join("");
     var st = fricheStatut();
     top.className = "topbar";
-    top.innerHTML =
-      '<a class="brand" href="index.html" aria-label="EVAD, retour à la carte vivante"><img class="brand-logo" src="assets/logo-evad.svg" alt="EVAD" width="92" height="30"></a>' +
+    top.innerHTML = BRAND +
       '<nav class="stepper" aria-label="Parcours REGEN"><span class="stepper-kicker" aria-hidden="true">REGEN</span><ol>' + steps + "</ol></nav>" +
       '<div class="top-right">' +
       '<a class="toplink' + (page === "commun" ? " is-current" : "") + '" href="commun.html"' + (page === "commun" ? ' aria-current="page"' : "") + ">Le Commun</a>" +
       '<a class="project-pill" href="rever.html" title="Mon projet"><span class="pill-dot st-' + st + '" aria-hidden="true"></span><span class="pill-name">' + esc(projectName()) + '</span><span class="sr-only">, ' + D.statuts[st].label + "</span></a>" +
       "</div>";
+  }
+
+  // Navigation dans la sidebar (pages du parcours) : mon lieu, parcours REGEN, Le Commun, déconnexion.
+  function renderSidebarNav(page) {
+    var inner = document.querySelector("#deva .deva-inner"); if (!inner) return;
+    var st = fricheStatut();
+    var steps = D.steps.map(function (s, n) {
+      var active = s.id === page, done = stepDone(s.id);
+      var cls = active ? "is-active" : done ? "is-done" : "is-todo";
+      var etat = active ? "étape en cours" : done ? "faite" : "à venir";
+      return '<li><a class="snav-step ' + cls + '" href="' + s.href + '"' + (active ? ' aria-current="step"' : "") + ' aria-label="Étape ' + (n + 1) + ", " + s.label + ", " + etat + '">' +
+        '<span class="snav-dot" aria-hidden="true">' + (done && !active ? ICON.check : n + 1) + "</span><span>" + s.label + "</span></a></li>";
+    }).join("");
+    var html = '<div class="deva-nav">' +
+      '<a class="snav-place" href="index.html?focus=friche" title="Voir mon lieu sur la carte">' +
+      '<span class="pill-dot st-' + st + '" aria-hidden="true"></span>' +
+      '<span class="snav-place-txt"><span class="snav-kicker">Mon lieu</span><strong>' + esc(projectName()) + '</strong></span></a>' +
+      '<nav class="snav-regen" aria-label="Parcours REGEN"><p class="snav-title">Parcours REGEN</p><ol>' + steps + "</ol></nav>" +
+      '<a class="snav-commun" href="commun.html">' + ICON.commun + "<span>Le Commun</span></a>" +
+      "</div>";
+    var existing = inner.querySelector(".deva-nav");
+    if (existing) existing.outerHTML = html; else inner.insertAdjacentHTML("afterbegin", html);
+    var foot = inner.querySelector(".deva-foot");
+    if (foot && !foot.querySelector(".snav-logout")) {
+      foot.insertAdjacentHTML("beforeend", '<a class="snav-logout" href="index.html">' + ICON.logout + "<span>Déconnexion</span></a>");
+    }
   }
   function renderFooter() {
     var f = $("#footer"); if (!f) return;
@@ -131,7 +162,7 @@
       location.href = "index.html";
     });
   }
-  function refreshChrome() { renderTopbar(document.body.dataset.page); }
+  function refreshChrome() { renderTopbar(document.body.dataset.page); renderSidebarNav(document.body.dataset.page); }
 
   /* ================= Projets et maquettes ================= */
   function allProjects() {
@@ -830,6 +861,7 @@
     renderFooter();
     var step = D.steps.find(function (s) { return s.id === page; });
     if (step && window.Deva) Deva.init(step.deva);
+    renderSidebarNav(page);
     if (PAGES[page]) PAGES[page]();
     window.addEventListener("storage", function (e) { if (e.key === KEY) { state = load(); refreshChrome(); } });
   });

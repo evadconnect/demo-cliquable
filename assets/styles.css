@@ -171,6 +171,31 @@ body.deva-closed .shell { grid-template-columns: 72px minmax(0, 1fr); }
 .footer p { margin: 0; }
 .footer .link-btn { color: var(--texte-2); font-size: .84rem; }
 
+/* ---------- navigation dans la sidebar ---------- */
+.deva-nav { display: flex; flex-direction: column; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--bord); }
+.snav-place { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--creme); border: 1px solid var(--bord); border-radius: var(--r); text-decoration: none; color: var(--encre); }
+.snav-place:hover { border-color: var(--mousse); }
+.snav-place .pill-dot { width: 13px; height: 13px; border-radius: 50%; flex: none; }
+.snav-place-txt { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.snav-kicker { font-size: .66rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--texte-2); }
+.snav-place strong { font-family: var(--f-titre); font-size: 1.02rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.snav-title { font-size: .66rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--mousse); margin: 0 0 6px; }
+.snav-regen ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.snav-step { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 10px; text-decoration: none; color: var(--texte-2); font-size: .9rem; font-weight: 500; }
+.snav-step:hover { background: var(--creme); color: var(--encre); }
+.snav-step.is-done { color: var(--foret); }
+.snav-step.is-active { background: var(--foret); color: var(--blanc); }
+.snav-dot { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; flex: none; font-size: .76rem; font-weight: 700; border: 1.5px solid var(--gris); background: var(--blanc); color: var(--gris-fonce); }
+.snav-dot svg { width: 14px; height: 14px; }
+.snav-step.is-done .snav-dot { background: var(--mousse); border-color: var(--mousse); color: var(--blanc); }
+.snav-step.is-active .snav-dot { background: var(--ambre); border-color: var(--ambre); color: var(--encre); }
+.snav-commun { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border: 1px solid var(--bord); border-radius: var(--r); background: var(--blanc); text-decoration: none; color: var(--foret); font-weight: 600; font-size: .92rem; }
+.snav-commun:hover { border-color: var(--mousse); }
+.snav-commun svg { width: 20px; height: 20px; flex: none; }
+.snav-logout { flex-basis: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 2px; min-height: 40px; padding: 8px; border: 1px solid var(--bord); border-radius: 999px; background: var(--blanc); color: var(--texte-2); text-decoration: none; font-size: .86rem; font-weight: 600; }
+.snav-logout:hover { border-color: var(--terre); color: var(--terre-fonce); }
+.snav-logout svg { width: 18px; height: 18px; flex: none; }
+
 /* ---------- Deva ---------- */
 .deva { position: sticky; top: var(--top-h); height: calc(100vh - var(--top-h)); border-right: 1px solid var(--bord); background: var(--blanc); z-index: 30; }
 .deva-inner { display: flex; flex-direction: column; height: 100%; }
@@ -196,7 +221,7 @@ body.deva-closed .shell { grid-template-columns: 72px minmax(0, 1fr); }
 .deva-form { display: flex; gap: 8px; padding: 10px 16px 6px; }
 .deva-form input { flex: 1; min-width: 0; min-height: 42px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--bord); background: var(--creme); }
 .deva-send { background: var(--vert-logo); color: var(--blanc); border-color: var(--vert-logo); }
-.deva-foot { display: flex; align-items: center; gap: 12px; padding: 10px 16px 14px; border-top: 1px solid var(--bord); margin-top: auto; }
+.deva-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 10px 16px 14px; border-top: 1px solid var(--bord); margin-top: auto; }
 .deva-foot .deva-avatar { flex: none; }
 .deva-foot .deva-avatar .deva-face { height: 58px; }
 .deva-rule { flex: 1; font-size: .74rem; color: var(--texte-2); padding: 0; margin: 0; }
