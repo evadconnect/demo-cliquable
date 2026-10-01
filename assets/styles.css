@@ -1,23 +1,23 @@
 /* EVAD, démo cliquable. Charte solarpunk : prévu gris, en cours ambre, vérifié vert. */
 :root {
-  --encre: #22301F;
-  --foret: #2C5234;
-  --vert-logo: #048262;
-  --vert-logo-fonce: #036B51;
-  --mousse: #5F7F52;
-  --fougere: #A9C48A;
+  --encre: #1C2E26;
+  --foret: #0B6049;
+  --vert-logo: #048263;
+  --vert-logo-fonce: #03684E;
+  --mousse: #4E8C6C;
+  --fougere: #9BC7AC;
   --creme: #FAF6EA;
   --blanc: #FFFDF7;
-  --ambre: #D9A03F;
-  --ambre-fonce: #8F6420;
+  --ambre: #D59154;
+  --ambre-fonce: #935A24;
   --terre: #C06848;
   --terre-fonce: #9A4B30;
   --gris: #CBC6B4;
   --gris-fonce: #6F6A58;
   --bord: #E4DECB;
-  --texte-2: #4D5A48;
-  --ombre: 0 1px 2px rgba(34, 48, 31, .06), 0 6px 20px rgba(34, 48, 31, .07);
-  --ombre-haute: 0 4px 10px rgba(34, 48, 31, .08), 0 18px 48px rgba(34, 48, 31, .14);
+  --texte-2: #48594F;
+  --ombre: 0 1px 2px rgba(28, 46, 38, .06), 0 6px 20px rgba(28, 46, 38, .07);
+  --ombre-haute: 0 4px 10px rgba(28, 46, 38, .08), 0 18px 48px rgba(28, 46, 38, .14);
   --r-sm: 10px;
   --r: 14px;
   --r-lg: 18px;
@@ -29,7 +29,7 @@
   --fam-sol: #8A6448;
   --fam-energie: #B9832B;
   --fam-reemploi: #7B6A9A;
-  --fam-alimentation: #5F7F52;
+  --fam-alimentation: #4E8C6C;
   --fam-gouvernance: #A45A40;
 }
 
@@ -71,7 +71,7 @@ svg :focus-visible { outline: none; }
 .btn-primary { background: var(--vert-logo); color: var(--blanc); }
 .btn-primary:hover { background: var(--vert-logo-fonce); color: var(--blanc); }
 .btn-amber { background: var(--ambre); color: var(--encre); }
-.btn-amber:hover { background: #E4B259; color: var(--encre); }
+.btn-amber:hover { background: #E0A368; color: var(--encre); }
 .btn-ghost { background: var(--blanc); color: var(--foret); border-color: var(--bord); }
 .btn-ghost:hover { border-color: var(--mousse); color: var(--foret); }
 .btn-on-dark { background: transparent; color: var(--blanc); border-color: rgba(255, 253, 247, .45); }
@@ -109,7 +109,7 @@ svg :focus-visible { outline: none; }
 .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: .76rem; font-weight: 600; letter-spacing: .01em; }
 .badge.st-reve { background: #EDEAE0; color: #57533F; box-shadow: inset 0 0 0 1px var(--gris); }
 .badge.st-encours { background: #F7E6C4; color: #6E4B12; }
-.badge.st-prouve { background: #DCE8CF; color: var(--foret); }
+.badge.st-prouve { background: #D5E8DC; color: var(--foret); }
 
 /* ---------- feuilles (jauges qualitatives) ---------- */
 .leaves { display: inline-flex; gap: 3px; }
@@ -119,7 +119,7 @@ svg :focus-visible { outline: none; }
 .leaf .vein { fill: none; stroke: rgba(255, 253, 247, .8); stroke-width: 1.2; stroke-linecap: round; }
 .leaf.off .vein { stroke: #D3CDB8; }
 .leaf.on-green path:first-child { fill: var(--mousse); stroke: var(--foret); }
-.leaf.on-amber path:first-child { fill: var(--ambre); stroke: #B9832B; }
+.leaf.on-amber path:first-child { fill: var(--ambre); stroke: #B06E2E; }
 .leaf.on-grey path:first-child { fill: var(--gris); stroke: #A9A38E; }
 .leaf.on-grey .vein { stroke: rgba(255, 253, 247, .6); }
 
@@ -184,7 +184,7 @@ body.deva-closed .shell { grid-template-columns: minmax(0, 1fr) 72px; }
 .deva-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .deva-log { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .deva-msg { max-width: 92%; padding: 10px 14px; border-radius: 16px; font-size: .92rem; line-height: 1.45; animation: pop .25s ease-out; }
-.from-deva { background: #EEF3E6; border-bottom-left-radius: 4px; align-self: flex-start; }
+.from-deva { background: #E8F2EB; border-bottom-left-radius: 4px; align-self: flex-start; }
 .from-user { background: var(--foret); color: var(--blanc); border-bottom-right-radius: 4px; align-self: flex-end; }
 .is-typing { display: flex; gap: 4px; padding: 14px; }
 .is-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--mousse); animation: blink 1s infinite; }
@@ -241,7 +241,7 @@ body[data-page="index"] .stage { padding: 0; }
 .map-stage.has-fiche .hero { left: calc(50% - 215px); width: min(520px, calc(100% - 480px)); transition: left .28s; }
 .hero.is-small h1, .hero.is-small .sub, .hero.is-small .kicker, .hero.is-small .hero-loop { display: none; }
 .hero-toggle { position: absolute; top: 8px; right: 10px; font-size: .78rem; }
-.hero-loop { margin: 12px 0 0; padding: 8px 12px; background: #DCE8CF; border-radius: var(--r-sm); color: var(--foret); font-size: .9rem; font-weight: 600; }
+.hero-loop { margin: 12px 0 0; padding: 8px 12px; background: #D5E8DC; border-radius: var(--r-sm); color: var(--foret); font-size: .9rem; font-weight: 600; }
 .map-filters { position: absolute; top: 22px; left: 20px; z-index: 6; display: flex; flex-direction: column; gap: 8px; background: rgba(255, 253, 247, .94); border: 1px solid var(--bord); border-radius: var(--r); padding: 12px; box-shadow: var(--ombre); max-width: 220px; }
 .map-filters .f-title { font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--texte-2); margin: 0; }
 .map-filters .row { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -311,7 +311,7 @@ body[data-page="index"] .stage { padding: 0; }
 .ici-tag { font-size: .74rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ambre-fonce); }
 .doctrine { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; background: var(--foret); color: var(--blanc); border-radius: var(--r-lg); padding: 22px 26px; margin: 8px 0 28px; }
 .doctrine h2 { color: var(--blanc); margin-bottom: 4px; }
-.doctrine p { margin: 0; color: #DCE8CF; max-width: 70ch; }
+.doctrine p { margin: 0; color: #D5E8DC; max-width: 70ch; }
 .doctrine svg { width: 54px; height: 54px; }
 .section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 32px 0 14px; }
 .drawer {
@@ -320,7 +320,7 @@ body[data-page="index"] .stage { padding: 0; }
 }
 .drawer.open { transform: none; visibility: visible; }
 .drawer-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
-.confirm { background: #DCE8CF; border-radius: var(--r); padding: 18px; color: var(--foret); }
+.confirm { background: #D5E8DC; border-radius: var(--r); padding: 18px; color: var(--foret); }
 .confirm:focus { outline: 3px solid var(--ambre); }
 #my-proposals ul { list-style: none; padding: 0; display: grid; gap: 8px; }
 
@@ -382,7 +382,7 @@ body[data-page="index"] .stage { padding: 0; }
 .commun-col .card { box-shadow: none; }
 .commun-col .chips .chip { min-height: 30px; padding: 3px 10px; font-size: .78rem; }
 .col-sub { font-size: .8rem; font-family: var(--f-texte); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ambre-fonce); margin: 10px 0 0; }
-.deva-badge { display: inline-flex; align-items: center; gap: 4px; font-size: .72rem; font-weight: 700; color: var(--foret); background: #EEF3E6; border-radius: 999px; padding: 3px 9px 3px 6px; }
+.deva-badge { display: inline-flex; align-items: center; gap: 4px; font-size: .72rem; font-weight: 700; color: var(--foret); background: #E8F2EB; border-radius: 999px; padding: 3px 9px 3px 6px; }
 .deva-badge .leaf { width: 14px; height: 14px; }
 .deva-badge .leaf path:first-child { fill: var(--mousse); stroke: none; }
 .added { display: inline-flex; align-items: center; gap: 5px; font-size: .86rem; font-weight: 600; color: var(--foret); }
@@ -451,7 +451,7 @@ body[data-page="index"] .stage { padding: 0; }
 .next-card::after { content: ""; position: absolute; right: -40px; top: -40px; width: 180px; height: 180px; border-radius: 50%; background: rgba(169, 196, 138, .14); }
 .next-card .kicker { color: var(--fougere); }
 .next-card h2 { color: var(--blanc); font-size: 1.5rem; max-width: 36ch; }
-.next-card p { color: #DCE8CF; max-width: 62ch; }
+.next-card p { color: #D5E8DC; max-width: 62ch; }
 .next-actions { display: flex; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; }
 .kanban { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .k-col { background: #F3EEDD; border-radius: var(--r-lg); padding: 14px; min-height: 220px; border: 2px solid transparent; transition: border-color .15s, background .15s; }
@@ -488,7 +488,7 @@ body[data-page="index"] .stage { padding: 0; }
 }
 .photo-zone svg { width: 34px; height: 34px; }
 .photo-zone:hover { border-color: var(--mousse); color: var(--foret); }
-.photo-zone.has-photo { border-style: solid; border-color: var(--mousse); background: linear-gradient(135deg, #CFE0B4, #A9C48A 55%, #7FA064); color: var(--foret); }
+.photo-zone.has-photo { border-style: solid; border-color: var(--mousse); background: linear-gradient(135deg, #CDE6D2, #9BC7AC 55%, #4E8C6C); color: var(--foret); }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .inline-actions { display: flex; justify-content: flex-end; margin-top: -8px; margin-bottom: 10px; }
 .scene-card { padding: 12px; }
@@ -500,7 +500,7 @@ body[data-page="index"] .stage { padding: 0; }
 .proof-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .proof-thumb { width: 52px; height: 52px; border-radius: 10px; display: grid; place-items: center; background: #EDEAE0; color: var(--gris-fonce); }
 .proof-thumb svg { width: 24px; height: 24px; }
-.proof-thumb.has-photo { background: linear-gradient(135deg, #CFE0B4, #7FA064); }
+.proof-thumb.has-photo { background: linear-gradient(135deg, #CDE6D2, #4E8C6C); }
 .proof-thumb .leaf path:first-child { fill: var(--blanc); stroke: none; }
 .wide-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 20px; }
 .vv-row { display: grid; grid-template-columns: 130px 1fr; gap: 6px 14px; align-items: center; padding: 10px 0; border-top: 1px solid var(--bord); }
@@ -525,7 +525,7 @@ body[data-page="index"] .stage { padding: 0; }
 .loop-card svg { width: 64px; height: 64px; }
 .loop-card h2 { margin-bottom: 4px; }
 .loop-card p { margin: 0; color: var(--texte-2); }
-.loop-card.is-green { background: #DCE8CF; border-color: var(--fougere); }
+.loop-card.is-green { background: #D5E8DC; border-color: var(--fougere); }
 .loop-card.is-green .loop-arrow { stroke: var(--mousse); }
 .loop-arrow { stroke: var(--gris); transition: stroke .6s; }
 .report { font-size: .92rem; }

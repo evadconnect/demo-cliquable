@@ -83,17 +83,17 @@
   var BASE = {
     wallL: "#F4EBD8", wallR: "#DCCDB0", wallT: "#EFE4CC",
     roofF: "#B8674A", roofB: "#9E553C", gable: "#E6D8BC",
-    green: { front: "#7FA064", back: "#6B8C54", gable: "#E6D8BC" },
+    green: { front: "#6FA083", back: "#588A6C", gable: "#E6D8BC" },
     solar: "#34465A", solarLine: "#8FA6B8",
     bed: { top: "#6E4E37", left: "#8A6448", right: "#765439" },
-    plant: "#5F7F52", plantLight: "#A9C48A",
-    water: "#9CC3C4", waterDeep: "#7FB0B3", rim: "#8FAE78",
+    plant: "#4E8C6C", plantLight: "#9BC7AC",
+    water: "#9CC3C4", waterDeep: "#7FB0B3", rim: "#86AE94",
     trunk: "#7A5A40"
   };
   var STATUS = {
     prevu: { a: "#C9C3B0", b: "#B3AD98", c: "#DEDACB", d: "#A29C87", stroke: "#8C8672", dash: "4 3", tile: "rgba(203,198,180,.55)" },
-    encours: { a: "#D9A03F", b: "#B9832B", c: "#EBC47E", d: "#9C6D22", stroke: "#8F6420", dash: null, tile: "rgba(217,160,63,.35)" },
-    verifie: { a: "#5F7F52", b: "#2C5234", c: "#A9C48A", d: "#3F6437", stroke: "#2C5234", dash: null, tile: "rgba(95,127,82,.35)" }
+    encours: { a: "#D59154", b: "#B06E2E", c: "#EAC197", d: "#9A5F28", stroke: "#8A5422", dash: null, tile: "rgba(213,145,84,.35)" },
+    verifie: { a: "#4E8C6C", b: "#0B6049", c: "#9BC7AC", d: "#2F6B52", stroke: "#0B6049", dash: null, tile: "rgba(78,140,108,.35)" }
   };
 
   /* ---------- bâtiments existants ---------- */
@@ -163,8 +163,8 @@
         el("line", { x1: c[0] + r[0], y1: c[1] + r[1], x2: c[0] + r[0] + 1, y2: c[1] + r[1] - 12, stroke: "#5F7F52", "stroke-width": 1.6, "stroke-linecap": "round" }, g);
       });
     },
-    arbre: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 1.25, { trunk: BASE.trunk, leaf: "#5F7F52", light: "#7E9E66" }); },
-    fruitier: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 0.95, { trunk: BASE.trunk, leaf: "#6E9458", light: "#A9C48A", fruit: "#C06848" }); }
+    arbre: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 1.25, { trunk: BASE.trunk, leaf: "#4E8C6C", light: "#79A98C" }); },
+    fruitier: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 0.95, { trunk: BASE.trunk, leaf: "#5E9B79", light: "#9BC7AC", fruit: "#C06848" }); }
   };
 
   /* ---------- solutions posées (dessinées selon leur état) ---------- */
@@ -281,8 +281,8 @@
     var ground = el("g", {}, svg);
     poly(ground, [P(0, N, 0), P(N, N, 0), P(N, N, -SLAB), P(0, N, -SLAB)], "#9C6B4A");
     poly(ground, [P(N, 0, 0), P(N, N, 0), P(N, N, -SLAB), P(N, 0, -SLAB)], "#80573C");
-    poly(ground, [P(0, N, 0), P(N, N, 0), P(N, N, -5), P(0, N, -5)], mix("#7E9A5E", "#5F8A4A", vitality));
-    poly(ground, [P(N, 0, 0), P(N, N, 0), P(N, N, -5), P(N, 0, -5)], mix("#6C8750", "#4E7A3E", vitality));
+    poly(ground, [P(0, N, 0), P(N, N, 0), P(N, N, -5), P(0, N, -5)], mix("#789A74", "#50895F", vitality));
+    poly(ground, [P(N, 0, 0), P(N, N, 0), P(N, N, -5), P(N, 0, -5)], mix("#688A66", "#447A52", vitality));
     // petits cailloux dans la terre
     for (var s2 = 0; s2 < 10; s2++) {
       var u = hash(s2, 3), v = 0.35 + hash(3, s2) * 0.5;
@@ -291,7 +291,7 @@
     }
 
     // cases
-    var grassA = mix("#C4CBA0", "#9DC07A", vitality), grassB = mix("#BBC395", "#90B56E", vitality);
+    var grassA = mix("#C4CBA0", "#90BE94", vitality), grassB = mix("#BBC395", "#85B588", vitality);
     var tiles = el("g", { class: "iso-tiles" }, svg);
     for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) {
       var tp = [P(i, j, 0), P(i + 1, j, 0), P(i + 1, j + 1, 0), P(i, j + 1, 0)];
@@ -299,7 +299,7 @@
       poly(tiles, tp, fill, { stroke: "rgba(255,253,247,.18)", "stroke-width": 0.6 });
       if (!isPath(i, j) && !occ[i + "," + j] && hash(j, i) > 0.72) {
         var t = P(i + 0.3 + hash(i, j) * 0.4, j + 0.5, 0);
-        el("path", { d: "M" + t[0] + " " + t[1] + " l-2 -4 M" + t[0] + " " + t[1] + " l2 -5 M" + t[0] + " " + t[1] + " l0 -5", stroke: mix("#8FA36A", "#4E7A3E", vitality), "stroke-width": 1, fill: "none" }, tiles);
+        el("path", { d: "M" + t[0] + " " + t[1] + " l-2 -4 M" + t[0] + " " + t[1] + " l2 -5 M" + t[0] + " " + t[1] + " l0 -5", stroke: mix("#8CA786", "#447A52", vitality), "stroke-width": 1, fill: "none" }, tiles);
       }
     }
 
