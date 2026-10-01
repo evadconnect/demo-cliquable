@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="stylesheet" href="assets/styles.css">
 <link rel="icon" type="image/svg+xml" href="assets/logo-evad.svg">
 </head>
@@ -26,7 +27,7 @@
     <div class="split">
       <section class="map-card" aria-label="Projets inspirants">
         <div id="map"></div>
-        <p class="map-hint">Clique un projet pour t'en inspirer</p>
+        <p class="map-hint">Clique un projet pour t'en inspirer, ou glisse le marqueur de ton lieu pour le situer</p>
         <div class="mini-fiche" id="mini-fiche" hidden></div>
       </section>
 
@@ -57,6 +58,7 @@
   <aside id="deva" class="deva" aria-label="Deva, ton assistante"></aside>
 </div>
 <footer id="footer"></footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="assets/data.js"></script>
 <script src="assets/scene.js"></script>
 <script src="assets/deva.js"></script>

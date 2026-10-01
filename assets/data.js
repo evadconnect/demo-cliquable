@@ -26,7 +26,7 @@ window.EVAD_DATA = {
     promesse: "Un tiers-lieu nourricier où l'on cultive, répare et partage, là où l'on tannait autrefois le cuir.",
     reveExemple: "des familles qui viennent chercher leurs légumes à pied, un atelier où l'on répare au lieu de jeter, et un café où tout le quartier se croise.",
     statutInitial: "encours",
-    pos: { x: 585, y: 395 }
+    pos: { x: 585, y: 395 }, lat: 45.183, lng: 0.715
   },
 
   familles: [
@@ -140,35 +140,35 @@ window.EVAD_DATA = {
   /* 8 projets voisins fictifs en Nouvelle-Aquitaine.
      jauges : impact vérifié qualitatif de 0 à 4 (affiché en feuilles, jamais en chiffres) */
   projets: [
-    { id: "darwin", nom: "Les Serres de Darwin", lieu: "Rive droite, Bordeaux", statut: "prouve", pos: { x: 330, y: 430 },
+    { id: "darwin", nom: "Les Serres de Darwin", lieu: "Rive droite, Bordeaux", statut: "prouve", pos: { x: 330, y: 430 }, lat: 44.857, lng: -0.537,
       promesse: "Des serres abandonnées devenues pépinière urbaine et école du vivant.", collectif: "Association de 14 jardiniers et deux lycées agricoles",
       jauges: { ecologie: 4, social: 3, economie: 3 }, preset: "serres",
       solutions: [["planches", "prouve"], ["recup-eau", "prouve"], ["compost", "prouve"], ["mare", "encours"]] },
-    { id: "moulin", nom: "Le Moulin des Possibles", lieu: "Vallée de la Charente", statut: "encours", pos: { x: 470, y: 300 },
+    { id: "moulin", nom: "Le Moulin des Possibles", lieu: "Vallée de la Charente", statut: "encours", pos: { x: 470, y: 300 }, lat: 45.696, lng: -0.329,
       promesse: "Un moulin qui refait tourner l'eau, le pain et les idées du village.", collectif: "Coopérative de 6 habitants et un meunier",
       jauges: { ecologie: 2, social: 2, economie: 1 }, preset: "moulin",
       solutions: [["four", "prouve"], ["solaire", "encours"], ["conseil", "encours"]] },
-    { id: "boisjoli", nom: "La Ferme du Bois Joli", lieu: "Lisière des Landes", statut: "prouve", pos: { x: 290, y: 570 },
+    { id: "boisjoli", nom: "La Ferme du Bois Joli", lieu: "Lisière des Landes", statut: "prouve", pos: { x: 290, y: 570 }, lat: 44.004, lng: -0.6,
       promesse: "Une ferme en agroforesterie qui nourrit trois villages et forme de jeunes paysans.", collectif: "Famille paysanne et 20 adhérents",
       jauges: { ecologie: 4, social: 2, economie: 4 }, preset: "ferme",
       solutions: [["haie", "prouve"], ["poulailler", "prouve"], ["planches", "prouve"], ["solaire", "prouve"]] },
-    { id: "millemains", nom: "Le Jardin des Mille Mains", lieu: "Quartier des Aubiers, Limoges", statut: "encours", pos: { x: 730, y: 330 },
+    { id: "millemains", nom: "Le Jardin des Mille Mains", lieu: "Quartier des Aubiers, Limoges", statut: "encours", pos: { x: 730, y: 330 }, lat: 45.835, lng: 1.258,
       promesse: "Un jardin au pied des immeubles, cultivé par celles et ceux qui y habitent.", collectif: "Collectif d'habitants, centre social",
       jauges: { ecologie: 2, social: 3, economie: 1 }, preset: "jardin",
       solutions: [["planches", "prouve"], ["compost", "encours"], ["budget", "encours"]] },
-    { id: "atelier-dordogne", nom: "L'Atelier de la Dordogne", lieu: "Bergerac", statut: "reve", pos: { x: 500, y: 490 },
+    { id: "atelier-dordogne", nom: "L'Atelier de la Dordogne", lieu: "Bergerac", statut: "reve", pos: { x: 500, y: 490 }, lat: 44.851, lng: 0.482,
       promesse: "Un grand atelier partagé pour réparer, fabriquer et transmettre les gestes.", collectif: "Trois artisans et une association d'insertion",
       jauges: { ecologie: 0, social: 1, economie: 0 }, preset: "atelier",
       solutions: [["repair", "reve"], ["ressourcerie", "reve"]] },
-    { id: "saintseve", nom: "Les Communs de Saint-Sève", lieu: "Entre-deux-Mers", statut: "reve", pos: { x: 420, y: 470 },
+    { id: "saintseve", nom: "Les Communs de Saint-Sève", lieu: "Entre-deux-Mers", statut: "reve", pos: { x: 420, y: 470 }, lat: 44.74, lng: -0.28,
       promesse: "Une ancienne école rendue aux habitants pour décider ensemble de l'avenir du bourg.", collectif: "Conseil citoyen de 11 personnes",
       jauges: { ecologie: 0, social: 1, economie: 0 }, preset: "ecole",
       solutions: [["conseil", "reve"], ["budget", "reve"], ["four", "reve"]] },
-    { id: "semences", nom: "La Cour des Semences", lieu: "Marais poitevin", statut: "prouve", pos: { x: 290, y: 290 },
+    { id: "semences", nom: "La Cour des Semences", lieu: "Marais poitevin", statut: "prouve", pos: { x: 290, y: 290 }, lat: 46.323, lng: -0.65,
       promesse: "Une grainothèque vivante qui garde les variétés du marais et les partage.", collectif: "Maison de quartier et réseau de 40 jardiniers",
       jauges: { ecologie: 3, social: 4, economie: 2 }, preset: "jardin",
       solutions: [["planches", "prouve"], ["mare", "prouve"], ["conseil", "prouve"]] },
-    { id: "quai", nom: "Le Quai des Réparateurs", lieu: "Port de Pauillac", statut: "encours", pos: { x: 245, y: 370 },
+    { id: "quai", nom: "Le Quai des Réparateurs", lieu: "Port de Pauillac", statut: "encours", pos: { x: 245, y: 370 }, lat: 45.198, lng: -0.746,
       promesse: "Un ancien hangar du port où l'on répare vélos, bateaux et objets du quotidien.", collectif: "Association de 9 bénévoles et un chantier d'insertion",
       jauges: { ecologie: 1, social: 2, economie: 2 }, preset: "atelier",
       solutions: [["repair", "prouve"], ["ressourcerie", "encours"], ["solaire", "reve"]] }

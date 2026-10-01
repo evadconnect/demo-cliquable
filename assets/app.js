@@ -12,7 +12,7 @@
   function defaultState() {
     return {
       v: 1,
-      project: { name: "", promesse: "", reve: "" },
+      project: { name: "", promesse: "", reve: "", loc: null },
       pinned: [],
       spaces: D.espaces.map(function (e) { return { id: e.id, nom: e.nom }; }),
       selectedSpace: D.espaces[0].id,
@@ -221,7 +221,56 @@
     '<g fill="none" stroke="#D8C9A2" stroke-width="2.4" stroke-dasharray="2 7" stroke-linecap="round"><path d="M330 430C380 460 460 480 500 490"/><path d="M500 490C540 450 560 420 585 395"/><path d="M585 395C640 370 690 350 730 330"/><path d="M470 300C400 330 330 350 245 370"/><path d="M290 290C360 290 420 295 470 300"/><path d="M290 570C300 520 310 480 330 430"/></g>' +
     '<text x="560" y="548" class="map-label" transform="rotate(20 560 548)">Garonne</text><text x="760" y="392" class="map-label">Dordogne</text><text x="330" y="236" class="map-label" transform="rotate(-6 330 236)">Charente</text><text x="250" y="660" class="map-label">Landes</text>';
 
+  /* Coordonnées réelles d'un projet. Le lieu créé par le visiteur est géolocalisable
+     (state.project.loc), sinon il prend la position par défaut de la Friche. */
+  function projectLoc(p) {
+    if (p.isMine) return state.project.loc || { lat: D.projet.lat, lng: D.projet.lng };
+    return (p.lat != null) ? { lat: p.lat, lng: p.lng } : null;
+  }
+
+  /* Carte open source (Leaflet + OpenStreetMap). Repli sur la carte SVG stylisée si Leaflet
+     n'est pas chargé (hors-ligne). */
   function renderMap(host, opts) {
+    opts = opts || {};
+    if (!window.L) return renderMapSvg(host, opts);
+    var projects = allProjects();
+    var map = host._lmap;
+    if (!map) {
+      map = L.map(host, { zoomControl: false, attributionControl: true });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(map);
+      L.control.zoom({ position: "topright" }).addTo(map);
+      map.setView([45.5, -0.2], 7);
+      host._lmap = map;
+      host._lmarkers = L.layerGroup().addTo(map);
+      map.on("click", function (e) { if (host._locateMove) host._locateMove(e.latlng.lat, e.latlng.lng); });
+    }
+    host._locateMove = opts.locate ? opts.locate.onMove : null;
+    var layer = host._lmarkers; layer.clearLayers();
+    var bounds = [], selLatLng = null;
+    projects.forEach(function (p) {
+      if (opts.filter && !opts.filter(p)) return;
+      var loc = projectLoc(p); if (!loc) return;
+      bounds.push([loc.lat, loc.lng]);
+      if (opts.selected === p.id) selLatLng = [loc.lat, loc.lng];
+      var sel = opts.selected === p.id, hl = opts.highlight && opts.highlight(p);
+      var icon = L.divIcon({ className: "lmark-ico", iconSize: [32, 42], iconAnchor: [16, 38], html:
+        '<span class="lmark st-' + p.statut + (p.isMine ? " is-mine" : "") + (sel ? " is-selected" : "") + (hl ? " is-highlight" : "") + '">' +
+        (p.isMine ? '<i class="lmark-pulse"></i>' : "") + '<i class="lmark-pin"></i></span>' });
+      var m = L.marker([loc.lat, loc.lng], { icon: icon, title: p.nom, riseOnHover: true, draggable: !!(opts.locate && p.isMine), keyboard: true, alt: p.nom });
+      m.bindTooltip(p.nom, { direction: "top", offset: [0, -36], permanent: !!p.isMine, className: "lmark-tip" });
+      if (opts.onSelect) m.on("click", function () { opts.onSelect(p.id); });
+      if (opts.locate && p.isMine) m.on("dragend", function (e) { var ll = e.target.getLatLng(); if (host._locateMove) host._locateMove(ll.lat, ll.lng); });
+      m.addTo(layer);
+    });
+    if (!host._lfit && bounds.length) { map.fitBounds(bounds, { padding: [48, 48], maxZoom: 9 }); host._lfit = true; }
+    if (selLatLng && host._lastSel !== opts.selected) { map.panTo(selLatLng, { animate: true }); }
+    host._lastSel = opts.selected;
+    setTimeout(function () { map.invalidateSize(); }, 60);
+  }
+
+  function renderMapSvg(host, opts) {
     opts = opts || {};
     var projects = allProjects();
     var svg = '<svg class="map-svg" viewBox="' + (opts.viewBox || "0 0 1000 700") + '" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Carte vivante des projets régénératifs en Nouvelle-Aquitaine">' + MAP_DECOR + '<g class="markers">';
@@ -396,8 +445,9 @@
   function pageRever() {
     var sel = null;
     var host = $("#map");
+    function locateMove(lat, lng) { state.project.loc = { lat: lat, lng: lng }; save(); draw(); }
     function draw() {
-      renderMap(host, { viewBox: "185 190 610 440", onSelect: select, selected: sel, highlight: function (p) { return p.statut === "prouve" || state.pinned.indexOf(p.id) >= 0; } });
+      renderMap(host, { viewBox: "185 190 610 440", onSelect: select, selected: sel, locate: { onMove: locateMove }, highlight: function (p) { return p.statut === "prouve" || state.pinned.indexOf(p.id) >= 0; } });
     }
     function select(id) {
       sel = id; draw();

@@ -236,6 +236,27 @@ body.deva-closed .shell { grid-template-columns: 72px minmax(0, 1fr); }
 
 /* ---------- carte vivante ---------- */
 .map-svg { display: block; width: 100%; height: 100%; }
+
+/* ---------- carte Leaflet (open source) ---------- */
+.map-stage #map, .map-card #map { z-index: 0; isolation: isolate; background: #DCE7DD; }
+.leaflet-container { font-family: var(--f-texte); background: #DCE7DD; }
+.leaflet-container a { color: var(--foret); }
+.map-card { isolation: isolate; }
+.lmark-ico { background: none !important; border: 0 !important; }
+.lmark { position: relative; display: block; width: 32px; height: 42px; }
+.lmark-pin { position: absolute; left: 50%; top: 2px; width: 22px; height: 22px; margin-left: -11px; border-radius: 50% 50% 50% 0; transform: rotate(45deg); border: 2.5px solid var(--blanc); box-shadow: 0 2px 5px rgba(28, 46, 38, .4); }
+.lmark-pin::after { content: ""; position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; background: var(--blanc); border-radius: 50%; }
+.lmark.st-reve .lmark-pin { background: var(--gris); }
+.lmark.st-encours .lmark-pin { background: var(--ambre); }
+.lmark.st-prouve .lmark-pin { background: var(--mousse); }
+.lmark.is-mine .lmark-pin { width: 27px; height: 27px; margin-left: -13.5px; border-width: 3px; }
+.lmark.is-selected .lmark-pin { border-color: var(--encre); box-shadow: 0 0 0 3px rgba(217, 145, 84, .5), 0 2px 5px rgba(28, 46, 38, .4); }
+.lmark-pulse { position: absolute; left: 50%; top: 13px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; animation: pulse 2.4s ease-out infinite; }
+.lmark.st-reve .lmark-pulse { background: var(--gris); }
+.lmark.st-encours .lmark-pulse { background: var(--ambre); }
+.lmark.st-prouve .lmark-pulse { background: var(--mousse); }
+.leaflet-tooltip.lmark-tip { background: var(--blanc); border: 1px solid var(--bord); border-radius: 8px; color: var(--encre); font-weight: 600; font-size: .82rem; box-shadow: var(--ombre); padding: 3px 9px; }
+.leaflet-tooltip.lmark-tip::before { border-top-color: var(--bord); }
 .map-label { font-family: var(--f-titre); font-style: italic; font-size: 15px; fill: #8A987A; }
 .map-sea { fill: #86A99C; font-size: 17px; letter-spacing: .08em; }
 .marker { cursor: pointer; }
