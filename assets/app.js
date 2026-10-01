@@ -402,6 +402,13 @@
     famSel.addEventListener("change", function () { fFam = famSel.value; draw(); });
     $("#f-near").addEventListener("click", function () { nearMe = !nearMe; this.setAttribute("aria-pressed", String(nearMe)); draw(); });
 
+    var filters = $(".map-filters"), ftoggle = $("#filters-toggle");
+    ftoggle.addEventListener("click", function () {
+      var collapsed = filters.classList.toggle("is-collapsed");
+      ftoggle.setAttribute("aria-expanded", String(!collapsed));
+      ftoggle.setAttribute("aria-label", collapsed ? "Afficher les filtres" : "Réduire les filtres");
+    });
+
     var fiche = $("#fiche");
     function closeFiche() { $(".map-stage").classList.remove("has-fiche"); fiche.classList.remove("open"); fiche.setAttribute("aria-hidden", "true"); selected = null; draw(); }
     function openFiche(id) {

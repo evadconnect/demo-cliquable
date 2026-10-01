@@ -21,15 +21,23 @@
       <div id="map"></div>
 
       <div class="map-filters" role="group" aria-label="Filtres de la carte">
-        <p class="f-title">Avancement</p>
-        <div class="row">
-          <button type="button" class="chip" data-fstat="reve" aria-pressed="true"><span class="dot st-reve" aria-hidden="true"></span>Rêvés</button>
-          <button type="button" class="chip" data-fstat="encours" aria-pressed="true"><span class="dot st-encours" aria-hidden="true"></span>En cours</button>
-          <button type="button" class="chip" data-fstat="prouve" aria-pressed="true"><span class="dot st-prouve" aria-hidden="true"></span>Prouvés</button>
+        <div class="map-filters-head">
+          <p class="f-title">Filtres</p>
+          <button type="button" class="icon-btn icon-sm filters-toggle" id="filters-toggle" aria-expanded="true" aria-controls="filters-body" aria-label="Réduire les filtres">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
         </div>
-        <label class="f-title" for="f-famille">Famille</label>
-        <select id="f-famille"></select>
-        <button type="button" class="chip" id="f-near" aria-pressed="false">Autour de moi</button>
+        <div class="map-filters-body" id="filters-body">
+          <p class="f-title">Avancement</p>
+          <div class="row">
+            <button type="button" class="chip" data-fstat="reve" aria-pressed="true"><span class="dot st-reve" aria-hidden="true"></span>Rêvés</button>
+            <button type="button" class="chip" data-fstat="encours" aria-pressed="true"><span class="dot st-encours" aria-hidden="true"></span>En cours</button>
+            <button type="button" class="chip" data-fstat="prouve" aria-pressed="true"><span class="dot st-prouve" aria-hidden="true"></span>Prouvés</button>
+          </div>
+          <label class="f-title" for="f-famille">Famille</label>
+          <select id="f-famille"></select>
+          <button type="button" class="chip" id="f-near" aria-pressed="false">Autour de moi</button>
+        </div>
       </div>
 
       <div class="legend" aria-label="Légende">

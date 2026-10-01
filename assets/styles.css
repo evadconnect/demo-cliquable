@@ -328,6 +328,12 @@ body[data-page="index"] .stage { padding: 0; }
 .hero-loop { margin: 12px 0 0; padding: 8px 12px; background: #D5E8DC; border-radius: var(--r-sm); color: var(--foret); font-size: .9rem; font-weight: 600; }
 .map-filters { position: absolute; top: 22px; left: 20px; z-index: 6; display: flex; flex-direction: column; gap: 8px; background: rgba(255, 253, 247, .94); border: 1px solid var(--bord); border-radius: var(--r); padding: 12px; box-shadow: var(--ombre); max-width: 220px; }
 .map-filters .f-title { font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--texte-2); margin: 0; }
+.map-filters-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.map-filters-body { display: flex; flex-direction: column; gap: 8px; }
+.filters-toggle svg { transition: transform .2s; }
+.map-filters.is-collapsed { gap: 0; }
+.map-filters.is-collapsed .map-filters-body { display: none; }
+.map-filters.is-collapsed .filters-toggle svg { transform: rotate(-90deg); }
 .map-filters .row { display: flex; flex-wrap: wrap; gap: 6px; }
 .map-filters .chip { min-height: 32px; font-size: .8rem; padding: 4px 10px; }
 .map-filters select { min-height: 36px; border-radius: 999px; border: 1px solid var(--bord); background: var(--blanc); padding: 4px 10px; font-size: .84rem; }
