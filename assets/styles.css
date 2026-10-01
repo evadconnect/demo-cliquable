@@ -155,8 +155,9 @@ svg :focus-visible { outline: none; }
 .pill-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------- mise en page ---------- */
-.shell { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) var(--deva-w); align-items: start; transition: grid-template-columns .25s; }
-body.deva-closed .shell { grid-template-columns: minmax(0, 1fr) 72px; }
+.shell { flex: 1; display: grid; grid-template-columns: var(--deva-w) minmax(0, 1fr); align-items: start; transition: grid-template-columns .25s; }
+.shell #deva { order: -1; }
+body.deva-closed .shell { grid-template-columns: 72px minmax(0, 1fr); }
 .shell.no-deva { grid-template-columns: minmax(0, 1fr); }
 .stage { min-width: 0; padding: 28px 32px 48px; }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -171,7 +172,7 @@ body.deva-closed .shell { grid-template-columns: minmax(0, 1fr) 72px; }
 .footer .link-btn { color: var(--texte-2); font-size: .84rem; }
 
 /* ---------- Deva ---------- */
-.deva { position: sticky; top: var(--top-h); height: calc(100vh - var(--top-h)); border-left: 1px solid var(--bord); background: var(--blanc); z-index: 30; }
+.deva { position: sticky; top: var(--top-h); height: calc(100vh - var(--top-h)); border-right: 1px solid var(--bord); background: var(--blanc); z-index: 30; }
 .deva-inner { display: flex; flex-direction: column; height: 100%; }
 .deva-head { display: flex; align-items: center; gap: 10px; padding: 14px 14px 12px 18px; border-bottom: 1px solid var(--bord); }
 .deva-avatar { display: flex; align-items: center; flex: none; }
@@ -195,7 +196,10 @@ body.deva-closed .shell { grid-template-columns: minmax(0, 1fr) 72px; }
 .deva-form { display: flex; gap: 8px; padding: 10px 16px 6px; }
 .deva-form input { flex: 1; min-width: 0; min-height: 42px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--bord); background: var(--creme); }
 .deva-send { background: var(--vert-logo); color: var(--blanc); border-color: var(--vert-logo); }
-.deva-rule { font-size: .74rem; color: var(--texte-2); padding: 0 16px 12px; margin: 0; }
+.deva-foot { display: flex; align-items: center; gap: 12px; padding: 10px 16px 14px; border-top: 1px solid var(--bord); margin-top: auto; }
+.deva-foot .deva-avatar { flex: none; }
+.deva-foot .deva-avatar .deva-face { height: 58px; }
+.deva-rule { flex: 1; font-size: .74rem; color: var(--texte-2); padding: 0; margin: 0; }
 .deva-fab { display: none; }
 .deva.is-closed .deva-inner { display: none; }
 .deva.is-closed .deva-fab { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; padding: 16px 0; border: 0; background: none; cursor: pointer; font-weight: 600; font-size: .78rem; color: var(--foret); }

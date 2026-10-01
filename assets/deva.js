@@ -21,7 +21,6 @@
     root.innerHTML =
       '<div class="deva-inner">' +
       '<div class="deva-head">' +
-      '<span class="deva-avatar">' + LEAF + '</span>' +
       '<div class="deva-id"><strong>Deva</strong><span class="deva-mode">' + mode.label + '</span></div>' +
       '<button type="button" class="icon-btn deva-toggle" aria-controls="deva-body" aria-label="Replier le panneau de Deva"></button>' +
       '</div>' +
@@ -32,7 +31,7 @@
       '<input id="deva-input" type="text" autocomplete="off" placeholder="Écrire à Deva…">' +
       '<button type="submit" class="icon-btn deva-send" aria-label="Envoyer à Deva"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
       '</form>' +
-      '<p class="deva-rule">Deva propose, tu décides. Elle ne calcule jamais d\'impact à ta place.</p>' +
+      '<div class="deva-foot"><span class="deva-avatar">' + LEAF + '</span><p class="deva-rule">Deva propose, tu décides. Elle ne calcule jamais d\'impact à ta place.</p></div>' +
       '</div></div>' +
       '<button type="button" class="deva-fab" aria-label="Ouvrir le panneau de Deva">' + LEAF + '<span>Deva</span></button>';
 
