@@ -26,6 +26,7 @@
       '</div>' +
       '<div class="deva-body" id="deva-body">' +
       '<div class="deva-log" role="log" aria-live="polite" aria-label="Conversation avec Deva"></div>' +
+      '<div class="deva-doors" aria-label="Que veux-tu faire"></div>' +
       '<div class="deva-sugs" aria-label="Questions suggérées"></div>' +
       '<form class="deva-form"><label for="deva-input" class="sr-only">Écrire à Deva</label>' +
       '<input id="deva-input" type="text" autocomplete="off" placeholder="Écrire à Deva…">' +
@@ -53,8 +54,27 @@
       say(gen + " Une piste : " + sug.a.charAt(0).toLowerCase() + sug.a.slice(1));
     });
 
+    renderDoors();
     renderSugs();
     say(mode.intro, { instant: true });
+  }
+
+  function renderDoors() {
+    var box = root.querySelector(".deva-doors");
+    if (!box) return;
+    if (!mode.actions || !mode.actions.length) { box.hidden = true; return; }
+    box.hidden = false;
+    box.innerHTML = "";
+    mode.actions.forEach(function (a) {
+      var b = document.createElement(a.href && a.href.charAt(0) === "#" ? "button" : "a");
+      b.className = "deva-door" + (a.primary ? " is-primary" : "");
+      if (b.tagName === "A") b.href = a.href; else b.type = "button";
+      b.textContent = a.label;
+      b.addEventListener("click", function (e) {
+        if (a.href === "#map") { e.preventDefault(); setOpen(false); }
+      });
+      box.appendChild(b);
+    });
   }
 
   function setOpen(open, silent) {

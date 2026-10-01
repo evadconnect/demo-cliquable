@@ -15,22 +15,10 @@
 <body data-page="index">
 <a class="skip" href="#main">Aller au contenu</a>
 <header id="topbar"></header>
-<div class="shell no-deva">
+<div class="shell">
   <main id="main" class="stage">
     <div class="map-stage">
       <div id="map"></div>
-
-      <section class="hero" id="hero" aria-labelledby="hero-title">
-        <button type="button" class="link-btn hero-toggle" id="hero-toggle" aria-expanded="true" aria-controls="hero">Réduire</button>
-        <p class="kicker">La vision EVAD 2030</p>
-        <h1 id="hero-title">Un monde régénératif désirable, déjà en train de pousser</h1>
-        <p class="sub">Du rêve à la preuve, et la preuve rouvre le rêve.</p>
-        <div class="hero-actions">
-          <a class="btn btn-primary btn-lg" href="rever.html">Créer mon projet régénératif</a>
-          <a class="btn btn-ghost" href="commun.html">Parcourir le Commun</a>
-        </div>
-        <p class="hero-loop" id="hero-loop" hidden>La Friche des Tanneurs vient de passer au vert : ses preuves sont vérifiées.</p>
-      </section>
 
       <div class="map-filters" role="group" aria-label="Filtres de la carte">
         <p class="f-title">Avancement</p>
@@ -53,6 +41,7 @@
       <aside class="fiche" id="fiche" aria-label="Fiche projet" aria-hidden="true"></aside>
     </div>
   </main>
+  <aside id="deva" class="deva" aria-label="Deva, ton assistante"></aside>
 </div>
 <footer id="footer"></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>

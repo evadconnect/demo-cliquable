@@ -125,8 +125,19 @@
       "</div>";
   }
 
+  // Bloc Vision 2030 en haut du rail d'accueil (Deva raconte la vision juste en dessous).
+  function renderHomeVision() {
+    var inner = document.querySelector("#deva .deva-inner"); if (!inner) return;
+    if (inner.querySelector(".deva-vision")) return;
+    inner.insertAdjacentHTML("afterbegin",
+      '<div class="deva-vision"><p class="snav-title">La vision EVAD 2030</p>' +
+      "<h1>Un monde régénératif désirable, déjà en train de pousser</h1>" +
+      "<p class=\"deva-vision-sub\">Du rêve à la preuve, et la preuve rouvre le rêve.</p></div>");
+  }
+
   // Navigation dans la sidebar (pages du parcours) : mon lieu, parcours REGEN, Le Commun, déconnexion.
   function renderSidebarNav(page) {
+    if (!D.steps.some(function (s) { return s.id === page; })) return;
     var inner = document.querySelector("#deva .deva-inner"); if (!inner) return;
     var st = fricheStatut();
     var steps = D.steps.map(function (s, n) {
@@ -359,14 +370,6 @@
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && fiche.classList.contains("open")) closeFiche(); });
 
     if (param("focus")) openFiche(param("focus"));
-    if (fricheStatut() === "prouve") {
-      $("#hero-loop").hidden = false;
-      $("#hero-loop").textContent = projectName() + " vient de passer au vert : ses preuves sont vérifiées. La preuve rouvre le rêve.";
-    }
-    $("#hero-toggle").addEventListener("click", function () {
-      var hero = $("#hero"); var small = hero.classList.toggle("is-small");
-      this.setAttribute("aria-expanded", String(!small)); this.textContent = small ? "Afficher la vision" : "Réduire";
-    });
   }
 
   /* ================= Écran 2 : le Commun ================= */
@@ -910,8 +913,10 @@
     renderTopbar(page);
     renderFooter();
     var step = D.steps.find(function (s) { return s.id === page; });
-    if (step && window.Deva) Deva.init(step.deva);
-    renderSidebarNav(page);
+    if (window.Deva) {
+      if (page === "index") { Deva.init("accueil"); renderHomeVision(); }
+      else if (step) { Deva.init(step.deva); renderSidebarNav(page); }
+    }
     if (PAGES[page]) PAGES[page]();
     window.addEventListener("storage", function (e) { if (e.key === KEY) { state = load(); refreshChrome(); } });
   });

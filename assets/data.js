@@ -205,6 +205,21 @@ window.EVAD_DATA = {
   /* Deva : un seul visage, cinq modes. Réponses scriptées, jamais de chiffres d'impact. */
   deva: {
     modes: {
+      accueil: {
+        label: "Accueil",
+        intro: "Bonjour, je suis Deva. Bienvenue sur EVAD. Ici, un monde régénératif désirable est déjà en train de pousser : chaque lieu sur la carte à droite a été rêvé, modélisé, puis prouvé sur le terrain. Du rêve à la preuve, et la preuve rouvre le rêve. Par quoi veux-tu commencer ?",
+        actions: [
+          { label: "Créer mon projet", href: "rever.html", primary: true },
+          { label: "Visiter la carte", href: "#map" },
+          { label: "Parcourir le Commun", href: "commun.html" }
+        ],
+        suggestions: [
+          { q: "C'est quoi EVAD ?", a: "EVAD accompagne les collectifs qui font pousser des lieux régénératifs : rêver un lieu, le modéliser, agir, puis prouver ce qui a vraiment changé. Ce qui est vérifié nourrit le rêve des suivants." },
+          { q: "Comment lire la carte ?", a: "Chaque marqueur est un lieu : gris s'il est rêvé, ambre s'il est en cours, vert s'il a fait ses preuves. Clique un lieu pour voir sa maquette et son impact vérifié." },
+          { q: "C'est quoi le Commun ?", a: "Une bibliothèque libre de solutions éprouvées sur le terrain, reliées à leurs preuves. Vérifié bat généré, et tout le monde peut y puiser." },
+          { q: "Faut-il un compte ?", a: "Non pour explorer la carte et le Commun, c'est ouvert à tous. Tu crées ton accès seulement quand tu veux lancer et suivre ton propre lieu." }
+        ]
+      },
       orientation: {
         label: "Orientation",
         intro: "Bonjour, je suis Deva. On commence par rêver ton lieu. Regarde les projets autour de toi, épingle ceux qui te parlent, puis donne un nom à ton projet.",
