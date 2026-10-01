@@ -173,7 +173,8 @@
           ? '<a class="btn btn-primary btn-sm" href="rever.html">Mon espace</a>'
           : '<button type="button" class="btn btn-ghost btn-sm" id="login-btn">Se connecter</button>';
       }
-      top.innerHTML = BRAND + (right ? '<div class="top-right">' + right + "</div>" : "");
+      var tagline = page === "index" ? '<span class="brand-tagline">écosystème vivant autonome et décentralisé</span>' : "";
+      top.innerHTML = BRAND + tagline + (right ? '<div class="top-right">' + right + "</div>" : "");
       var lb = $("#login-btn"); if (lb) lb.addEventListener("click", function () { openGate("connecter", "rever.html", false); });
       return;
     }
