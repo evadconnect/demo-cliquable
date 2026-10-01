@@ -418,7 +418,7 @@
         ? state.placed.map(function (x) { return [x.solId, { prevu: "reve", encours: "encours", verifie: "prouve" }[x.status]]; })
         : p.solutions;
       var detail = sols.length
-        ? "<ul class='sol-list'>" + sols.map(function (s) { return "<li><span class='dot st-" + s[1] + "' aria-hidden='true'></span>" + esc(SOL[s[0]].nom) + " <span class='muted'>(" + D.statuts[s[1]].label.toLowerCase() + ")</span></li>"; }).join("") + "</ul>"
+        ? "<ul class='sol-list'>" + sols.map(function (s) { return "<li><a class='sol-link' href='commun.html?sol=" + s[0] + "'><span class='dot st-" + s[1] + "' aria-hidden='true'></span><span>" + esc(SOL[s[0]].nom) + " <span class='muted'>(" + D.statuts[s[1]].label.toLowerCase() + ")</span></span><span class='sol-link-go' aria-hidden='true'>" + ICON.arrow + "</span></a></li>"; }).join("") + "</ul>"
         : "<p class='muted'>Aucune solution posée pour l'instant. Commence le parcours pour faire pousser ce lieu.</p>";
       fiche.innerHTML =
         '<div class="fiche-head">' + statutBadge(p.statut) + '<button type="button" class="icon-btn" id="fiche-close" aria-label="Fermer la fiche">' + ICON.close + "</button></div>" +
@@ -459,7 +459,7 @@
     var diff = ""; for (var k = 1; k <= 3; k++) diff += '<span class="pip' + (k <= s.difficulte ? " on" : "") + '"></span>';
     var diffWord = ["", "accessible", "demande de l'organisation", "exigeante"][s.difficulte];
     var coutWord = ["", "modeste", "moyen", "important"][s.cout];
-    return '<article class="card sol-card fam-' + s.famille + '">' +
+    return '<article class="card sol-card fam-' + s.famille + '" data-sol="' + s.id + '">' +
       '<div class="card-top"><span class="fam-tag fam-' + s.famille + '">' + FAM[s.famille].label + "</span>" + (extra && extra.badge ? extra.badge : "") + "</div>" +
       "<h3>" + esc(s.nom) + "</h3><p>" + esc(s.change) + "</p>" +
       '<dl class="meta"><div><dt>Difficulté</dt><dd><span class="pips" aria-hidden="true">' + diff + '</span> ' + diffWord + "</dd></div>" +
@@ -524,6 +524,18 @@
       box.innerHTML = '<h3 class="mini-title">Tes propositions en relecture</h3><ul>' + state.proposals.map(function (p) { return '<li><span class="badge st-reve">En relecture</span> ' + esc(p.nom) + ' <span class="muted">(' + FAM[p.famille].label + ")</span></li>"; }).join("") + "</ul>";
     }
     drawProposals();
+
+    // Arrivée depuis « Explorer ce projet » : mettre en avant la solution ciblée.
+    var target = param("sol");
+    if (target && SOL[target]) {
+      var card = $('#commun-grid [data-sol="' + target + '"]');
+      if (card) {
+        card.classList.add("is-highlight");
+        card.setAttribute("tabindex", "-1");
+        setTimeout(function () { card.scrollIntoView({ behavior: "smooth", block: "center" }); card.focus({ preventScroll: true }); }, 120);
+        setTimeout(function () { card.classList.remove("is-highlight"); }, 3200);
+      }
+    }
   }
 
   /* ================= Écran 3 : Rêver ================= */

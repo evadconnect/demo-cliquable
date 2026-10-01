@@ -16,7 +16,8 @@
     mode = D.modes[modeId];
     var ui = uiGet();
     var narrow = window.matchMedia("(max-width: 900px)").matches;
-    var open = narrow ? false : ui.devaOpen !== false;
+    // Desktop : sidebar toujours ouverte (pas de rétraction). Mobile : tiroir ouvrable.
+    var open = narrow ? false : true;
 
     root.innerHTML =
       '<div class="deva-inner">' +
@@ -102,13 +103,14 @@
   }
 
   function setOpen(open, silent) {
+    // Desktop : jamais de rétraction, la sidebar reste ouverte.
+    if (!window.matchMedia("(max-width: 900px)").matches) open = true;
     root.classList.toggle("is-open", open);
     root.classList.toggle("is-closed", !open);
     document.body.classList.toggle("deva-closed", !open);
     root.querySelector(".deva-toggle").setAttribute("aria-expanded", String(open));
     root.querySelector(".deva-fab").setAttribute("aria-expanded", String(open));
     root.querySelector(".deva-toggle").innerHTML = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
-    if (!window.matchMedia("(max-width: 900px)").matches) { var ui = uiGet(); ui.devaOpen = open; uiSet(ui); }
     if (!silent) {
       if (open) root.querySelector("#deva-input").focus({ preventScroll: true });
       else root.querySelector(".deva-fab").focus({ preventScroll: true });

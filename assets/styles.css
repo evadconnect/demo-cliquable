@@ -264,6 +264,8 @@ body.deva-closed .shell { grid-template-columns: 72px minmax(0, 1fr); }
 .deva-carbone svg { width: 15px; height: 15px; flex: none; color: var(--mousse); }
 .deva-carbone strong { color: var(--foret); }
 .deva-fab { display: none; }
+/* Desktop : pas de rétraction, on masque le bouton de repli. */
+@media (min-width: 901px) { .deva-toggle { display: none; } }
 .deva.is-closed .deva-inner { display: none; }
 .deva.is-closed .deva-fab { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; padding: 16px 0; border: 0; background: none; cursor: pointer; font-weight: 600; font-size: .78rem; color: var(--foret); }
 .deva.nudge .deva-fab .deva-face { animation: bob .8s ease-out; }
@@ -360,6 +362,14 @@ body[data-page="index"] .stage { padding: 0; }
 .fiche-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
 .sol-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; font-size: .92rem; }
 .sol-list li { display: flex; align-items: center; gap: 8px; }
+.sol-link { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 10px; border: 1px solid var(--bord); border-radius: var(--r-sm); background: var(--blanc); text-decoration: none; color: var(--encre); }
+.sol-link:hover { border-color: var(--mousse); background: var(--creme); }
+.sol-link > span:nth-child(2) { flex: 1; }
+.sol-link-go { display: inline-flex; color: var(--mousse); opacity: .6; }
+.sol-link-go svg { width: 16px; height: 16px; }
+.sol-link:hover .sol-link-go { opacity: 1; }
+.sol-card.is-highlight { outline: 3px solid var(--ambre); outline-offset: 2px; animation: cardpulse 1s ease-out; }
+@keyframes cardpulse { 0% { box-shadow: 0 0 0 0 rgba(217, 145, 84, .5); } 100% { box-shadow: 0 0 0 16px rgba(217, 145, 84, 0); } }
 .jauges { display: grid; gap: 8px; }
 .jauge { display: grid; grid-template-columns: 118px auto 1fr; gap: 10px; align-items: center; font-size: .88rem; }
 .jauge-lbl { font-weight: 600; }
