@@ -191,6 +191,7 @@ body.deva-closed .shell { grid-template-columns: 72px minmax(0, 1fr); }
 .snav-step.is-active .snav-dot { background: var(--ambre); border-color: var(--ambre); color: var(--encre); }
 .snav-commun { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border: 1px solid var(--bord); border-radius: var(--r); background: var(--blanc); text-decoration: none; color: var(--foret); font-weight: 600; font-size: .92rem; }
 .snav-commun:hover { border-color: var(--mousse); }
+.snav-commun.is-current { background: var(--creme); box-shadow: inset 0 0 0 1.5px var(--fougere); }
 .snav-commun svg { width: 20px; height: 20px; flex: none; }
 .snav-logout { flex-basis: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 2px; min-height: 40px; padding: 8px; border: 1px solid var(--bord); border-radius: 999px; background: var(--blanc); color: var(--texte-2); text-decoration: none; font-size: .86rem; font-weight: 600; }
 .snav-logout:hover { border-color: var(--terre); color: var(--terre-fonce); }

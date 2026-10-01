@@ -220,6 +220,16 @@ window.EVAD_DATA = {
           { q: "Faut-il un compte ?", a: "Non pour explorer la carte et le Commun, c'est ouvert à tous. Tu crées ton accès seulement quand tu veux lancer et suivre ton propre lieu." }
         ]
       },
+      commun: {
+        label: "Le Commun",
+        intro: "Voici le Commun : une bibliothèque libre de solutions éprouvées sur le terrain, reliées à leurs preuves. Cherche par mot ou par famille. Si tu as éprouvé quelque chose, propose-le.",
+        suggestions: [
+          { q: "Comment choisir une solution ?", a: "Regarde sur combien de projets elle a déjà été éprouvée et quels ICI elle nourrit. Vérifié bat généré." },
+          { q: "C'est quoi un ICI ?", a: "Un indicateur de changement d'impact : ce qu'on observe concrètement quand ça marche, comme le retour des vers de terre ou des voisins qui s'entraident." },
+          { q: "Puis-je proposer une solution ?", a: "Oui, avec le bouton « Proposer une solution ». La communauté la reliera à ses preuves avant de l'ajouter au Commun." },
+          { q: "Faut-il un compte ?", a: "Non, le Commun est libre d'accès. Tu peux tout consulter sans te connecter." }
+        ]
+      },
       orientation: {
         label: "Orientation",
         intro: "Bonjour, je suis Deva. On commence par rêver ton lieu. Regarde les projets autour de toi, épingle ceux qui te parlent, puis donne un nom à ton projet.",

@@ -135,9 +135,9 @@
       "<p class=\"deva-vision-sub\">Du rêve à la preuve, et la preuve rouvre le rêve.</p></div>");
   }
 
-  // Navigation dans la sidebar (pages du parcours) : mon lieu, parcours REGEN, Le Commun, déconnexion.
+  // Navigation dans la sidebar (parcours + Le Commun) : mon lieu, parcours REGEN, Le Commun, déconnexion.
   function renderSidebarNav(page) {
-    if (!D.steps.some(function (s) { return s.id === page; })) return;
+    if (!D.steps.some(function (s) { return s.id === page; }) && page !== "commun") return;
     var inner = document.querySelector("#deva .deva-inner"); if (!inner) return;
     var st = fricheStatut();
     var steps = D.steps.map(function (s, n) {
@@ -152,7 +152,7 @@
       '<span class="pill-dot st-' + st + '" aria-hidden="true"></span>' +
       '<span class="snav-place-txt"><span class="snav-kicker">Mon lieu</span><strong>' + esc(projectName()) + '</strong></span></a>' +
       '<nav class="snav-regen" aria-label="Parcours REGEN"><p class="snav-title">Parcours REGEN</p><ol>' + steps + "</ol></nav>" +
-      '<a class="snav-commun" href="commun.html">' + ICON.commun + "<span>Le Commun</span></a>" +
+      '<a class="snav-commun' + (page === "commun" ? " is-current" : "") + '" href="commun.html"' + (page === "commun" ? ' aria-current="page"' : "") + ">" + ICON.commun + "<span>Le Commun</span></a>" +
       "</div>";
     var existing = inner.querySelector(".deva-nav");
     if (existing) existing.outerHTML = html; else inner.insertAdjacentHTML("afterbegin", html);
@@ -915,6 +915,7 @@
     var step = D.steps.find(function (s) { return s.id === page; });
     if (window.Deva) {
       if (page === "index") { Deva.init("accueil"); renderHomeVision(); }
+      else if (page === "commun") { Deva.init("commun"); renderSidebarNav(page); }
       else if (step) { Deva.init(step.deva); renderSidebarNav(page); }
     }
     if (PAGES[page]) PAGES[page]();
