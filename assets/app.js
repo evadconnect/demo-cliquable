@@ -112,7 +112,7 @@
     var st = fricheStatut();
     top.className = "topbar";
     top.innerHTML =
-      '<a class="brand" href="index.html" aria-label="EVAD, retour à la carte vivante">' + BRAND_LEAF + "<span>EVAD</span></a>" +
+      '<a class="brand" href="index.html" aria-label="EVAD, retour à la carte vivante"><img class="brand-logo" src="assets/logo-evad.svg" alt="EVAD" width="92" height="30"></a>' +
       '<nav class="stepper" aria-label="Parcours REGEN"><span class="stepper-kicker" aria-hidden="true">REGEN</span><ol>' + steps + "</ol></nav>" +
       '<div class="top-right">' +
       '<a class="toplink' + (page === "commun" ? " is-current" : "") + '" href="commun.html"' + (page === "commun" ? ' aria-current="page"' : "") + ">Le Commun</a>" +
