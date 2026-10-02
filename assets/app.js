@@ -323,10 +323,8 @@
     var map = host._lmap;
     if (!map) {
       map = L.map(host, { zoomControl: false, attributionControl: true });
-      // Fond open source (OpenStreetMap, sans clé), harmonisé en solarpunk via un filtre CSS.
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19, detectRetina: true,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
       }).addTo(map);
       L.control.zoom({ position: "topright" }).addTo(map);
       map.setView([45.5, -0.2], 7);
