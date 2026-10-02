@@ -50,10 +50,7 @@
       input.value = "";
       user(txt);
       countQuestion();
-      var gen = D.generiques[Math.floor(Math.random() * D.generiques.length)];
-      var sugs = mode.suggestions || [];
-      if (sugs.length) { var sug = sugs[rot % sugs.length]; rot++; say(gen + " Une piste : " + sug.a.charAt(0).toLowerCase() + sug.a.slice(1)); }
-      else say(gen);
+      say(answer(txt));
     });
     root.querySelector(".deva-carbone").addEventListener("click", function () {
       var c = D.carbone || {};
@@ -100,6 +97,23 @@
     el.innerHTML = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 14a3.5 3.5 0 0 1-.4-7A4.5 4.5 0 0 1 14 7.3 3.2 3.2 0 0 1 14.5 14H6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>' +
       "<span>Empreinte : <strong>" + fmtCarbon() + "</strong>" + (n ? " · " + n + " question" + (n > 1 ? "s" : "") : " · échanges sobres") + "</span>";
     el.title = D.carbone.note || "";
+  }
+
+  /* Moteur conversationnel scripté : salutations, remerciements, puis reconnaissance de mots-clés. */
+  function norm(s) { return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+  function pick(a) { return (a && a.length) ? a[Math.floor(Math.random() * a.length)] : ""; }
+  function answer(txt) {
+    var t = " " + norm(txt) + " ";
+    if (/(^| )(bonjour|salut|coucou|bonsoir|hello|hey|yo|bonne journee)( |$)/.test(t)) return pick(D.salutations);
+    if (/(^| )(merci|mercii|super|genial|parfait|nickel|top|cool|bravo|ok merci)( |$)/.test(t)) return pick(D.remerciements);
+    if (/(^| )(au revoir|aurevoir|bye|a bientot|ciao|a plus)( |$)/.test(t)) return pick(D.adieux);
+    var best = null, score = 0;
+    (D.faq || []).forEach(function (e) {
+      var s = 0; e.k.forEach(function (kw) { if (t.indexOf(norm(kw)) >= 0) s++; });
+      if (s > score) { score = s; best = e; }
+    });
+    if (best && score > 0) return best.a;
+    return pick(D.incompris);
   }
 
   function setOpen(open, silent) {

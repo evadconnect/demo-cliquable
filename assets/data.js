@@ -299,6 +299,61 @@ window.EVAD_DATA = {
       "Bien vu, c'est une vraie question de terrain.",
       "Merci de me le dire, je garde ça en tête pour ton projet."
     ],
+    /* Petit moteur conversationnel : Deva reconnaît des mots-clés et répond sans IA. */
+    salutations: [
+      "Bonjour ! Ravie de te voir. Tu veux explorer la carte, créer ton projet, ou que je t'explique EVAD ?",
+      "Salut ! Je suis là pour t'aider. Dis-moi ce qui t'amène : découvrir un lieu, en créer un, ou comprendre comment ça marche ?"
+    ],
+    remerciements: [
+      "Avec plaisir. Une autre question ?",
+      "Quand tu veux. Je reste à côté pour la suite.",
+      "De rien ! N'hésite pas si tu veux aller plus loin."
+    ],
+    adieux: [
+      "À bientôt sur EVAD. Reviens quand tu veux faire pousser ton lieu.",
+      "Prends soin de toi. La carte et le Commun restent ouverts à tous."
+    ],
+    incompris: [
+      "Je ne suis pas sûre d'avoir bien saisi. Je peux t'expliquer EVAD, t'aider à lire la carte, parcourir le Commun, ou lancer ton projet. Qu'est-ce qui t'intéresse ?",
+      "Je suis une assistante encore jeune et je réponds par règles, pas toujours à tout. Essaie avec « c'est quoi EVAD ? », « comment lire la carte ? », « c'est quoi le Commun ? » ou « créer un projet ».",
+      "Reformule-moi ça autrement ? Je connais surtout EVAD, la carte, le Commun, les preuves et le parcours Rêver → Nourrir."
+    ],
+    faq: [
+      { k: ["c'est quoi evad", "quoi evad", "presente", "présente", "explique evad", "ca sert a quoi", "à quoi ça sert", "c'est quoi ce site", "principe"],
+        a: "EVAD aide les collectifs à faire pousser des lieux régénératifs, du rêve à la preuve. On rêve un lieu sur la carte, on le modélise, on agit, puis on prouve sur le terrain ce qui a vraiment changé. Et ce qui est vérifié rouvre le rêve des suivants." },
+      { k: ["lire la carte", "carte", "marqueur", "couleur", "gris", "ambre", "vert", "points sur la carte", "lieux"],
+        a: "Chaque marqueur est un lieu : gris s'il est rêvé, ambre s'il est en cours, vert s'il a fait ses preuves. Clique un marqueur pour ouvrir sa fiche, sa maquette et son impact vérifié." },
+      { k: ["commun", "bibliotheque", "bibliothèque", "solutions libres", "banque de solutions"],
+        a: "Le Commun est une bibliothèque libre de solutions éprouvées sur le terrain, reliées à leurs preuves. C'est ouvert à tous, sans compte, et ici vérifié bat généré." },
+      { k: ["preuve", "prouver", "verifie", "vérifié", "vadite", "vadité", "terrain", "attester"],
+        a: "Une preuve, c'est ce que tu apportes depuis le terrain à l'étape Nourrir : une photo, une mesure, une date. Quand c'est confirmé, l'élément passe au vert. C'est ça, la Vadité : l'impact vérifié, pas seulement prévu." },
+      { k: ["vadance", "impact", "indicateur", "ici", "mesure impact", "jauge"],
+        a: "La Vadance, c'est l'impact prévu ; la Vadité, l'impact vérifié. Les ICI (indicateurs de changement d'impact) décrivent ce qu'on observe concrètement : vie du sol, liens entre voisins, achats locaux… Je ne calcule jamais ces chiffres à ta place : ils viennent de tes actes validés." },
+      { k: ["creer", "créer", "lancer", "demarrer", "démarrer", "mon projet", "nouveau projet", "commencer", "se lancer"],
+        a: "Pour lancer ton projet, clique « Créer mon projet » : tu entres dans le parcours à l'étape Rêver, où tu nommes ton lieu et t'inspires des projets voisins. Prêt ?" },
+      { k: ["rever", "rêver", "vision", "inspiration", "epingler", "épingler"],
+        a: "Rêver, c'est la 1re étape : tu t'inspires des lieux sur la carte, tu situes ton lieu et tu poses les premiers mots de ta vision." },
+      { k: ["explorer", "espace", "espaces", "decouper", "découper"],
+        a: "Explorer, c'est la 2e étape : tu découpes ton lieu en espaces (jardin, atelier, café…) et tu y accroches des solutions du Commun." },
+      { k: ["generer", "générer", "maquette", "poser", "modeliser", "modéliser", "plan du lieu"],
+        a: "Générer, c'est la 3e étape : tu poses tes solutions sur la maquette 2.5D du lieu. Tout ce que tu poses est d'abord prévu, en gris." },
+      { k: ["entreprendre", "quete", "quête", "action", "kanban", "a faire", "à faire"],
+        a: "Entreprendre, c'est la 4e étape : chaque solution posée devient une quête, que vous faites avancer ensemble, de « à faire » à « vérifié »." },
+      { k: ["nourrir", "photo", "journal", "export", "rapport"],
+        a: "Nourrir, c'est la 5e étape : tu apportes les preuves de terrain. Chaque preuve fait verdir le lieu, et tu peux en tirer des aperçus pour tes partenaires (ODD, CSRD, PCAET, RSE)." },
+      { k: ["compte", "connecter", "connexion", "inscription", "s'inscrire", "login", "identifiant"],
+        a: "Explorer la carte et le Commun est ouvert à tous, sans compte. Tu crées un accès seulement pour lancer et suivre ton propre lieu, via « Créer mon projet » ou « Se connecter ». En bêta, c'est sans mot de passe." },
+      { k: ["qui es-tu", "qui es tu", "tu es quoi", "c'est quoi deva", "qui est deva", "robot", "ia", "intelligence artificielle"],
+        a: "Je suis Deva, ton assistante sur EVAD. Je te guide pas à pas, je propose, et c'est toujours toi qui décides. Je fonctionne par règles, sans IA lourde : c'est plus sobre, et je ne m'invente jamais de chiffres d'impact." },
+      { k: ["carbone", "empreinte", "co2", "ecologie du site", "pollution", "sobriete", "sobriété"],
+        a: "Bonne question : nos échanges ont une empreinte, affichée en bas de ce panneau. Comme je réponds localement, par règles, elle reste minime, loin d'une requête vers un gros modèle d'IA." },
+      { k: ["regen", "etapes", "étapes", "parcours", "comment ca marche", "comment ça marche"],
+        a: "Le parcours REGEN a 5 étapes : Rêver, Explorer, Générer, Entreprendre, Nourrir. On part du rêve, on modélise, on agit, puis on prouve. Et la preuve rouvre le rêve." },
+      { k: ["gratuit", "prix", "cout", "coût", "payant", "tarif"],
+        a: "La carte et le Commun sont en accès libre. EVAD est un commun : l'idée n'est pas de vendre, mais de relier des lieux et des preuves." },
+      { k: ["aide", "help", "comment faire", "perdu", "sais pas"],
+        a: "Je peux t'expliquer EVAD, t'aider à lire la carte, à parcourir le Commun, ou te lancer dans la création de ton projet. Par quoi veux-tu commencer ?" }
+    ],
     reactions: {
       "nom": "Joli nom. Ton projet existe déjà un peu plus. Quand tu es prêt, passe à Explorer.",
       "pin": "Épinglé. Tu pourras t'appuyer sur ses preuves quand tu choisiras tes solutions.",
