@@ -1,9 +1,21 @@
-# EVAD, démo cliquable
+# EVAD, bêta du parcours REGEN
 
 **En ligne : https://evadconnect.github.io/demo-cliquable/**
 
 Parcours complet en 3 minutes, du rêve à la preuve : carte vivante, le Commun, puis les 5 étapes REGEN (Rêver, Explorer, Générer, Entreprendre, Nourrir).
 Front uniquement : HTML, CSS et JavaScript sans framework ni build, sans backend, sans compte, sans API.
+
+## Bêta : comptes et données (Supabase)
+
+- Les comptes sont ceux de Supabase (email + mot de passe), les mêmes que le prototype EVAD.
+- Chaque testeur crée **son propre lieu** (nom, commune géolocalisée, promesse, collectif) sur un terrain vierge. Le projet est enregistré en ligne (table `regen_projets`, protégée par compte) et mis en cache sur l'appareil.
+- La carte publique montre les lieux des testeurs qui ont coché « Afficher mon lieu sur la carte » (vue `regen_carte`, colonnes limitées), plus des projets d'exemple marqués « Exemple ».
+- Base utilisée : constante `ENV` en haut de `assets/backend.js` (`"staging"` = evad-dev, `"prod"` = base réelle).
+
+### Mise en service
+1. Dans Supabase (staging d'abord) > SQL Editor : exécuter `supabase/regen-beta.sql`.
+2. Authentication > URL Configuration : ajouter `https://evadconnect.github.io/demo-cliquable/` (et `http://localhost:8790/`) aux Redirect URLs, pour les liens de confirmation et de mot de passe oublié.
+3. Quand c'est validé : relancer le SQL sur la base prod et passer `ENV` à `"prod"`.
 
 ## Lancer en local
 

@@ -187,7 +187,7 @@ window.EVAD_DATA = {
   /* Retours d'expérience affichés à l'étape Nourrir */
   temoignage: {
     texte: "Au début on pensait qu'il fallait tout savoir avant de commencer. En fait, chaque preuve posée nous a donné envie d'aller plus loin, et les voisins sont venus d'eux-mêmes.",
-    auteur: "Maryse, maraîchère du collectif"
+    auteur: "Témoignage d'un collectif (exemple)"
   },
 
   /* Correspondances pour l'aperçu d'export (étape Nourrir) */
@@ -374,7 +374,7 @@ window.EVAD_DATA = {
       "quest-start": "C'est parti. Quand ce sera fait, apporte une preuve à l'étape Nourrir.",
       "quest-proof": "Pour passer en vérifié, il me faut une preuve de terrain. Je t'emmène à l'étape Nourrir ?",
       "proof": "Preuve reçue et reliée à ton lieu. Regarde : il passe au vert.",
-      "proof3": "Trois preuves posées : La Friche des Tanneurs passe au vert sur la carte. Elle peut maintenant inspirer d'autres collectifs.",
+      "proof3": "Trois preuves posées : ton lieu passe au vert sur la carte. Il peut maintenant inspirer d'autres collectifs.",
       "export": "Voici un aperçu construit uniquement à partir de tes preuves vérifiées. Rien n'est inventé."
     }
   }

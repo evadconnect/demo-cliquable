@@ -714,3 +714,21 @@ body[data-page="index"] .stage { padding: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- bêta ---------- */
+.badge-exemple { background: #EDEAE0; color: var(--gris-fonce); }
+.gate-ok { background: #DCE8D9; color: var(--foret); border-radius: var(--r-sm); padding: 10px 12px; font-size: .88rem; margin: 0 0 10px; }
+.gate-forgot { display: block; margin: 10px auto 0; font-size: .86rem; }
+.snav-sync { display: block; font-size: .74rem; color: var(--texte-2); }
+.snav-sync[data-state="error"] { color: var(--terre-fonce); }
+.snav-sync[data-state="saved"]::before { content: "✓ "; color: var(--mousse); }
+.geo-row { display: flex; gap: 8px; }
+.geo-row input { flex: 1; min-width: 0; }
+.geo-results { list-style: none; margin: 6px 0 0; padding: 0; border: 1px solid var(--bord); border-radius: var(--r-sm); background: var(--blanc); max-height: 200px; overflow-y: auto; }
+.geo-results:empty { display: none; }
+.geo-results button { display: block; width: 100%; text-align: left; padding: 8px 12px; border: 0; background: none; font-size: .86rem; cursor: pointer; }
+.geo-results button:hover, .geo-results button:focus { background: var(--creme); }
+.geo-status { font-size: .8rem; color: var(--texte-2); margin: 4px 0 0; }
+.check-line { display: flex; gap: 8px; align-items: flex-start; font-size: .88rem; }
+.check-line input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--foret); }
+.boot-loading { padding: 40px; text-align: center; color: var(--texte-2); }

@@ -1,19 +1,25 @@
-/* EVAD, démo cliquable : état (localStorage), navigation et logique des écrans. */
+/* EVAD bêta : état du projet (synchronisé avec Supabase), navigation et logique des écrans. */
 (function () {
   "use strict";
   var D = window.EVAD_DATA;
-  var KEY = "evad-demo-state-v1";
+  var KEY_PREFIX = "evad-beta-v2-";
   var SOL = {}; D.solutions.forEach(function (s) { SOL[s.id] = s; });
   var ICI = {}; D.ici.forEach(function (x) { ICI[x.id] = x; });
   var FAM = {}; D.familles.forEach(function (f) { FAM[f.id] = f; });
   var STATUS_LABEL = { prevu: "prévu", encours: "en cours", verifie: "vérifié" };
+  var DATA_KEYS = ["pinned", "spaces", "selectedSpace", "chosen", "icis", "placed", "proofs"];
+
+  var user = null;          // compte Supabase connecté
+  var publicPlaces = [];    // lieux publics des autres testeurs
+  var syncStatus = "idle";  // idle | saving | saved | error
 
   /* ================= État ================= */
   function defaultState() {
     return {
-      v: 1,
-      session: null,
-      project: { name: "", promesse: "", reve: "", loc: null },
+      v: 2,
+      projectId: null,
+      localUpdatedAt: 0,
+      project: { name: "", promesse: "", reve: "", collectif: "", lieu: "", loc: null, public: true },
       pinned: [],
       spaces: D.espaces.map(function (e) { return { id: e.id, nom: e.nom }; }),
       selectedSpace: D.espaces[0].id,
@@ -24,20 +30,65 @@
       proposals: []
     };
   }
-  var state = load();
-  function load() {
+  var state = defaultState();
+  function cacheKey() { return KEY_PREFIX + (user ? user.id : "invite"); }
+  function loadCache() {
     try {
-      var raw = localStorage.getItem(KEY);
-      if (raw) { var s = JSON.parse(raw); if (s && s.v === 1) return Object.assign(defaultState(), s); }
-    } catch (e) { /* stockage indisponible : on reste en mémoire */ }
-    return defaultState();
+      var raw = localStorage.getItem(cacheKey());
+      if (raw) { var s = JSON.parse(raw); if (s && s.v === 2) return Object.assign(defaultState(), s); }
+    } catch (e) { /* stockage indisponible */ }
+    return null;
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } }
+  function writeCache() { try { localStorage.setItem(cacheKey(), JSON.stringify(state)); } catch (e) { /* ignore */ } }
+  function save() { state.localUpdatedAt = Date.now(); writeCache(); scheduleSync(); }
   function uid(p) { return (p || "x") + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
-  function projectName() { return state.project.name.trim() || D.projet.nom; }
+  // Projet <-> ligne Supabase
+  function toRow() {
+    var p = state.project, data = {};
+    DATA_KEYS.forEach(function (k) { data[k] = state[k]; });
+    return { nom: p.name.trim(), promesse: p.promesse.trim(), reve: p.reve.trim(), collectif: p.collectif.trim(), lieu: p.lieu.trim(),
+      lat: p.loc ? p.loc.lat : null, lng: p.loc ? p.loc.lng : null, public: p.public !== false, statut: projectStatut(), data: data };
+  }
+  function fromRow(r) {
+    var s = defaultState(), d = r.data || {};
+    s.projectId = r.id;
+    s.localUpdatedAt = Date.parse(r.updated_at) || 0;
+    s.project = { name: r.nom || "", promesse: r.promesse || "", reve: r.reve || "", collectif: r.collectif || "", lieu: r.lieu || "",
+      loc: (r.lat != null && r.lng != null) ? { lat: r.lat, lng: r.lng } : null, public: r.public !== false };
+    DATA_KEYS.forEach(function (k) { if (d[k] !== undefined) s[k] = d[k]; });
+    return s;
+  }
+
+  // Sauvegarde en ligne, différée pour regrouper les frappes.
+  var syncTimer = null;
+  function scheduleSync() {
+    if (!user || !window.EvadDB) return;
+    clearTimeout(syncTimer); setSync("saving");
+    syncTimer = setTimeout(syncNow, 600);
+  }
+  function syncNow() {
+    syncTimer = null;
+    return EvadDB.saveProject(state.projectId, toRow()).then(function (id) {
+      if (!state.projectId) { state.projectId = id; writeCache(); }
+      setSync("saved");
+    }).catch(function (e) { console.warn("[EVAD] sauvegarde :", e.message); setSync("error"); });
+  }
+  function setSync(s) {
+    syncStatus = s;
+    var el = $(".snav-sync"); if (!el) return;
+    el.dataset.state = s;
+    el.textContent = { saving: "Enregistrement…", saved: "Enregistré en ligne", error: "Hors ligne : gardé sur cet appareil", idle: "" }[s] || "";
+  }
+
+  function projectName() { return state.project.name.trim() || "Mon lieu"; }
   function verifiedCount() { return state.proofs.length; }
-  function fricheStatut() { return verifiedCount() >= 3 ? "prouve" : D.projet.statutInitial; }
+  function projectStatut() {
+    if (verifiedCount() >= 3) return "prouve";
+    if (verifiedCount() > 0 || state.placed.some(function (p) { return p.status !== "prevu"; })) return "encours";
+    return "reve";
+  }
+  var fricheStatut = projectStatut;
   function spaceName(id) { var s = state.spaces.find(function (x) { return x.id === id; }); return s ? s.nom : "Lieu"; }
   function stepDone(id) {
     if (id === "rever") return !!state.project.name.trim();
@@ -102,8 +153,13 @@
     return dlg;
   }
 
-  /* ================= Accès (bêta, sans backend) ================= */
-  function hasSession() { return !!(state.session && state.session.name); }
+  /* ================= Accès (comptes Supabase) ================= */
+  function hasSession() { return !!user; }
+  function userName() {
+    if (!user) return "";
+    var m = user.user_metadata || {};
+    return m.prenom || m.first_name || (user.email || "").split("@")[0];
+  }
 
   // Point de bascule connexion / créer un accès avant d'entrer dans l'espace de travail.
   function openGate(mode, redirect, blocking) {
@@ -111,8 +167,10 @@
     var g = $("#gate");
     if (!g) { g = document.createElement("div"); g.id = "gate"; g.className = "gate"; document.body.appendChild(g); }
     var copy = {
-      creer: { title: "Créer mon accès", sub: "Choisis un prénom pour entrer dans ton espace et lancer ton projet.", submit: "Créer mon accès" },
-      connecter: { title: "Se connecter", sub: "Entre le prénom de ton accès pour retrouver ton espace.", submit: "Se connecter" }
+      creer: { title: "Créer mon accès", sub: "Ton accès EVAD garde ton projet en ligne et le retrouve sur tous tes appareils.", submit: "Créer mon accès" },
+      connecter: { title: "Se connecter", sub: "Retrouve ton espace et ton lieu.", submit: "Se connecter" },
+      oubli: { title: "Mot de passe oublié", sub: "Entre ton email : tu recevras un lien pour choisir un nouveau mot de passe.", submit: "Recevoir le lien" },
+      nouveau: { title: "Nouveau mot de passe", sub: "Choisis ton nouveau mot de passe.", submit: "Enregistrer" }
     };
     g.innerHTML =
       '<div class="gate-card" role="dialog" aria-modal="true" aria-labelledby="gate-title">' +
@@ -120,42 +178,65 @@
       '<div class="gate-tabs" role="tablist">' +
       '<button type="button" class="gate-tab" role="tab" data-mode="creer">Créer un accès</button>' +
       '<button type="button" class="gate-tab" role="tab" data-mode="connecter">J\'ai déjà un accès</button>' +
-      '</div>' +
+      "</div>" +
       '<h2 id="gate-title"></h2><p class="gate-sub"></p>' +
       '<form id="gate-form" novalidate>' +
-      '<div class="field"><label for="gate-nom">Prénom</label><input id="gate-nom" type="text" autocomplete="given-name" aria-describedby="gate-err"></div>' +
-      '<div class="field"><label for="gate-email">Email <span class="hint">facultatif</span></label><input id="gate-email" type="email" autocomplete="email"></div>' +
-      '<p class="err" id="gate-err" hidden>Donne un prénom pour continuer.</p>' +
+      '<div class="field" data-for="creer"><label for="gate-nom">Prénom</label><input id="gate-nom" type="text" autocomplete="given-name"></div>' +
+      '<div class="field" data-for="creer connecter oubli"><label for="gate-email">Email</label><input id="gate-email" type="email" autocomplete="email"></div>' +
+      '<div class="field" data-for="creer connecter nouveau"><label for="gate-pw">Mot de passe <span class="hint">6 caractères minimum</span></label><input id="gate-pw" type="password" autocomplete="current-password"></div>' +
+      '<p class="err" id="gate-err" role="alert" hidden></p>' +
+      '<p class="gate-ok" id="gate-ok" role="status" hidden></p>' +
       '<button type="submit" class="btn btn-primary btn-lg" id="gate-submit" style="width:100%"></button>' +
-      '</form>' +
-      '<p class="gate-note">Bêta : pas de mot de passe. Ton accès et ton projet restent sur cet appareil.</p>' +
+      "</form>" +
+      '<button type="button" class="link-btn gate-forgot" id="gate-forgot">Mot de passe oublié ?</button>' +
+      '<p class="gate-note">Bêta EVAD : ton projet est enregistré sur ton compte. La carte et le Commun restent ouverts à tous.</p>' +
       '<a class="gate-back link-btn" href="index.html">Revenir à la carte</a>';
 
+    function field(id) { return $("#" + id, g); }
+    function showErr(msg) { var e = field("gate-err"); e.textContent = msg; e.hidden = !msg; }
+    function showOk(msg) { var o = field("gate-ok"); o.textContent = msg; o.hidden = !msg; }
     function setMode(m) {
-      mode = m;
+      mode = m; showErr(""); showOk("");
       $all(".gate-tab", g).forEach(function (t) { var on = t.dataset.mode === m; t.classList.toggle("is-active", on); t.setAttribute("aria-selected", String(on)); });
+      $(".gate-tabs", g).hidden = (m === "nouveau");
+      $all("[data-for]", g).forEach(function (f) { f.hidden = f.dataset.for.split(" ").indexOf(m) < 0; });
+      field("gate-pw").setAttribute("autocomplete", m === "connecter" ? "current-password" : "new-password");
+      field("gate-forgot").hidden = (m !== "connecter");
       $("#gate-title", g).textContent = copy[m].title;
       $(".gate-sub", g).textContent = copy[m].sub;
-      $("#gate-submit", g).textContent = copy[m].submit;
+      field("gate-submit").textContent = copy[m].submit;
+      var first = $("[data-for]:not([hidden]) input", g); if (first) setTimeout(function () { first.focus(); }, 30);
     }
-    $all(".gate-tab", g).forEach(function (t) { t.addEventListener("click", function () { setMode(t.dataset.mode); $("#gate-nom", g).focus(); }); });
-    $("#gate-form", g).addEventListener("submit", function (e) {
+    $all(".gate-tab", g).forEach(function (t) { t.addEventListener("click", function () { setMode(t.dataset.mode); }); });
+    field("gate-forgot").addEventListener("click", function () { setMode("oubli"); });
+
+    field("gate-form").addEventListener("submit", function (e) {
       e.preventDefault();
-      var nom = $("#gate-nom", g).value.trim();
-      if (!nom) { $("#gate-err", g).hidden = false; $("#gate-nom", g).setAttribute("aria-invalid", "true"); $("#gate-nom", g).focus(); return; }
-      state.session = { name: nom, email: $("#gate-email", g).value.trim() || null, since: Date.now() };
-      save();
-      if (blocking) location.reload(); else location.href = redirect || "rever.html";
+      if (!window.EvadDB || !EvadDB.ready()) { showErr("Connexion au service impossible pour l'instant. Vérifie ta connexion internet."); return; }
+      var nom = field("gate-nom").value.trim(), email = field("gate-email").value.trim(), pw = field("gate-pw").value;
+      if (mode === "creer" && !nom) { showErr("Donne ton prénom."); field("gate-nom").focus(); return; }
+      if (mode !== "nouveau" && !email) { showErr("Donne ton adresse email."); field("gate-email").focus(); return; }
+      if (mode !== "oubli" && pw.length < 6) { showErr("Le mot de passe doit faire au moins 6 caractères."); field("gate-pw").focus(); return; }
+      var btn = field("gate-submit"); btn.disabled = true; showErr("");
+      var done = function () { if (blocking) location.reload(); else location.href = redirect || "rever.html"; };
+      var job =
+        mode === "creer" ? EvadDB.signUp(email, pw, nom).then(function (r) {
+          if (r.needsConfirm) { showOk("Presque fini : clique le lien envoyé à " + email + " pour confirmer ton accès, puis reviens te connecter."); setMode("connecter"); field("gate-email").value = email; showOk("Lien de confirmation envoyé à " + email + ". Une fois confirmé, connecte-toi ici."); }
+          else done();
+        })
+        : mode === "connecter" ? EvadDB.signIn(email, pw).then(done)
+        : mode === "oubli" ? EvadDB.resetPassword(email).then(function () { showOk("Si un accès existe pour " + email + ", un lien vient d'être envoyé."); })
+        : EvadDB.updatePassword(pw).then(function () { showOk("Mot de passe mis à jour."); setTimeout(done, 800); });
+      job.catch(function (er) { showErr(er.message); }).then(function () { btn.disabled = false; });
     });
     setMode(mode);
     g.classList.add("open");
     document.body.classList.add("gate-open");
-    setTimeout(function () { $("#gate-nom", g).focus(); }, 40);
   }
 
   function logout() {
-    state.session = null; save();
-    location.href = "index.html";
+    var go = function () { location.href = "index.html"; };
+    if (window.EvadDB) EvadDB.signOut().then(go, go); else go();
   }
 
   /* ================= Barre du haut et pied de page ================= */
@@ -219,7 +300,7 @@
         '<span class="snav-dot" aria-hidden="true">' + (done && !active ? ICON.check : n + 1) + "</span><span>" + s.label + "</span></a></li>";
     }).join("");
     var html = '<div class="deva-nav">' +
-      '<a class="snav-place" href="index.html?focus=friche" title="Voir mon lieu sur la carte">' +
+      '<a class="snav-place" href="index.html?focus=mine" title="Voir mon lieu sur la carte">' +
       '<span class="pill-dot st-' + st + '" aria-hidden="true"></span>' +
       '<span class="snav-place-txt"><span class="snav-kicker">Mon lieu</span><strong>' + esc(projectName()) + '</strong></span></a>' +
       '<nav class="snav-regen" aria-label="Parcours REGEN"><p class="snav-title">Parcours REGEN</p><ol>' + steps + "</ol></nav>" +
@@ -230,36 +311,49 @@
     var foot = inner.querySelector(".deva-foot");
     if (foot && !foot.querySelector(".snav-logout")) {
       foot.insertAdjacentHTML("beforeend",
-        (hasSession() ? '<p class="snav-user">Connecté : <strong>' + esc(state.session.name) + "</strong></p>" : "") +
+        (hasSession() ? '<p class="snav-user">Connecté : <strong>' + esc(userName()) + '</strong> <span class="snav-sync" aria-live="polite"></span></p>' : "") +
         '<button type="button" class="snav-logout">' + ICON.logout + "<span>Déconnexion</span></button>");
       var lo = foot.querySelector(".snav-logout");
       if (lo) lo.addEventListener("click", logout);
+      setSync(syncStatus);
     }
   }
   function renderFooter() {
     var f = $("#footer"); if (!f) return;
     f.className = "footer";
-    f.innerHTML = "<p>Démo EVAD. Données fictives, rien ne quitte ton navigateur.</p>" +
-      '<button type="button" class="link-btn" id="reset-demo">Réinitialiser la démo</button>';
-    $("#reset-demo").addEventListener("click", function () {
-      if (!window.confirm("Remettre la démo à zéro ? Le projet, les solutions, les quêtes et les preuves seront effacés.")) return;
-      try { localStorage.removeItem(KEY); localStorage.removeItem("evad-demo-ui"); } catch (e) { /* ignore */ }
-      state = defaultState();
-      location.href = "index.html";
-    });
+    f.innerHTML = "<p>EVAD bêta" + (window.EvadDB && EvadDB.env !== "prod" ? " (base de test)" : "") +
+      ". Ton projet est enregistré sur ton compte ; la carte et le Commun sont ouverts à tous.</p>" +
+      '<a class="link-btn" href="mailto:contact@evad.org?subject=Retour%20b%C3%AAta%20EVAD">Donner un retour</a>';
   }
   function refreshChrome() { renderTopbar(document.body.dataset.page); renderSidebarNav(document.body.dataset.page); }
 
   /* ================= Projets et maquettes ================= */
+  // Terrain vierge : le lieu de chaque testeur part d'une parcelle vide à aménager.
+  var BLANK_SCENE = { grille: 9, chemin: null, structures: [], personnages: [] };
+  function jaugesFromPlaced(placed) {
+    var r = { ecologie: 0, social: 0, economie: 0 };
+    (placed || []).forEach(function (p) {
+      var e = p.status === "verifie" && SOL[p.solId] && SOL[p.solId].effets; if (!e) return;
+      for (var k in r) r[k] += e[k] || 0;
+    });
+    return { ecologie: Math.min(4, Math.round(r.ecologie / 1.5)), social: Math.min(4, Math.round(r.social / 1.5)), economie: Math.min(4, Math.round(r.economie / 1.5)) };
+  }
+  function myProject() {
+    var p = state.project;
+    return { id: "mine", isMine: true, nom: projectName(), lieu: p.lieu.trim() || "Lieu à préciser", statut: projectStatut(),
+      promesse: p.promesse.trim() || "Promesse à écrire à l'étape Rêver.", collectif: p.collectif.trim() || "Collectif à présenter à l'étape Rêver.",
+      jauges: jaugesFromPlaced(state.placed) };
+  }
   function allProjects() {
-    var st = fricheStatut();
-    var ver = familySums(function (p) { return p.status === "verifie"; });
-    var friche = {
-      id: "friche", nom: projectName(), lieu: D.projet.lieu, statut: st, pos: D.projet.pos, isMine: true,
-      promesse: state.project.promesse.trim() || D.projet.promesse, collectif: D.projet.collectif,
-      jauges: { ecologie: Math.min(4, Math.round(ver.ecologie / 1.5)), social: Math.min(4, Math.round(ver.social / 1.5)), economie: Math.min(4, Math.round(ver.economie / 1.5)) }
-    };
-    return [friche].concat(D.projets);
+    var list = [];
+    if (hasSession() && state.project.loc) list.push(myProject());
+    publicPlaces.forEach(function (r) {
+      if (r.id === state.projectId) return;
+      list.push({ id: "p:" + r.id, isPublic: true, nom: r.nom, lieu: r.lieu || "", statut: r.statut || "reve", lat: r.lat, lng: r.lng,
+        promesse: r.promesse || "", collectif: r.collectif || "", placedRemote: r.placed || [], jauges: jaugesFromPlaced(r.placed) });
+    });
+    D.projets.forEach(function (p) { list.push(Object.assign({ isExample: true }, p)); });
+    return list;
   }
   function freeCells(structures, n, path) {
     var occ = {};
@@ -270,15 +364,20 @@
     return out;
   }
   function sceneOptionsFor(project) {
-    if (project.id === "friche") {
-      return { grille: D.scene.grille, chemin: D.scene.chemin, structures: D.scene.structures, personnages: D.scene.personnages, placed: state.placed, solutions: SOL, vitalite: verifiedCount() / 3, label: "Maquette 2.5D de " + projectName() };
+    if (project.isMine || project.isPublic) {
+      var placed = project.isMine ? state.placed : project.placedRemote;
+      var vit = project.isMine ? verifiedCount() / 3 : { reve: 0, encours: 0.4, prouve: 1 }[project.statut];
+      return Object.assign({}, BLANK_SCENE, { placed: placed, solutions: SOL, vitalite: vit, label: "Maquette 2.5D de " + project.nom });
     }
     var structures = D.presets[project.preset] || [];
     var cells = freeCells(structures, 9, 4);
     var map = { reve: "prevu", encours: "encours", prouve: "verifie" };
-    var placed = (project.solutions || []).map(function (s, k) { var c = cells[k * 3 % cells.length]; return { uid: project.id + k, solId: s[0], status: map[s[1]], i: c.i, j: c.j }; });
-    return { grille: 9, chemin: 4, structures: structures, placed: placed, solutions: SOL, personnages: [{ i: 4, j: 2, c: "#C06848" }, { i: 6, j: 4, c: "#2C5234" }],
+    var placedEx = (project.solutions || []).map(function (s, k) { var c = cells[k * 3 % cells.length]; return { uid: project.id + k, solId: s[0], status: map[s[1]], i: c.i, j: c.j }; });
+    return { grille: 9, chemin: 4, structures: structures, placed: placedEx, solutions: SOL, personnages: [{ i: 4, j: 2, c: "#C06848" }, { i: 6, j: 4, c: "#2C5234" }],
       vitalite: { reve: 0, encours: 0.4, prouve: 1 }[project.statut], label: "Maquette 2.5D de " + project.nom };
+  }
+  function myScene(extra) {
+    return Object.assign({}, BLANK_SCENE, { placed: state.placed, solutions: SOL, vitalite: verifiedCount() / 3, label: "Maquette 2.5D de " + projectName() }, extra || {});
   }
 
   function jaugesHtml(j) {
@@ -308,10 +407,15 @@
     '<text x="560" y="548" class="map-label" transform="rotate(20 560 548)">Garonne</text><text x="760" y="392" class="map-label">Dordogne</text><text x="330" y="236" class="map-label" transform="rotate(-6 330 236)">Charente</text><text x="250" y="660" class="map-label">Landes</text>';
 
   /* Coordonnées réelles d'un projet. Le lieu créé par le visiteur est géolocalisable
-     (state.project.loc), sinon il prend la position par défaut de la Friche. */
+     (state.project.loc) ; tant qu'il n'est pas situé, il n'apparaît pas. */
   function projectLoc(p) {
-    if (p.isMine) return state.project.loc || { lat: D.projet.lat, lng: D.projet.lng };
+    if (p.isMine) return state.project.loc;
     return (p.lat != null) ? { lat: p.lat, lng: p.lng } : null;
+  }
+  function distKm(a, b) {
+    var R = 6371, t = Math.PI / 180, dLat = (b.lat - a.lat) * t, dLng = (b.lng - a.lng) * t;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a.lat * t) * Math.cos(b.lat * t) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.sqrt(h));
   }
 
   /* Carte open source (Leaflet + OpenStreetMap). Repli sur la carte SVG stylisée si Leaflet
@@ -361,6 +465,7 @@
     var projects = allProjects();
     var svg = '<svg class="map-svg" viewBox="' + (opts.viewBox || "0 0 1000 700") + '" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Carte vivante des projets régénératifs en Nouvelle-Aquitaine">' + MAP_DECOR + '<g class="markers">';
     projects.forEach(function (p) {
+      if (!p.pos) return; // repli hors-ligne : seuls les exemples ont une position stylisée
       var hidden = opts.filter && !opts.filter(p);
       var cls = "marker st-" + p.statut + (p.isMine ? " is-mine" : "") + (opts.selected === p.id ? " is-selected" : "") + (hidden ? " is-hidden" : "") + (opts.highlight && opts.highlight(p) ? " is-highlight" : "");
       var sc = p.isMine ? 1.25 : 1;
@@ -388,7 +493,7 @@
     function filter(p) {
       if (!fStat[p.statut]) return false;
       if (fFam && !p.isMine && !(p.solutions || []).some(function (s) { return SOL[s[0]].famille === fFam; })) return false;
-      if (nearMe && !p.isMine) { var dx = p.pos.x - D.projet.pos.x, dy = p.pos.y - D.projet.pos.y; if (Math.sqrt(dx * dx + dy * dy) > 230) return false; }
+      if (nearMe && !p.isMine) { var me = state.project.loc, at = projectLoc(p); if (me && at && distKm(me, at) > 80) return false; }
       return true;
     }
     function draw() { renderMap(host, { onSelect: openFiche, selected: selected, filter: filter }); }
@@ -400,7 +505,9 @@
     var famSel = $("#f-famille");
     famSel.innerHTML = '<option value="">Toutes les familles</option>' + D.familles.map(function (f) { return '<option value="' + f.id + '">' + f.label + "</option>"; }).join("");
     famSel.addEventListener("change", function () { fFam = famSel.value; draw(); });
-    $("#f-near").addEventListener("click", function () { nearMe = !nearMe; this.setAttribute("aria-pressed", String(nearMe)); draw(); });
+    $("#f-near").addEventListener("click", function () {
+      if (!state.project.loc) { toast(hasSession() ? "Situe d'abord ton lieu à l'étape Rêver." : "Connecte-toi et situe ton lieu pour voir les projets autour de toi."); return; }
+      nearMe = !nearMe; this.setAttribute("aria-pressed", String(nearMe)); draw(); });
 
     var filters = $(".map-filters"), ftoggle = $("#filters-toggle");
     ftoggle.addEventListener("click", function () {
@@ -412,19 +519,18 @@
     var fiche = $("#fiche");
     function closeFiche() { $(".map-stage").classList.remove("has-fiche"); fiche.classList.remove("open"); fiche.setAttribute("aria-hidden", "true"); selected = null; draw(); }
     function openFiche(id) {
-      var p = projectById(id); selected = id; draw();
+      var p = projectById(id); if (!p) return; selected = id; draw();
       var nextStep = D.steps.find(function (s) { return !stepDone(s.id); }) || D.steps[4];
-      var sols = p.isMine
-        ? state.placed.map(function (x) { return [x.solId, { prevu: "reve", encours: "encours", verifie: "prouve" }[x.status]]; })
-        : p.solutions;
+      var toSol = function (x) { return [x.solId, { prevu: "reve", encours: "encours", verifie: "prouve" }[x.status]]; };
+      var sols = p.isMine ? state.placed.map(toSol) : p.isPublic ? (p.placedRemote || []).filter(function (x) { return SOL[x.solId]; }).map(toSol) : (p.solutions || []);
       var detail = sols.length
         ? "<ul class='sol-list'>" + sols.map(function (s) { return "<li><a class='sol-link' href='commun.html?sol=" + s[0] + "'><span class='dot st-" + s[1] + "' aria-hidden='true'></span><span>" + esc(SOL[s[0]].nom) + " <span class='muted'>(" + D.statuts[s[1]].label.toLowerCase() + ")</span></span><span class='sol-link-go' aria-hidden='true'>" + ICON.arrow + "</span></a></li>"; }).join("") + "</ul>"
         : "<p class='muted'>Aucune solution posée pour l'instant. Commence le parcours pour faire pousser ce lieu.</p>";
       fiche.innerHTML =
-        '<div class="fiche-head">' + statutBadge(p.statut) + '<button type="button" class="icon-btn" id="fiche-close" aria-label="Fermer la fiche">' + ICON.close + "</button></div>" +
+        '<div class="fiche-head"><span>' + statutBadge(p.statut) + (p.isExample ? ' <span class="badge badge-exemple" title="Projet fictif, pour illustrer">Exemple</span>' : "") + '</span><button type="button" class="icon-btn" id="fiche-close" aria-label="Fermer la fiche">' + ICON.close + "</button></div>" +
         '<div class="fiche-scene" id="fiche-scene"></div>' +
         '<h2 class="fiche-title" id="fiche-title">' + esc(p.nom) + "</h2>" +
-        '<p class="fiche-lieu">' + esc(p.lieu) + (p.isMine ? " · ton projet" : "") + "</p>" +
+        '<p class="fiche-lieu">' + esc(p.lieu) + (p.isMine ? " · ton projet" : p.isPublic ? " · lieu d'un collectif bêta" : "") + "</p>" +
         '<p class="fiche-promesse">' + esc(p.promesse) + "</p>" +
         '<p class="fiche-collectif"><strong>Collectif</strong> ' + esc(p.collectif) + "</p>" +
         "<h3 class='mini-title'>Impact vérifié</h3>" + jaugesHtml(p.jauges) +
@@ -542,9 +648,9 @@
   function pageRever() {
     var sel = null;
     var host = $("#map");
-    function locateMove(lat, lng) { state.project.loc = { lat: lat, lng: lng }; save(); draw(); }
+    var locateMove = function (lat, lng) { state.project.loc = { lat: lat, lng: lng }; save(); draw(); };
     function draw() {
-      renderMap(host, { viewBox: "185 190 610 440", onSelect: select, selected: sel, locate: { onMove: locateMove }, highlight: function (p) { return p.statut === "prouve" || state.pinned.indexOf(p.id) >= 0; } });
+      renderMap(host, { viewBox: "185 190 610 440", onSelect: select, selected: sel, locate: { onMove: function (la, ln) { locateMove(la, ln); } }, highlight: function (p) { return p.statut === "prouve" || state.pinned.indexOf(p.id) >= 0; } });
     }
     function select(id) {
       sel = id; draw();
@@ -567,23 +673,66 @@
     }
     draw();
 
-    var name = $("#v-nom"), prom = $("#v-promesse"), reve = $("#v-reve"), next = $("#to-explorer");
+    var name = $("#v-nom"), prom = $("#v-promesse"), reve = $("#v-reve"), coll = $("#v-collectif"), pub = $("#v-public"), next = $("#to-explorer");
     name.value = state.project.name; prom.value = state.project.promesse; reve.value = state.project.reve;
+    coll.value = state.project.collectif; pub.checked = state.project.public !== false;
     function sync() {
-      state.project.name = name.value; state.project.promesse = prom.value; state.project.reve = reve.value; save();
+      state.project.name = name.value; state.project.promesse = prom.value; state.project.reve = reve.value;
+      state.project.collectif = coll.value; state.project.public = pub.checked; save();
       var ok = !!name.value.trim();
-      next.disabled = !ok; $("#next-hint").hidden = ok;
+      next.disabled = !ok;
+      $("#next-hint").hidden = ok && !!state.project.loc;
+      $("#next-hint").textContent = !ok ? "Donne un nom à ton lieu pour continuer." : "Pense à situer ton lieu pour qu'il apparaisse sur la carte.";
       refreshChrome();
     }
-    [name, prom, reve].forEach(function (f) { f.addEventListener("input", sync); });
+    [name, prom, reve, coll].forEach(function (f) { f.addEventListener("input", sync); });
+    pub.addEventListener("change", sync);
     var named = !!state.project.name.trim();
     name.addEventListener("change", function () { if (name.value.trim() && !named) { named = true; Deva.react("nom"); } });
-    $("#use-example").addEventListener("click", function () {
-      name.value = D.projet.nom; if (!prom.value.trim()) prom.value = D.projet.promesse; if (!reve.value.trim()) reve.value = D.projet.reveExemple;
-      sync(); if (!named) { named = true; Deva.react("nom"); }
-      next.focus();
-    });
     next.addEventListener("click", function () { if (!next.disabled) location.href = "explorer.html"; });
+
+    // Géolocalisation du lieu : recherche d'adresse (Nominatim, OpenStreetMap) ou clic sur la carte.
+    var geo = $("#v-geo"), geoRes = $("#v-geo-results"), geoStatus = $("#v-geo-status");
+    geo.value = state.project.lieu;
+    function shortLabel(r) {
+      var a = r.address || {}, town = a.city || a.town || a.village || a.municipality || a.hamlet || "";
+      var road = a.road ? (a.house_number ? a.house_number + " " : "") + a.road : "";
+      return [road, town].filter(Boolean).join(", ") + (a.postcode ? " (" + a.postcode + ")" : "") || r.display_name;
+    }
+    function setLieu(lat, lng, label, recenter) {
+      state.project.loc = { lat: +lat, lng: +lng };
+      if (label) { state.project.lieu = label; geo.value = label; }
+      geoStatus.textContent = "Lieu situé" + (label ? " : " + label : "") + ".";
+      save(); sync(); draw();
+      if (recenter && host._lmap) host._lmap.setView([+lat, +lng], 13);
+    }
+    function search() {
+      var q = geo.value.trim(); if (q.length < 3) { geoStatus.textContent = "Tape au moins 3 caractères."; return; }
+      geoStatus.textContent = "Recherche…"; geoRes.innerHTML = "";
+      fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&countrycodes=fr&accept-language=fr&q=" + encodeURIComponent(q))
+        .then(function (r) { return r.json(); })
+        .then(function (list) {
+          if (!list.length) { geoStatus.textContent = "Aucun résultat. Essaie avec la commune seule, ou clique directement la carte."; return; }
+          geoStatus.textContent = list.length + " résultat" + (list.length > 1 ? "s" : "") + " : choisis le bon.";
+          geoRes.innerHTML = list.map(function (r, k) { return '<li><button type="button" data-k="' + k + '">' + esc(r.display_name) + "</button></li>"; }).join("");
+          $all("button", geoRes).forEach(function (b) { b.addEventListener("click", function () {
+            var r = list[+b.dataset.k]; geoRes.innerHTML = ""; setLieu(r.lat, r.lon, shortLabel(r), true);
+          }); });
+          var first = $("button", geoRes); if (first) first.focus();
+        })
+        .catch(function () { geoStatus.textContent = "Recherche indisponible pour l'instant. Clique directement la carte pour situer ton lieu."; });
+    }
+    $("#v-geo-btn").addEventListener("click", search);
+    geo.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); search(); } });
+    // Clic ou glisser sur la carte : on situe, puis on retrouve la commune.
+    locateMove = function (lat, lng) {
+      setLieu(lat, lng, null, false);
+      fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=16&accept-language=fr&lat=" + lat + "&lon=" + lng)
+        .then(function (r) { return r.json(); })
+        .then(function (r) { if (r && r.address) { state.project.lieu = shortLabel(r); geo.value = state.project.lieu; geoStatus.textContent = "Lieu situé : " + state.project.lieu + "."; save(); } })
+        .catch(function () { /* la position suffit */ });
+    };
+    if (state.project.loc && host._lmap) host._lmap.setView([state.project.loc.lat, state.project.loc.lng], 11);
     sync();
 
     function drawPins() {
@@ -742,7 +891,7 @@
       $("#cancel-arm").addEventListener("click", function () { armed = null; drawBar(); drawHint(); });
     }
     function drawScene(focusUid) {
-      api = EvadScene.render(stage, { grille: D.scene.grille, chemin: D.scene.chemin, structures: D.scene.structures, personnages: D.scene.personnages, placed: state.placed, solutions: SOL, vitalite: verifiedCount() / 3, interactive: true, label: "Maquette 2.5D de " + projectName() + ". Glisse une solution sur une case d'herbe libre." });
+      api = EvadScene.render(stage, myScene({ interactive: true, label: "Maquette 2.5D de " + projectName() + ". Glisse une solution sur une case d'herbe libre." }));
       $all(".iso-item", stage).forEach(function (g) {
         g.addEventListener("click", function (e) { e.stopPropagation(); openMenu(g.dataset.uid, g); });
         g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openMenu(g.dataset.uid, g); } });
@@ -933,7 +1082,7 @@
     });
 
     function drawScene() {
-      EvadScene.render($("#nr-scene"), { grille: D.scene.grille, chemin: D.scene.chemin, structures: D.scene.structures, personnages: D.scene.personnages, placed: state.placed, solutions: SOL, vitalite: verifiedCount() / 3, justVerified: justVerified, label: "Maquette 2.5D de " + projectName() });
+      EvadScene.render($("#nr-scene"), myScene({ justVerified: justVerified }));
       var ver = state.placed.filter(function (p) { return p.status === "verifie"; }).length;
       $("#scene-state").textContent = !state.placed.length ? "Aucun élément posé." : ver === 0 ? "Rien n'est encore vérifié : le lieu attend ses premières preuves." : ver === state.placed.length ? "Tout le lieu est vérifié." : "Le lieu commence à verdir.";
     }
@@ -982,7 +1131,7 @@
       var on = $all("[data-export]").filter(function (b) { return b.getAttribute("aria-pressed") === "true"; }).map(function (b) { return b.dataset.export; });
       if (!on.length) { toast("Choisis au moins un cadre de rapport."); return; }
       var proofs = state.proofs;
-      var body = '<div class="report"><p class="report-meta">' + esc(projectName()) + " · " + esc(D.projet.lieu) + " · aperçu du " + frDate(today()) + "</p>";
+      var body = '<div class="report"><p class="report-meta">' + esc(projectName()) + (state.project.lieu.trim() ? " · " + esc(state.project.lieu.trim()) : "") + " · aperçu du " + frDate(today()) + "</p>";
       on.forEach(function (k) {
         var fw = D.exports[k];
         body += '<section class="report-sec"><h3>' + fw.titre + '</h3><p class="muted small">' + fw.intro + "</p>";
@@ -1002,19 +1151,50 @@
 
   /* ================= Démarrage ================= */
   var PAGES = { index: pageIndex, commun: pageCommun, rever: pageRever, explorer: pageExplorer, generer: pageGenerer, entreprendre: pageEntreprendre, nourrir: pageNourrir };
+  // Charge le compte, son projet (en ligne, ou le cache local s'il est plus récent) et les lieux publics.
+  function boot(page) {
+    var hasMap = page === "index" || page === "rever";
+    var db = window.EvadDB && EvadDB.ready() ? EvadDB : null;
+    var places = (db && hasMap) ? db.loadPublicPlaces().catch(function () { return []; }) : Promise.resolve([]);
+    if (!db) return places.then(function (pl) { publicPlaces = pl; });
+    return db.getUser().then(function (u) {
+      user = u;
+      if (!user) return;
+      var cache = loadCache();
+      return db.loadMyProject(user.id).then(function (row) {
+        var remote = row ? fromRow(row) : null;
+        if (cache && (!remote || cache.localUpdatedAt > remote.localUpdatedAt + 1000)) {
+          state = cache; if (remote && !state.projectId) state.projectId = remote.projectId;
+          if (cache.localUpdatedAt) scheduleSync(); // des changements locaux n'avaient pas été envoyés
+        } else if (remote) { state = remote; state.proposals = (cache && cache.proposals) || []; writeCache(); }
+        else if (cache) state = cache;
+      }).catch(function (e) {
+        console.warn("[EVAD] projet en ligne indisponible :", e.message);
+        if (cache) state = cache;
+        setSync("error");
+      });
+    }).then(function () { return places; }).then(function (pl) { publicPlaces = pl || []; });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     var page = document.body.dataset.page;
-    renderTopbar(page);
-    renderFooter();
-    var step = D.steps.find(function (s) { return s.id === page; });
-    // Garde-fou : l'espace de travail (parcours) demande un accès.
-    if (step && !hasSession()) { openGate("creer", page + ".html", true); return; }
-    if (window.Deva) {
-      if (page === "index") { Deva.init("accueil"); renderHomeVision(); }
-      else if (page === "commun") { Deva.init("commun"); }
-      else if (step) { Deva.init(step.deva); renderSidebarNav(page); }
-    }
-    if (PAGES[page]) PAGES[page]();
-    window.addEventListener("storage", function (e) { if (e.key === KEY) { state = load(); refreshChrome(); } });
+    document.body.classList.add("is-booting");
+    if (window.EvadDB) EvadDB.onRecovery(function () { openGate("nouveau", location.pathname.split("/").pop() || "index.html", true); });
+    boot(page).then(function () {
+      document.body.classList.remove("is-booting");
+      renderTopbar(page);
+      renderFooter();
+      var step = D.steps.find(function (s) { return s.id === page; });
+      // Garde-fou : l'espace de travail (parcours) demande un compte.
+      if (step && !hasSession()) { openGate("creer", page + ".html", true); return; }
+      if (window.Deva) {
+        if (page === "index") { Deva.init("accueil"); renderHomeVision(); }
+        else if (page === "commun") { Deva.init("commun"); }
+        else if (step) { Deva.init(step.deva); renderSidebarNav(page); }
+      }
+      if (PAGES[page]) PAGES[page]();
+    });
+    // Avant de quitter la page, on tente d'envoyer une sauvegarde en attente.
+    window.addEventListener("pagehide", function () { if (syncTimer) { clearTimeout(syncTimer); syncNow(); } });
   });
 })();

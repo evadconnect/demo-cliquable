@@ -27,16 +27,24 @@
     <div class="split">
       <section class="map-card" aria-label="Projets inspirants">
         <div id="map"></div>
-        <p class="map-hint">Clique un projet pour t'en inspirer, ou glisse le marqueur de ton lieu pour le situer</p>
+        <p class="map-hint">Clique un projet pour t'en inspirer. Clique la carte pour situer ton lieu, ou glisse son marqueur.</p>
         <div class="mini-fiche" id="mini-fiche" hidden></div>
       </section>
 
       <section class="panel" aria-labelledby="vision-title">
         <h2 id="vision-title">Ma vision</h2>
         <div class="field">
-          <label for="v-nom">Nom du projet</label>
-          <input id="v-nom" type="text" autocomplete="off" placeholder="Ex. La Friche des Tanneurs">
-          <button type="button" class="link-btn" id="use-example" style="align-self:flex-start">Utiliser l'exemple : La Friche des Tanneurs</button>
+          <label for="v-nom">Nom du lieu</label>
+          <input id="v-nom" type="text" autocomplete="off" placeholder="Ex. Le Jardin du Lavoir">
+        </div>
+        <div class="field">
+          <label for="v-geo">Où se trouve-t-il ? <span class="hint">commune ou adresse, puis choisis dans la liste</span></label>
+          <div class="geo-row">
+            <input id="v-geo" type="search" autocomplete="off" placeholder="Ex. Périgueux, rue des Tanneurs">
+            <button type="button" class="btn btn-ghost btn-sm" id="v-geo-btn">Chercher</button>
+          </div>
+          <ul class="geo-results" id="v-geo-results" aria-label="Résultats de la recherche d'adresse"></ul>
+          <p class="geo-status" id="v-geo-status" aria-live="polite"></p>
         </div>
         <div class="field">
           <label for="v-promesse">Promesse <span class="hint">en une phrase, ce que le lieu change pour les gens</span></label>
@@ -46,6 +54,11 @@
           <label for="v-reve">Dans 3 ans, on rêve de voir…</label>
           <textarea id="v-reve" rows="3"></textarea>
         </div>
+        <div class="field">
+          <label for="v-collectif">Le collectif <span class="hint">qui porte le lieu</span></label>
+          <textarea id="v-collectif" rows="2" placeholder="Ex. 6 habitants, une association de quartier, un maraîcher"></textarea>
+        </div>
+        <label class="check-line"><input type="checkbox" id="v-public" checked> <span>Afficher mon lieu sur la carte publique EVAD (nom, commune, promesse et avancement)</span></label>
         <h3 class="mini-title">Projets épinglés</h3>
         <ul class="pins" id="pins"></ul>
         <div class="vision-actions">
@@ -59,6 +72,8 @@
 </div>
 <footer id="footer"></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/backend.js"></script>
 <script src="assets/data.js"></script>
 <script src="assets/scene.js"></script>
 <script src="assets/deva.js"></script>
