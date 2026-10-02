@@ -280,6 +280,10 @@ body.deva-closed .shell { grid-template-columns: 72px minmax(0, 1fr); }
 /* ---------- carte Leaflet (open source) ---------- */
 .map-stage #map, .map-card #map { z-index: 0; isolation: isolate; background: #DCE7DD; }
 .leaflet-container { font-family: var(--f-texte); background: #DCE7DD; }
+/* Harmonisation solarpunk 2030 : fond plus chaud, verts accentués, routes adoucies. */
+.leaflet-tile { filter: sepia(.28) saturate(1.08) hue-rotate(-12deg) brightness(1.05) contrast(.9); }
+/* Voile vert/crème léger pour lier la carte à la charte (sous les marqueurs). */
+.leaflet-tile-pane::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 40%, rgba(169, 196, 138, .12), rgba(95, 127, 82, .16)); mix-blend-mode: multiply; pointer-events: none; }
 .leaflet-container a { color: var(--foret); }
 .map-card { isolation: isolate; }
 .lmark-ico { background: none !important; border: 0 !important; }
