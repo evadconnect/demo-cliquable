@@ -9,7 +9,10 @@ HTML, CSS et JavaScript sans framework ni build ; comptes et données sur Supaba
 
 - Les comptes sont ceux de Supabase (email + mot de passe), les mêmes que le prototype EVAD.
 - Chaque testeur crée **son propre lieu** (nom, commune géolocalisée, promesse, collectif) sur un terrain vierge. Le projet est enregistré en ligne (table `regen_projets`, protégée par compte) et mis en cache sur l'appareil.
-- La carte publique montre les lieux des testeurs qui ont coché « Afficher mon lieu sur la carte » (vue `regen_carte`, colonnes limitées), plus des projets d'exemple marqués « Exemple ».
+- La carte publique montre les lieux des testeurs qui ont coché « Afficher mon lieu sur la carte » (case décochée par défaut : opt-in), plus des projets d'exemple marqués « Exemple ». La vue `regen_carte` ne publie que des colonnes limitées, la commune (pas la rue) et une position arrondie à environ 1 km.
+- Les solutions proposées au Commun partent dans la table `regen_propositions` (une ligne par proposition, statut `en_relecture`, `acceptee` ou `refusee`). La relecture se fait depuis le tableau de bord Supabase. Sans compte, la proposition reste sur l'appareil et part à la prochaine connexion.
+- Bibliothèques externes épinglées avec contrôle d'intégrité (SRI) : Supabase JS 2.117.2 et Leaflet 1.9.4, via jsDelivr. Pour monter de version, recalculer le hash `integrity` (par exemple `openssl dgst -sha384 -binary fichier.js | openssl base64 -A` sur le fichier du paquet npm).
+- `mentions.html` : mentions légales et informations RGPD, liées depuis le pied de page.
 - Base utilisée : constante `ENV` en haut de `assets/backend.js` (`"staging"` = evad-dev, `"prod"` = base réelle).
 
 ### Mise en service
@@ -46,10 +49,10 @@ En ligne de commande : `npx vercel` depuis ce dossier.
 
 ## Bon à savoir
 
-- L'état (nom du projet, solutions choisies et posées, quêtes, preuves) vit dans le `localStorage` du navigateur. Le bouton « Réinitialiser la démo » en pied de page remet tout à zéro.
+- L'état du projet (nom, solutions choisies et posées, quêtes, preuves) est enregistré en ligne sur le compte (table `regen_projets`) et mis en cache dans le `localStorage` du navigateur ; la version la plus récente l'emporte au chargement.
 - Deva ne produit jamais de chiffre d'impact : les jauges et les barres ne bougent que par les actions du visiteur.
 - La carte de l'accueil (et de Rêver) est une vraie carte open source : Leaflet + tuiles OpenStreetMap. Chaque lieu a de vraies coordonnées (`lat`/`lng` dans `data.js`), et sur Rêver on situe son propre lieu en cliquant la carte ou en glissant son marqueur. Hors-ligne, la démo retombe automatiquement sur une carte stylisée en SVG.
 - Le projet passe au vert sur la carte à partir de 3 preuves saisies à l'étape Nourrir.
-- Deux niveaux d'accès : les pages publiques (accueil, Le Commun) sont ouvertes à tous, avec Deva et un bouton « Se connecter » ; l'espace de travail (les 5 étapes du parcours) demande un accès. Entrer dans le parcours (ou cliquer « Créer mon projet ») ouvre l'écran d'accès « Créer un accès / J'ai déjà un accès ». Bêta sans backend : pas de mot de passe, un simple prénom crée une session locale (`state.session`) stockée sur l'appareil ; « Déconnexion » l'efface.
+- Deux niveaux d'accès : les pages publiques (accueil, Le Commun, mentions légales) sont ouvertes à tous, avec Deva et un bouton « Se connecter » ; l'espace de travail (les 5 étapes du parcours) demande un compte Supabase (email + mot de passe, voir plus haut). Entrer dans le parcours (ou cliquer « Créer mon projet ») ouvre l'écran d'accès « Créer un accès / J'ai déjà un accès », avec mot de passe oublié. « Déconnexion » ferme la session Supabase.
 - Sur l'accueil (public), la sidebar de gauche est Deva en mode accueil : elle présente la Vision 2030 et propose les portes (créer un projet, visiter la carte, parcourir le Commun). La carte occupe la droite.
 - Parcours type : accueil → « Créer mon projet » → « Utiliser l'exemple » → ajouter 3 ou 4 solutions → les poser sur la maquette → « C'est parti » → saisir 3 preuves → « Voir la carte ».

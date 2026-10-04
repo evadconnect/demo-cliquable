@@ -19,7 +19,7 @@
       v: 2,
       projectId: null,
       localUpdatedAt: 0,
-      project: { name: "", promesse: "", reve: "", collectif: "", lieu: "", loc: null, public: true },
+      project: { name: "", promesse: "", reve: "", collectif: "", lieu: "", loc: null, public: false },
       pinned: [],
       spaces: D.espaces.map(function (e) { return { id: e.id, nom: e.nom }; }),
       selectedSpace: D.espaces[0].id,
@@ -48,14 +48,14 @@
     var p = state.project, data = {};
     DATA_KEYS.forEach(function (k) { data[k] = state[k]; });
     return { nom: p.name.trim(), promesse: p.promesse.trim(), reve: p.reve.trim(), collectif: p.collectif.trim(), lieu: p.lieu.trim(),
-      lat: p.loc ? p.loc.lat : null, lng: p.loc ? p.loc.lng : null, public: p.public !== false, statut: projectStatut(), data: data };
+      lat: p.loc ? p.loc.lat : null, lng: p.loc ? p.loc.lng : null, public: p.public === true, statut: projectStatut(), data: data };
   }
   function fromRow(r) {
     var s = defaultState(), d = r.data || {};
     s.projectId = r.id;
     s.localUpdatedAt = Date.parse(r.updated_at) || 0;
     s.project = { name: r.nom || "", promesse: r.promesse || "", reve: r.reve || "", collectif: r.collectif || "", lieu: r.lieu || "",
-      loc: (r.lat != null && r.lng != null) ? { lat: r.lat, lng: r.lng } : null, public: r.public !== false };
+      loc: (r.lat != null && r.lng != null) ? { lat: r.lat, lng: r.lng } : null, public: r.public === true };
     DATA_KEYS.forEach(function (k) { if (d[k] !== undefined) s[k] = d[k]; });
     return s;
   }
@@ -245,7 +245,7 @@
   function renderTopbar(page) {
     var top = $("#topbar"); if (!top) return;
     // Pages avec sidebar : barre du haut réduite au logo (+ accès sur les pages publiques).
-    if (document.getElementById("deva")) {
+    if (document.getElementById("deva") || page === "mentions") {
       top.className = "topbar topbar-slim";
       var isWorkspace = D.steps.some(function (s) { return s.id === page; });
       var right = "";
@@ -323,7 +323,8 @@
     f.className = "footer";
     f.innerHTML = "<p>EVAD bêta" + (window.EvadDB && EvadDB.env !== "prod" ? " (base de test)" : "") +
       ". Ton projet est enregistré sur ton compte ; la carte et le Commun sont ouverts à tous.</p>" +
-      '<a class="link-btn" href="mailto:contact@evad.org?subject=Retour%20b%C3%AAta%20EVAD">Donner un retour</a>';
+      '<span class="footer-links"><a class="link-btn" href="mentions.html">Mentions légales et données</a> · ' +
+      '<a class="link-btn" href="mailto:contact@evad.org?subject=Retour%20b%C3%AAta%20EVAD">Donner un retour</a></span>';
   }
   function refreshChrome() { renderTopbar(document.body.dataset.page); renderSidebarNav(document.body.dataset.page); }
 
@@ -614,22 +615,65 @@
     $("#open-propose").addEventListener("click", openDrawer);
     $all("[data-close-propose]").forEach(function (b) { b.addEventListener("click", closeDrawer); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && drawer.classList.contains("open")) closeDrawer(); });
+    // Les propositions partent en ligne (table regen_propositions) quand on est connecté.
+    // Sans compte, elles restent sur l'appareil et partent à la prochaine connexion.
+    var canSend = function () { return hasSession() && window.EvadDB && EvadDB.ready(); };
+    function sendProposal(p) {
+      return EvadDB.saveProposal(p).then(function (id) { p.remoteId = id; p.envoye = true; });
+    }
+    function flushProposals() {
+      if (!canSend()) return Promise.resolve();
+      // Brouillons faits sans compte sur cet appareil : on les rattache au compte.
+      try {
+        var guestKey = KEY_PREFIX + "invite", guest = JSON.parse(localStorage.getItem(guestKey) || "null");
+        if (guest && guest.proposals && guest.proposals.length) {
+          guest.proposals.forEach(function (p) { if (!p.envoye && !state.proposals.some(function (q) { return q.id === p.id; })) state.proposals.push(p); });
+          guest.proposals = guest.proposals.filter(function (p) { return p.envoye; });
+          localStorage.setItem(guestKey, JSON.stringify(guest));
+        }
+      } catch (e) { /* stockage indisponible */ }
+      var pending = state.proposals.filter(function (p) { return !p.envoye; });
+      return pending.reduce(function (chain, p) {
+        return chain.then(function () { return sendProposal(p); }).catch(function (e) { console.warn("[EVAD] proposition :", e.message); });
+      }, Promise.resolve()).then(function () {
+        return EvadDB.loadMyProposals().then(function (rows) {
+          rows.forEach(function (r) { var p = state.proposals.find(function (q) { return q.remoteId === r.id; }); if (p) p.statut = r.statut; });
+        }).catch(function () { /* statuts indisponibles */ });
+      }).then(function () { writeCache(); drawProposals(); });
+    }
     $("#propose-form").addEventListener("submit", function (e) {
       e.preventDefault();
-      var nom = $("#p-nom").value.trim();
+      var form = this, nom = $("#p-nom").value.trim();
       if (!nom) { $("#p-nom").focus(); $("#p-nom").setAttribute("aria-invalid", "true"); return; }
-      state.proposals.push({ id: uid("pr"), nom: nom, famille: $("#p-famille").value, change: $("#p-change").value.trim(), ici: $all("input[name=ici]:checked").map(function (c) { return c.value; }), ou: $("#p-ou").value.trim() });
-      save();
-      this.reset(); $("#p-nom").removeAttribute("aria-invalid");
-      this.hidden = true; $("#propose-ok").hidden = false; $("#propose-ok").focus();
-      drawProposals();
+      var p = { id: uid("pr"), nom: nom, famille: $("#p-famille").value, change: $("#p-change").value.trim(), ici: $all("input[name=ici]:checked").map(function (c) { return c.value; }), ou: $("#p-ou").value.trim(), envoye: false };
+      state.proposals.push(p); writeCache();
+      var btn = $("button[type=submit]", form); btn.disabled = true;
+      var job = canSend() ? sendProposal(p).then(function () { return true; }, function (er) { console.warn("[EVAD] proposition :", er.message); return false; }) : Promise.resolve(false);
+      job.then(function (sent) {
+        writeCache(); btn.disabled = false;
+        form.reset(); $("#p-nom").removeAttribute("aria-invalid");
+        $("#propose-ok-msg").textContent = sent
+          ? "Merci, ta proposition est envoyée. Elle sera relue par la communauté et reliée à ses preuves avant d'entrer au Commun."
+          : canSend()
+            ? "Ta proposition est gardée sur cet appareil : l'envoi a échoué, il sera retenté à ta prochaine visite du Commun."
+            : "Ta proposition est gardée sur cet appareil. Connecte-toi pour l'envoyer à la relecture.";
+        $("#propose-login").hidden = sent || canSend();
+        form.hidden = true; $("#propose-ok").hidden = false; $("#propose-ok").focus();
+        drawProposals();
+      });
     });
+    $("#propose-login").addEventListener("click", function () { openGate("connecter", "commun.html", false); });
     function drawProposals() {
       var box = $("#my-proposals");
       box.hidden = !state.proposals.length;
-      box.innerHTML = '<h3 class="mini-title">Tes propositions en relecture</h3><ul>' + state.proposals.map(function (p) { return '<li><span class="badge st-reve">En relecture</span> ' + esc(p.nom) + ' <span class="muted">(' + FAM[p.famille].label + ")</span></li>"; }).join("") + "</ul>";
+      var LBL = { en_relecture: ["st-reve", "En relecture"], acceptee: ["st-prouve", "Acceptée"], refusee: ["st-encours", "Non retenue"] };
+      box.innerHTML = '<h3 class="mini-title">Tes propositions</h3><ul>' + state.proposals.map(function (p) {
+        var b = !p.envoye ? ["st-encours", "Pas encore envoyée"] : (LBL[p.statut] || LBL.en_relecture);
+        return '<li><span class="badge ' + b[0] + '">' + b[1] + "</span> " + esc(p.nom) + ' <span class="muted">(' + esc(FAM[p.famille] ? FAM[p.famille].label : "") + ")</span></li>";
+      }).join("") + "</ul>";
     }
     drawProposals();
+    flushProposals();
 
     // Arrivée depuis « Explorer ce projet » : mettre en avant la solution ciblée.
     var target = param("sol");
@@ -675,7 +719,7 @@
 
     var name = $("#v-nom"), prom = $("#v-promesse"), reve = $("#v-reve"), coll = $("#v-collectif"), pub = $("#v-public"), next = $("#to-explorer");
     name.value = state.project.name; prom.value = state.project.promesse; reve.value = state.project.reve;
-    coll.value = state.project.collectif; pub.checked = state.project.public !== false;
+    coll.value = state.project.collectif; pub.checked = state.project.public === true;
     function sync() {
       state.project.name = name.value; state.project.promesse = prom.value; state.project.reve = reve.value;
       state.project.collectif = coll.value; state.project.public = pub.checked; save();

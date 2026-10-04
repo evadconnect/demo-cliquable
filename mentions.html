@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mentions légales et données, EVAD</title>
+<meta name="description" content="Mentions légales de la bêta EVAD et informations sur les données personnelles.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="icon" type="image/svg+xml" href="assets/logo-evad.svg">
+<style>
+  .legal { max-width: 72ch; }
+  .legal section { margin-top: 20px; }
+  .legal h2 { margin-top: 0; }
+  .legal p, .legal li { color: var(--texte-2); line-height: 1.6; }
+  .legal ul { padding-left: 1.2em; }
+</style>
+</head>
+<body data-page="mentions">
+<a class="skip" href="#main">Aller au contenu</a>
+<header id="topbar"></header>
+<div class="shell no-deva">
+  <main id="main" class="stage">
+    <div class="page-head">
+      <div>
+        <p class="kicker">Bêta EVAD</p>
+        <h1>Mentions légales et données</h1>
+        <p>Qui publie ce site, où il est hébergé, et ce que nous faisons de tes données pendant la bêta.</p>
+      </div>
+    </div>
+
+    <div class="legal">
+      <section class="panel" aria-labelledby="editeur">
+        <h2 id="editeur">Éditeur</h2>
+        <p>Ce site est édité par <strong>EVAD Connect</strong>, association loi 1901 d'intérêt général, dont le siège est à Agen (Lot-et-Garonne).<br>
+        SIRET : 920 172 970 00021.<br>
+        Directeur de la publication : le président de l'association.<br>
+        Contact : <a href="mailto:contact@evad.org">contact@evad.org</a></p>
+      </section>
+
+      <section class="panel" aria-labelledby="hebergement">
+        <h2 id="hebergement">Hébergement</h2>
+        <ul>
+          <li>Pages du site : GitHub Pages, GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</li>
+          <li>Comptes et projets : Supabase, Inc. (base de données et authentification), agissant comme sous-traitant d'EVAD Connect.</li>
+        </ul>
+      </section>
+
+      <section class="panel" aria-labelledby="donnees-titre" id="donnees">
+        <h2 id="donnees-titre">Tes données pendant la bêta</h2>
+        <p><strong>Responsable du traitement :</strong> EVAD Connect.</p>
+        <p><strong>Ce que nous enregistrons :</strong></p>
+        <ul>
+          <li>ton compte : prénom, adresse email et mot de passe (chiffré par Supabase, nous ne le voyons jamais) ;</li>
+          <li>ton projet : nom du lieu, adresse ou commune, position sur la carte, promesse, rêve, collectif, espaces, solutions, maquette et preuves ;</li>
+          <li>les solutions que tu proposes au Commun.</li>
+        </ul>
+        <p><strong>Pourquoi :</strong> faire fonctionner ton espace de travail et tester EVAD avec toi. La base légale est l'exécution du service que tu demandes en créant un accès ; l'affichage sur la carte publique repose sur ton consentement.</p>
+        <p><strong>Carte publique :</strong> ton lieu n'y apparaît que si tu coches la case prévue à l'étape Rêver, et tu peux la décocher à tout moment. Sont alors visibles : le nom du lieu, la commune, la promesse, le collectif, les solutions posées et l'avancement. La position est arrondie à environ 1 km ; ton adresse, ton email et tes preuves détaillées ne sont jamais publiés.</p>
+        <p><strong>Durée :</strong> pendant la bêta, puis au plus un an après sa fin, sauf si tu demandes la suppression avant.</p>
+        <p><strong>Sur ton appareil :</strong> la bêta garde une copie de ton projet et ta session dans le stockage local du navigateur, pour fonctionner hors ligne. Pas de cookie publicitaire ni de mesure d'audience.</p>
+        <p><strong>Tes droits :</strong> accès, rectification, effacement, opposition et portabilité, en écrivant à <a href="mailto:contact@evad.org?subject=Mes%20donn%C3%A9es%20EVAD">contact@evad.org</a>. Tu peux aussi saisir la <a href="https://www.cnil.fr/fr/plaintes" rel="noopener">CNIL</a>.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="tiers">
+        <h2 id="tiers">Services tiers</h2>
+        <p>Pour afficher la carte et les polices, ton navigateur contacte directement ces services, qui reçoivent ton adresse IP :</p>
+        <ul>
+          <li>OpenStreetMap (fonds de carte) et Nominatim (recherche d'adresse, uniquement quand tu situes ton lieu), OpenStreetMap Foundation ;</li>
+          <li>Google Fonts (polices Fraunces et Epilogue), Google ;</li>
+          <li>jsDelivr (bibliothèques Leaflet et Supabase).</li>
+        </ul>
+        <p>Données cartographiques © les contributeurs d'OpenStreetMap, sous licence ODbL.</p>
+      </section>
+    </div>
+  </main>
+</div>
+<footer id="footer"></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
+<script src="assets/backend.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/scene.js"></script>
+<script src="assets/deva.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
