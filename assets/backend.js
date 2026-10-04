@@ -68,6 +68,20 @@
     return r.data || [];
   }
 
+  // Propositions pour le Commun (table regen_propositions, une ligne par proposition).
+  async function saveProposal(p) {
+    var r = await client.from("regen_propositions")
+      .insert({ nom: p.nom, famille: p.famille || "", change: p.change || "", ici: p.ici || [], ou: p.ou || "" })
+      .select("id").single();
+    if (r.error) throw new Error(err(r.error));
+    return r.data.id;
+  }
+  async function loadMyProposals() {
+    var r = await client.from("regen_propositions").select("id, nom, famille, statut, created_at").order("created_at", { ascending: false });
+    if (r.error) throw new Error(err(r.error));
+    return r.data || [];
+  }
+
   function traduire(e) {
     var m = (e && e.message) || "";
     if (/Invalid login credentials/i.test(m)) return "Email ou mot de passe incorrect.";
@@ -82,6 +96,7 @@
   window.EvadDB = {
     env: ENV, ready: ready, getUser: getUser, signIn: signIn, signUp: signUp, signOut: signOut,
     resetPassword: resetPassword, updatePassword: updatePassword, onRecovery: onRecovery,
-    loadMyProject: loadMyProject, saveProject: saveProject, loadPublicPlaces: loadPublicPlaces
+    loadMyProject: loadMyProject, saveProject: saveProject, loadPublicPlaces: loadPublicPlaces,
+    saveProposal: saveProposal, loadMyProposals: loadMyProposals
   };
 })();

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="stylesheet" href="assets/styles.css">
 <link rel="icon" type="image/svg+xml" href="assets/logo-evad.svg">
 </head>
@@ -58,7 +58,7 @@
           <label for="v-collectif">Le collectif <span class="hint">qui porte le lieu</span></label>
           <textarea id="v-collectif" rows="2" placeholder="Ex. 6 habitants, une association de quartier, un maraîcher"></textarea>
         </div>
-        <label class="check-line"><input type="checkbox" id="v-public" checked> <span>Afficher mon lieu sur la carte publique EVAD (nom, commune, promesse et avancement)</span></label>
+        <label class="check-line"><input type="checkbox" id="v-public"> <span>Afficher mon lieu sur la carte publique EVAD : nom, commune, promesse, collectif, solutions posées et avancement. La position est arrondie à environ 1 km et l'adresse n'est jamais publiée. <a href="mentions.html#donnees">En savoir plus</a></span></label>
         <h3 class="mini-title">Projets épinglés</h3>
         <ul class="pins" id="pins"></ul>
         <div class="vision-actions">
@@ -71,8 +71,8 @@
   <aside id="deva" class="deva" aria-label="Deva, ton assistante"></aside>
 </div>
 <footer id="footer"></footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
 <script src="assets/backend.js"></script>
 <script src="assets/data.js"></script>
 <script src="assets/scene.js"></script>
