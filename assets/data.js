@@ -217,7 +217,7 @@ window.EVAD_DATA = {
           { q: "C'est quoi EVAD ?", a: "EVAD accompagne les collectifs qui font pousser des lieux régénératifs : rêver un lieu, le modéliser, agir, puis prouver ce qui a vraiment changé. Ce qui est vérifié nourrit le rêve des suivants." },
           { q: "Comment lire la carte ?", a: "Chaque marqueur est un lieu : gris s'il est rêvé, ambre s'il est en cours, vert s'il a fait ses preuves. Clique un lieu pour voir sa maquette et son impact vérifié." },
           { q: "C'est quoi le Commun ?", a: "Une bibliothèque libre de solutions éprouvées sur le terrain, reliées à leurs preuves. Vérifié bat généré, et tout le monde peut y puiser." },
-          { q: "Faut-il un compte ?", a: "Non pour explorer la carte et le Commun, c'est ouvert à tous. Tu crées ton accès seulement quand tu veux lancer et suivre ton propre lieu." }
+          { q: "Faut-il un compte ?", a: "Non, tout est ouvert : explore la carte et le Commun, et lance ton propre lieu sans créer de compte. Ton projet est gardé sur cet appareil." }
         ]
       },
       commun: {
@@ -342,7 +342,7 @@ window.EVAD_DATA = {
       { k: ["nourrir", "photo", "journal", "export", "rapport"],
         a: "Nourrir, c'est la 5e étape : tu apportes les preuves de terrain. Chaque preuve fait verdir le lieu, et tu peux en tirer des aperçus pour tes partenaires (ODD, CSRD, PCAET, RSE)." },
       { k: ["compte", "connecter", "connexion", "inscription", "s'inscrire", "login", "identifiant"],
-        a: "Explorer la carte et le Commun est ouvert à tous, sans compte. Tu crées un accès seulement pour lancer et suivre ton propre lieu, via « Créer mon projet » ou « Se connecter ». En bêta, c'est sans mot de passe." },
+        a: "Pas besoin de compte en bêta : tout est ouvert. Clique « Créer mon projet » pour lancer ton lieu tout de suite ; il est gardé sur cet appareil." },
       { k: ["qui es-tu", "qui es tu", "tu es quoi", "c'est quoi deva", "qui est deva", "robot", "ia", "intelligence artificielle"],
         a: "Je suis Deva, ton assistante sur EVAD. Je te guide pas à pas, je propose, et c'est toujours toi qui décides. Je fonctionne par règles, sans IA lourde : c'est plus sobre, et je ne m'invente jamais de chiffres d'impact." },
       { k: ["carbone", "empreinte", "co2", "ecologie du site", "pollution", "sobriete", "sobriété"],

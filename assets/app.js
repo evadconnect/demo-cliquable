@@ -117,8 +117,7 @@
     pin: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 18s-5.5-5.2-5.5-9.2a5.5 5.5 0 0 1 11 0C15.5 12.8 10 18 10 18z" fill="currentColor"/><circle cx="10" cy="8.6" r="2" fill="#FFFDF7"/></svg>',
     photo: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="6" width="18" height="13" rx="3" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="12" cy="12.5" r="3.4" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M8.5 6l1.5-2h4l1.5 2" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>',
     search: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-    commun: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 5.5C8.5 4 6.5 3.7 4 4v10c2.5-.3 4.5 0 6 1.5 1.5-1.5 3.5-1.8 6-1.5V4c-2.5-.3-4.5 0-6 1.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 5.5v10" stroke="currentColor" stroke-width="1.6"/></svg>',
-    logout: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M8 17H4.5A1.5 1.5 0 0 1 3 15.5v-11A1.5 1.5 0 0 1 4.5 3H8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 13l3-3-3-3M15 10H8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    commun: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 5.5C8.5 4 6.5 3.7 4 4v10c2.5-.3 4.5 0 6 1.5 1.5-1.5 3.5-1.8 6-1.5V4c-2.5-.3-4.5 0-6 1.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 5.5v10" stroke="currentColor" stroke-width="1.6"/></svg>'
   };
   var BRAND_LEAF = '<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M5 27C5 13 13 5 27 5c0 14-8 22-22 22z" fill="#5F7F52"/><path d="M7 25C12 19 17 14 23 9.5" stroke="#FAF6EA" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M13 19.5l-1-5M17.5 15l-.5-4.5M13 19.5l5 .5M17.5 15l4.5.2" stroke="#FAF6EA" stroke-width="1.4" stroke-linecap="round"/></svg>';
 
@@ -153,92 +152,6 @@
     return dlg;
   }
 
-  /* ================= Accès (comptes Supabase) ================= */
-  function hasSession() { return !!user; }
-  function userName() {
-    if (!user) return "";
-    var m = user.user_metadata || {};
-    return m.prenom || m.first_name || (user.email || "").split("@")[0];
-  }
-
-  // Point de bascule connexion / créer un accès avant d'entrer dans l'espace de travail.
-  function openGate(mode, redirect, blocking) {
-    mode = mode || "creer";
-    var g = $("#gate");
-    if (!g) { g = document.createElement("div"); g.id = "gate"; g.className = "gate"; document.body.appendChild(g); }
-    var copy = {
-      creer: { title: "Créer mon accès", sub: "Ton accès EVAD garde ton projet en ligne et le retrouve sur tous tes appareils.", submit: "Créer mon accès" },
-      connecter: { title: "Se connecter", sub: "Retrouve ton espace et ton lieu.", submit: "Se connecter" },
-      oubli: { title: "Mot de passe oublié", sub: "Entre ton email : tu recevras un lien pour choisir un nouveau mot de passe.", submit: "Recevoir le lien" },
-      nouveau: { title: "Nouveau mot de passe", sub: "Choisis ton nouveau mot de passe.", submit: "Enregistrer" }
-    };
-    g.innerHTML =
-      '<div class="gate-card" role="dialog" aria-modal="true" aria-labelledby="gate-title">' +
-      '<div class="gate-brand"><img src="assets/logo-evad.svg" alt="EVAD" height="30"></div>' +
-      '<div class="gate-tabs" role="tablist">' +
-      '<button type="button" class="gate-tab" role="tab" data-mode="creer">Créer un accès</button>' +
-      '<button type="button" class="gate-tab" role="tab" data-mode="connecter">J\'ai déjà un accès</button>' +
-      "</div>" +
-      '<h2 id="gate-title"></h2><p class="gate-sub"></p>' +
-      '<form id="gate-form" novalidate>' +
-      '<div class="field" data-for="creer"><label for="gate-nom">Prénom</label><input id="gate-nom" type="text" autocomplete="given-name"></div>' +
-      '<div class="field" data-for="creer connecter oubli"><label for="gate-email">Email</label><input id="gate-email" type="email" autocomplete="email"></div>' +
-      '<div class="field" data-for="creer connecter nouveau"><label for="gate-pw">Mot de passe <span class="hint">6 caractères minimum</span></label><input id="gate-pw" type="password" autocomplete="current-password"></div>' +
-      '<p class="err" id="gate-err" role="alert" hidden></p>' +
-      '<p class="gate-ok" id="gate-ok" role="status" hidden></p>' +
-      '<button type="submit" class="btn btn-primary btn-lg" id="gate-submit" style="width:100%"></button>' +
-      "</form>" +
-      '<button type="button" class="link-btn gate-forgot" id="gate-forgot">Mot de passe oublié ?</button>' +
-      '<p class="gate-note">Bêta EVAD : ton projet est enregistré sur ton compte. La carte et le Commun restent ouverts à tous.</p>' +
-      '<a class="gate-back link-btn" href="index.html">Revenir à la carte</a>';
-
-    function field(id) { return $("#" + id, g); }
-    function showErr(msg) { var e = field("gate-err"); e.textContent = msg; e.hidden = !msg; }
-    function showOk(msg) { var o = field("gate-ok"); o.textContent = msg; o.hidden = !msg; }
-    function setMode(m) {
-      mode = m; showErr(""); showOk("");
-      $all(".gate-tab", g).forEach(function (t) { var on = t.dataset.mode === m; t.classList.toggle("is-active", on); t.setAttribute("aria-selected", String(on)); });
-      $(".gate-tabs", g).hidden = (m === "nouveau");
-      $all("[data-for]", g).forEach(function (f) { f.hidden = f.dataset.for.split(" ").indexOf(m) < 0; });
-      field("gate-pw").setAttribute("autocomplete", m === "connecter" ? "current-password" : "new-password");
-      field("gate-forgot").hidden = (m !== "connecter");
-      $("#gate-title", g).textContent = copy[m].title;
-      $(".gate-sub", g).textContent = copy[m].sub;
-      field("gate-submit").textContent = copy[m].submit;
-      var first = $("[data-for]:not([hidden]) input", g); if (first) setTimeout(function () { first.focus(); }, 30);
-    }
-    $all(".gate-tab", g).forEach(function (t) { t.addEventListener("click", function () { setMode(t.dataset.mode); }); });
-    field("gate-forgot").addEventListener("click", function () { setMode("oubli"); });
-
-    field("gate-form").addEventListener("submit", function (e) {
-      e.preventDefault();
-      if (!window.EvadDB || !EvadDB.ready()) { showErr("Connexion au service impossible pour l'instant. Vérifie ta connexion internet."); return; }
-      var nom = field("gate-nom").value.trim(), email = field("gate-email").value.trim(), pw = field("gate-pw").value;
-      if (mode === "creer" && !nom) { showErr("Donne ton prénom."); field("gate-nom").focus(); return; }
-      if (mode !== "nouveau" && !email) { showErr("Donne ton adresse email."); field("gate-email").focus(); return; }
-      if (mode !== "oubli" && pw.length < 6) { showErr("Le mot de passe doit faire au moins 6 caractères."); field("gate-pw").focus(); return; }
-      var btn = field("gate-submit"); btn.disabled = true; showErr("");
-      var done = function () { if (blocking) location.reload(); else location.href = redirect || "rever.html"; };
-      var job =
-        mode === "creer" ? EvadDB.signUp(email, pw, nom).then(function (r) {
-          if (r.needsConfirm) { showOk("Presque fini : clique le lien envoyé à " + email + " pour confirmer ton accès, puis reviens te connecter."); setMode("connecter"); field("gate-email").value = email; showOk("Lien de confirmation envoyé à " + email + ". Une fois confirmé, connecte-toi ici."); }
-          else done();
-        })
-        : mode === "connecter" ? EvadDB.signIn(email, pw).then(done)
-        : mode === "oubli" ? EvadDB.resetPassword(email).then(function () { showOk("Si un accès existe pour " + email + ", un lien vient d'être envoyé."); })
-        : EvadDB.updatePassword(pw).then(function () { showOk("Mot de passe mis à jour."); setTimeout(done, 800); });
-      job.catch(function (er) { showErr(er.message); }).then(function () { btn.disabled = false; });
-    });
-    setMode(mode);
-    g.classList.add("open");
-    document.body.classList.add("gate-open");
-  }
-
-  function logout() {
-    var go = function () { location.href = "index.html"; };
-    if (window.EvadDB) EvadDB.signOut().then(go, go); else go();
-  }
-
   /* ================= Barre du haut et pied de page ================= */
   var BRAND = '<a class="brand" href="index.html" aria-label="EVAD, retour à la carte vivante"><img class="brand-logo" src="assets/logo-evad.svg" alt="EVAD" width="92" height="30"></a>';
 
@@ -248,15 +161,9 @@
     if (document.getElementById("deva")) {
       top.className = "topbar topbar-slim";
       var isWorkspace = D.steps.some(function (s) { return s.id === page; });
-      var right = "";
-      if (!isWorkspace) {
-        right = hasSession()
-          ? '<a class="btn btn-primary btn-sm" href="rever.html">Mon espace</a>'
-          : '<button type="button" class="btn btn-ghost btn-sm" id="login-btn">Se connecter</button>';
-      }
+      var right = isWorkspace ? "" : '<a class="btn btn-primary btn-sm" href="rever.html">Créer mon projet</a>';
       var tagline = '<span class="brand-tagline">écosystème vivant autonome et décentralisé</span>';
       top.innerHTML = BRAND + tagline + (right ? '<div class="top-right">' + right + "</div>" : "");
-      var lb = $("#login-btn"); if (lb) lb.addEventListener("click", function () { openGate("connecter", "rever.html", false); });
       return;
     }
     var steps = D.steps.map(function (s, n) {
@@ -308,21 +215,12 @@
       "</div>";
     var existing = inner.querySelector(".deva-nav");
     if (existing) existing.outerHTML = html; else inner.insertAdjacentHTML("afterbegin", html);
-    var foot = inner.querySelector(".deva-foot");
-    if (foot && !foot.querySelector(".snav-logout")) {
-      foot.insertAdjacentHTML("beforeend",
-        (hasSession() ? '<p class="snav-user">Connecté : <strong>' + esc(userName()) + '</strong> <span class="snav-sync" aria-live="polite"></span></p>' : "") +
-        '<button type="button" class="snav-logout">' + ICON.logout + "<span>Déconnexion</span></button>");
-      var lo = foot.querySelector(".snav-logout");
-      if (lo) lo.addEventListener("click", logout);
-      setSync(syncStatus);
-    }
   }
   function renderFooter() {
     var f = $("#footer"); if (!f) return;
     f.className = "footer";
     f.innerHTML = "<p>EVAD bêta" + (window.EvadDB && EvadDB.env !== "prod" ? " (base de test)" : "") +
-      ". Ton projet est enregistré sur ton compte ; la carte et le Commun sont ouverts à tous.</p>" +
+      ". Ton projet est gardé sur cet appareil ; la carte et le Commun sont ouverts à tous.</p>" +
       '<a class="link-btn" href="mailto:contact@evad.org?subject=Retour%20b%C3%AAta%20EVAD">Donner un retour</a>';
   }
   function refreshChrome() { renderTopbar(document.body.dataset.page); renderSidebarNav(document.body.dataset.page); }
@@ -346,7 +244,7 @@
   }
   function allProjects() {
     var list = [];
-    if (hasSession() && state.project.loc) list.push(myProject());
+    if (state.project.loc) list.push(myProject());
     publicPlaces.forEach(function (r) {
       if (r.id === state.projectId) return;
       list.push({ id: "p:" + r.id, isPublic: true, nom: r.nom, lieu: r.lieu || "", statut: r.statut || "reve", lat: r.lat, lng: r.lng,
@@ -506,7 +404,7 @@
     famSel.innerHTML = '<option value="">Toutes les familles</option>' + D.familles.map(function (f) { return '<option value="' + f.id + '">' + f.label + "</option>"; }).join("");
     famSel.addEventListener("change", function () { fFam = famSel.value; draw(); });
     $("#f-near").addEventListener("click", function () {
-      if (!state.project.loc) { toast(hasSession() ? "Situe d'abord ton lieu à l'étape Rêver." : "Connecte-toi et situe ton lieu pour voir les projets autour de toi."); return; }
+      if (!state.project.loc) { toast("Situe d'abord ton lieu à l'étape Rêver."); return; }
       nearMe = !nearMe; this.setAttribute("aria-pressed", String(nearMe)); draw(); });
 
     var filters = $(".map-filters"), ftoggle = $("#filters-toggle");
@@ -746,6 +644,47 @@
       $all("[data-show]", ul).forEach(function (b) { b.addEventListener("click", function () { select(b.dataset.show); }); });
     }
     drawPins();
+
+    /* Deva t'accueille : raconte ton lieu idéal, elle propose des projets voisins dont t'inspirer. */
+    var STOP = " le la les un une des de du d et a au aux en dans pour par sur avec sans vers chez que qui quoi ou mon ma mes ton ta tes son sa ses notre nos leur leurs ce cet cette ces on nous vous ils elles il elle je tu se est sont etre avoir plus moins tres bien plutot aussi comme lieu projet envie reve rever ".split(" ");
+    function nrm(s) { return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+    function toks(s) { return nrm(s).split(/[^a-z0-9]+/).filter(function (w) { return w.length >= 3 && STOP.indexOf(w) < 0; }); }
+    // Corpus par projet : promesse, collectif, lieu, familles et noms des solutions.
+    function corpus(p) {
+      var sols = (p.solutions || []).map(function (s) { var so = SOL[s[0]]; return so ? so.nom + " " + (FAM[so.famille] ? FAM[so.famille].label : "") : ""; }).join(" ");
+      return nrm([p.nom, p.promesse, p.collectif, p.lieu, sols].join(" "));
+    }
+    function matchProjects(txt) {
+      var words = toks(txt);
+      if (!words.length) return [];
+      var scored = D.projets.map(function (p) {
+        var c = corpus(p), s = 0;
+        words.forEach(function (w) { if (c.indexOf(w) >= 0) s += 1; });
+        if (p.statut === "prouve") s += 0.3; // à mots égaux, on met en avant ce qui est prouvé
+        return { p: p, s: s };
+      }).filter(function (x) { return x.s > 0; }).sort(function (a, b) { return b.s - a.s; });
+      return scored.slice(0, 3).map(function (x) { return x.p; });
+    }
+    function proven() { return D.projets.filter(function (p) { return p.statut === "prouve"; }).slice(0, 3); }
+    function onDream(txt) {
+      state.project.reveBrief = txt; save();
+      var found = matchProjects(txt), fallback = !found.length;
+      var list = fallback ? proven() : found;
+      var actions = list.map(function (p) { return { label: p.nom, once: false, onClick: function () { select(p.id); if (host._lmap && p.lat != null) host._lmap.setView([p.lat, p.lng], 9); } }; });
+      actions.push({ label: "Reprendre mes mots dans ma vision", primary: true, onClick: function () {
+        reve.value = reve.value.trim() ? reve.value + "\n" + txt : txt;
+        state.project.reve = reve.value; save(); reve.focus();
+      } });
+      var intro = fallback
+        ? "Joli rêve. Je n'ai pas trouvé de jumeau évident, alors inspire-toi de ces lieux déjà prouvés. Clique pour les voir, épingle ceux qui te parlent :"
+        : "Ton lieu idéal me fait penser à " + (list.length > 1 ? "ces projets" : "ce projet") + ". Clique pour les voir sur la carte et épingle ceux qui t'inspirent :";
+      return { text: intro, actions: actions };
+    }
+    if (!state.project.name.trim() && !state.project.reveBrief && window.Deva && Deva.prompt) {
+      setTimeout(function () {
+        Deva.prompt("Avant de nommer ton lieu, raconte-moi ton lieu idéal en quelques mots : ce qu'on y fait, pour qui, ce que ça change autour.", onDream);
+      }, 700);
+    }
   }
 
   /* ================= Écran 4 : Explorer ================= */
@@ -1159,7 +1098,8 @@
     if (!db) return places.then(function (pl) { publicPlaces = pl; });
     return db.getUser().then(function (u) {
       user = u;
-      if (!user) return;
+      // Sans compte : le projet vit sur l'appareil (localStorage).
+      if (!user) { var local = loadCache(); if (local) state = local; return; }
       var cache = loadCache();
       return db.loadMyProject(user.id).then(function (row) {
         var remote = row ? fromRow(row) : null;
@@ -1179,14 +1119,12 @@
   document.addEventListener("DOMContentLoaded", function () {
     var page = document.body.dataset.page;
     document.body.classList.add("is-booting");
-    if (window.EvadDB) EvadDB.onRecovery(function () { openGate("nouveau", location.pathname.split("/").pop() || "index.html", true); });
     boot(page).then(function () {
       document.body.classList.remove("is-booting");
       renderTopbar(page);
       renderFooter();
       var step = D.steps.find(function (s) { return s.id === page; });
-      // Garde-fou : l'espace de travail (parcours) demande un compte.
-      if (step && !hasSession()) { openGate("creer", page + ".html", true); return; }
+      // Parcours ouvert à tous : pas de compte requis, les données restent sur l'appareil.
       if (window.Deva) {
         if (page === "index") { Deva.init("accueil"); renderHomeVision(); }
         else if (page === "commun") { Deva.init("commun"); }

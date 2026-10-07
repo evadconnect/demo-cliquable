@@ -4,6 +4,7 @@
   var D = window.EVAD_DATA.deva;
   var UI_KEY = "evad-demo-ui";
   var mode = null, log = null, root = null, rot = 0;
+  var pending = null; // question ouverte : la prochaine saisie lui est transmise
 
   function uiGet() { try { return JSON.parse(localStorage.getItem(UI_KEY)) || {}; } catch (e) { return {}; } }
   function uiSet(v) { try { localStorage.setItem(UI_KEY, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
@@ -50,7 +51,8 @@
       input.value = "";
       user(txt);
       countQuestion();
-      say(answer(txt));
+      if (pending) { var h = pending; pending = null; var res = h(txt); if (res) say(res.text || res, res); }
+      else say(answer(txt));
     });
     root.querySelector(".deva-carbone").addEventListener("click", function () {
       var c = D.carbone || {};
@@ -140,24 +142,52 @@
     return d;
   }
   function user(text) { bubble("from-user", text); }
+  // Puces d'action affichées sous une bulle de Deva (projets à explorer, reprise des mots…).
+  function renderActions(actions) {
+    if (!actions || !actions.length) return;
+    var box = document.createElement("div");
+    box.className = "deva-chips";
+    actions.forEach(function (a) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "deva-chip" + (a.primary ? " is-primary" : "");
+      b.textContent = a.label;
+      b.addEventListener("click", function () {
+        if (a.once !== false) { b.disabled = true; b.classList.add("is-used"); }
+        a.onClick && a.onClick();
+      });
+      box.appendChild(b);
+    });
+    log.appendChild(box);
+    log.scrollTop = log.scrollHeight;
+  }
   function say(text, opt) {
     if (!log) return;
     opt = opt || {};
-    if (opt.instant) { bubble("from-deva", text); return; }
+    if (opt.instant) { bubble("from-deva", text); renderActions(opt.actions); return; }
     var t = bubble("from-deva is-typing", "");
     t.setAttribute("aria-hidden", "true");
     t.innerHTML = "<span></span><span></span><span></span>";
     setTimeout(function () {
       t.remove();
       var m = bubble("from-deva", text);
+      renderActions(opt.actions);
       if (opt.nudge) { root.classList.add("nudge"); setTimeout(function () { root.classList.remove("nudge"); }, 900); }
       return m;
     }, 550);
+  }
+  // Deva pose une question ouverte : la prochaine saisie est transmise à `handler`,
+  // qui peut renvoyer une chaîne ou { text, actions:[{label, onClick, primary}] }.
+  function prompt(text, handler, opt) {
+    opt = opt || {};
+    pending = handler;
+    if (root && root.classList.contains("is-closed")) setOpen(true);
+    say(text, opt);
   }
   function react(key, fallback) {
     var t = D.reactions[key] || (fallback && D.reactions[fallback]);
     if (t) say(t, { nudge: true });
   }
 
-  window.Deva = { init: init, say: say, react: react };
+  window.Deva = { init: init, say: say, react: react, prompt: prompt };
 })();

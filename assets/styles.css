@@ -250,6 +250,12 @@ body.deva-closed .shell { grid-template-columns: 72px minmax(0, 1fr); }
 .is-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--mousse); animation: blink 1s infinite; }
 .is-typing span:nth-child(2) { animation-delay: .15s; }
 .is-typing span:nth-child(3) { animation-delay: .3s; }
+.deva-chips { display: flex; flex-wrap: wrap; gap: 6px; align-self: flex-start; max-width: 96%; margin-top: -2px; animation: pop .25s ease-out; }
+.deva-chip { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--bord); background: var(--blanc); color: var(--foret); font-weight: 600; font-size: .86rem; cursor: pointer; }
+.deva-chip:hover { border-color: var(--mousse); }
+.deva-chip.is-primary { background: #E8F2EB; border-color: var(--mousse); }
+.deva-chip.is-used { opacity: .5; cursor: default; }
+.deva-chip:disabled { cursor: default; }
 .deva-sugs { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px; border-top: 1px solid var(--bord); }
 .chip-sug { font-size: .8rem; min-height: 32px; padding: 5px 12px; background: var(--creme); text-align: left; }
 .deva-form { display: flex; gap: 8px; padding: 10px 16px 6px; }
