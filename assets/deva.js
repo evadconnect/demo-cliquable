@@ -11,7 +11,8 @@
 
   var LEAF = '<img class="deva-face" src="assets/deva-avatar.png" alt="" aria-hidden="true">';
 
-  function init(modeId) {
+  function init(modeId, opts) {
+    opts = opts || {};
     root = document.getElementById("deva");
     if (!root) return;
     mode = D.modes[modeId];
@@ -60,10 +61,11 @@
       if (root.classList.contains("is-closed")) setOpen(true);
     });
 
-    renderDoors();
     renderCarbone();
-    say(mode.intro, { instant: true });
+    // Mode piloté (onboarding) : on laisse la page mener la conversation, sans intro ni portes auto.
+    if (!opts.silent) { renderDoors(); say(mode.intro, { instant: true }); }
   }
+  function close() { if (root) setOpen(false); }
 
   function renderDoors() {
     var box = root.querySelector(".deva-doors");
@@ -189,5 +191,5 @@
     if (t) say(t, { nudge: true });
   }
 
-  window.Deva = { init: init, say: say, react: react, prompt: prompt };
+  window.Deva = { init: init, say: say, react: react, prompt: prompt, close: close };
 })();

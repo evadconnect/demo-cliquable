@@ -19,6 +19,7 @@
       v: 2,
       projectId: null,
       localUpdatedAt: 0,
+      prenom: "",
       project: { name: "", promesse: "", reve: "", collectif: "", lieu: "", loc: null, public: true },
       pinned: [],
       spaces: D.espaces.map(function (e) { return { id: e.id, nom: e.nom }; }),
@@ -456,6 +457,37 @@
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && fiche.classList.contains("open")) closeFiche(); });
 
     if (param("focus")) openFiche(param("focus"));
+
+    /* Onboarding : Deva demande le prénom, présente la vision, puis propose trois portes d'entrée. */
+    var VISION = "EVAD, c'est un monde régénératif désirable, déjà en train de pousser : chaque lieu sur la carte a été rêvé, modélisé, puis prouvé sur le terrain. Du rêve à la preuve, et la preuve rouvre le rêve.";
+    function cleanPrenom(txt) {
+      var w = (txt || "").trim().split(/\s+/)[0] || "";
+      w = w.replace(/[^\p{L}\-']/gu, "").slice(0, 24);
+      return w ? w.charAt(0).toUpperCase() + w.slice(1) : "";
+    }
+    function visitMap() {
+      if (window.Deva && Deva.close) Deva.close();
+      if (host) host.scrollIntoView({ behavior: "smooth", block: "center" });
+      toast("Clique un lieu sur la carte pour découvrir son histoire.");
+    }
+    function choices() {
+      return [
+        { label: "Visiter les lieux régénératifs", once: false, onClick: visitMap },
+        { label: "Découvrir les solutions du Commun", once: false, onClick: function () { location.href = "commun.html"; } },
+        { label: "Créer mon lieu", primary: true, once: false, onClick: function () { location.href = "rever.html"; } }
+      ];
+    }
+    if (window.Deva && Deva.prompt) {
+      if (state.prenom) {
+        Deva.say("Ravie de te revoir, " + state.prenom + ". " + VISION + " Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
+      } else {
+        Deva.prompt("Bonjour, je suis Deva, ton assistante sur EVAD. Avant de commencer, comment t'appelles-tu ?", function (txt) {
+          var p = cleanPrenom(txt);
+          if (p) { state.prenom = p; save(); refreshChrome(); }
+          return { text: (p ? "Enchantée, " + p + " ! " : "Enchantée ! ") + VISION + " Par quoi veux-tu commencer ?", actions: choices() };
+        });
+      }
+    }
   }
 
   /* ================= Écran 2 : le Commun ================= */
@@ -1126,7 +1158,7 @@
       var step = D.steps.find(function (s) { return s.id === page; });
       // Parcours ouvert à tous : pas de compte requis, les données restent sur l'appareil.
       if (window.Deva) {
-        if (page === "index") { Deva.init("accueil"); renderHomeVision(); }
+        if (page === "index") { Deva.init("accueil", { silent: true }); renderHomeVision(); }
         else if (page === "commun") { Deva.init("commun"); }
         else if (step) { Deva.init(step.deva); renderSidebarNav(page); }
       }
