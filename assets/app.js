@@ -725,16 +725,11 @@
         // Carte : page courante — on révèle la carte puis Deva en fait le tour.
         leave(); setTimeout(function () { startTour(carteTour); }, 680);
       }
-      // Questions suggérées (réutilise la FAQ d'accueil de Deva).
-      var SUG = ((((D.deva || {}).modes || {}).accueil || {}).suggestions || []).slice(0, 4);
       function askIntent() {
         foot.innerHTML =
           '<form class="intro-form"><label class="sr-only" for="intro-quete">Ce que tu cherches</label>' +
           '<input id="intro-quete" class="intro-input" type="text" autocomplete="off" placeholder="Dis-moi en quelques mots…">' +
           '<button type="submit" class="btn btn-primary intro-send" aria-label="Envoyer à Deva">' + ICON.arrow + '</button></form>' +
-          (SUG.length ? '<div class="intro-suggests" aria-label="Questions fréquentes">' +
-            SUG.map(function (s, k) { return '<button type="button" class="deva-chip" data-sug="' + k + '">' + esc(s.q) + "</button>"; }).join("") +
-            "</div>" : "") +
           '<div class="intro-doors" role="group" aria-label="Portes d\'entrée">' +
           '<button type="button" class="deva-door is-primary" data-go="regen">Créer un projet</button>' +
           '<button type="button" class="deva-door" data-go="carte">Visiter des lieux</button>' +
@@ -757,10 +752,6 @@
           line(rep || "Choisis une porte pour commencer — tu pourras tout explorer ensuite.");
           input.focus({ preventScroll: true });
         }
-        // Chips de questions suggérées : Deva donne directement la réponse curée.
-        foot.querySelectorAll("[data-sug]").forEach(function (b) {
-          b.addEventListener("click", function () { var s = SUG[+b.getAttribute("data-sug")]; if (!s) return; userBubble(s.q); line(s.a); input.focus({ preventScroll: true }); });
-        });
         form.addEventListener("submit", function (e) {
           e.preventDefault();
           var txt = input.value.trim(); if (!txt) { input.focus(); return; }
