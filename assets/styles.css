@@ -738,3 +738,87 @@ body[data-page="index"] .stage { padding: 0; }
 .check-line { display: flex; gap: 8px; align-items: flex-start; font-size: .88rem; }
 .check-line input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--foret); }
 .boot-loading { padding: 40px; text-align: center; color: var(--texte-2); }
+
+/* ======================================================================
+   Onboarding prototype : Deva seule présente la vision EVAD à l'ouverture
+   ====================================================================== */
+body.has-intro { overflow: hidden; }
+.intro {
+  position: fixed; inset: 0; z-index: 2000;
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: radial-gradient(130% 120% at 50% -10%, #E7F1E9 0%, var(--creme) 55%, var(--creme) 100%);
+  animation: introIn .5s ease-out;
+}
+.intro.is-leaving { animation: introOut .45s ease-in forwards; }
+.intro-card {
+  width: min(560px, 100%);
+  background: var(--blanc); border: 1px solid var(--bord);
+  border-radius: var(--r-lg); box-shadow: var(--ombre-haute);
+  padding: 26px 26px 20px; display: flex; flex-direction: column; gap: 16px;
+}
+.intro-hero { display: flex; align-items: center; gap: 14px; }
+.intro-hero .deva-face { height: 60px; width: auto; border-radius: 16px; }
+.intro-hero strong { font-family: var(--f-titre); font-size: 1.18rem; color: var(--encre); }
+.intro-hero span { display: block; font-size: .84rem; color: var(--texte-2); }
+.intro-log { display: flex; flex-direction: column; gap: 10px; min-height: 108px; }
+.intro-log .deva-msg { max-width: 100%; font-size: .98rem; }
+.intro-foot { min-height: 46px; }
+.intro-form { display: flex; gap: 8px; animation: pop .25s ease-out; }
+.intro-input {
+  flex: 1; min-width: 0; border: 1px solid var(--bord); border-radius: 999px;
+  padding: 12px 16px; font: inherit; color: var(--encre); background: var(--blanc);
+}
+.intro-input:focus { outline: none; border-color: var(--mousse); box-shadow: 0 0 0 3px rgba(78, 140, 108, .2); }
+.intro-cta { width: 100%; animation: pop .25s ease-out; }
+.intro-skip {
+  align-self: center; margin-top: 2px; padding: 6px 8px;
+  background: none; border: none; color: var(--texte-2);
+  font: inherit; font-size: .84rem; text-decoration: underline; cursor: pointer;
+}
+.intro-skip:hover { color: var(--foret); }
+@keyframes introIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes introOut { to { opacity: 0; transform: scale(1.015); } }
+@media (max-width: 900px) { .intro-card { padding: 22px 18px 16px; } .intro-hero .deva-face { height: 52px; } }
+@media (prefers-reduced-motion: reduce) { .intro, .intro.is-leaving { animation: none; } .intro-form, .intro-cta { animation: none; } }
+.intro-send { flex: none; width: 48px; padding: 10px; }
+.intro-doors { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; animation: pop .25s ease-out; }
+
+/* ===== Visite guidée (coachmarks Deva) ===== */
+.tour { position: fixed; inset: 0; z-index: 2100; animation: introIn .3s ease-out; }
+.tour.is-leaving { animation: introOut .25s ease-in forwards; }
+.tour-hole {
+  position: fixed; left: 0; top: 0; width: 0; height: 0; border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(28, 46, 38, .55); outline: 2px solid var(--vert-logo); outline-offset: 2px;
+  transition: left .25s ease, top .25s ease, width .25s ease, height .25s ease, opacity .2s; pointer-events: none;
+}
+.tour-pop {
+  position: fixed; left: 50%; top: 50%; width: 320px; max-width: calc(100vw - 32px);
+  background: var(--blanc); border: 1px solid var(--bord); border-radius: var(--r);
+  box-shadow: var(--ombre-haute); padding: 14px 16px 12px;
+}
+.tour-pop-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.tour-pop-head .deva-face { height: 34px; width: auto; border-radius: 10px; }
+.tour-pop-head strong { font-family: var(--f-titre); color: var(--encre); }
+.tour-count { margin-left: auto; font-size: .78rem; color: var(--texte-2); }
+.tour-text { margin: 0 0 12px; font-size: .92rem; line-height: 1.45; color: var(--encre); }
+.tour-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tour-skip { background: none; border: none; color: var(--texte-2); font: inherit; font-size: .85rem; text-decoration: underline; cursor: pointer; padding: 6px; }
+@media (prefers-reduced-motion: reduce) { .tour, .tour.is-leaving { animation: none; } .tour-hole { transition: none; } }
+.footer-actions { display: inline-flex; align-items: center; gap: 16px; }
+
+/* Menu global (barre du haut) + chips de questions dans l'onboarding */
+.topnav { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.intro-suggests { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.intro-suggests .deva-chip { font-size: .82rem; }
+
+/* Bandeau horizontal du parcours REGEN, en haut du contenu */
+.page-stepper { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 20px; padding-bottom: 16px; border-bottom: 1px solid var(--bord); }
+.page-stepper ol { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.page-stepper li { display: flex; align-items: center; }
+.page-stepper li + li::before { content: ""; width: 18px; height: 2px; background: var(--bord); margin-right: 4px; border-radius: 2px; }
+@media (max-width: 640px) { .page-stepper li + li::before { width: 8px; } }
+
+/* Bandeau EVAD logé sous le panneau de Deva (sidebar) */
+.deva-footer { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 16px 16px; }
+.deva-footer p { font-size: .76rem; line-height: 1.4; }
+.deva-footer .footer-actions { gap: 14px; flex-wrap: wrap; }

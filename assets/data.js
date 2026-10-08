@@ -301,7 +301,7 @@ window.EVAD_DATA = {
     ],
     /* Petit moteur conversationnel : Deva reconnaît des mots-clés et répond sans IA. */
     salutations: [
-      "Bonjour ! Ravie de te voir. Tu veux explorer la carte, créer ton projet, ou que je t'explique EVAD ?",
+      "Bonjour ! Ravi de te voir. Tu veux explorer la carte, créer ton projet, ou que je t'explique EVAD ?",
       "Salut ! Je suis là pour t'aider. Dis-moi ce qui t'amène : découvrir un lieu, en créer un, ou comprendre comment ça marche ?"
     ],
     remerciements: [
@@ -314,8 +314,8 @@ window.EVAD_DATA = {
       "Prends soin de toi. La carte et le Commun restent ouverts à tous."
     ],
     incompris: [
-      "Je ne suis pas sûre d'avoir bien saisi. Je peux t'expliquer EVAD, t'aider à lire la carte, parcourir le Commun, ou lancer ton projet. Qu'est-ce qui t'intéresse ?",
-      "Je suis une assistante encore jeune et je réponds par règles, pas toujours à tout. Essaie avec « c'est quoi EVAD ? », « comment lire la carte ? », « c'est quoi le Commun ? » ou « créer un projet ».",
+      "Je ne suis pas sûr d'avoir bien saisi. Je peux t'expliquer EVAD, t'aider à lire la carte, parcourir le Commun, ou lancer ton projet. Qu'est-ce qui t'intéresse ?",
+      "Je suis un assistant encore jeune et je réponds par règles, pas toujours à tout. Essaie avec « c'est quoi EVAD ? », « comment lire la carte ? », « c'est quoi le Commun ? » ou « créer un projet ».",
       "Reformule-moi ça autrement ? Je connais surtout EVAD, la carte, le Commun, les preuves et le parcours Rêver → Nourrir."
     ],
     faq: [
@@ -344,7 +344,7 @@ window.EVAD_DATA = {
       { k: ["compte", "connecter", "connexion", "inscription", "s'inscrire", "login", "identifiant"],
         a: "Pas besoin de compte en bêta : tout est ouvert. Clique « Créer mon projet » pour lancer ton lieu tout de suite ; il est gardé sur cet appareil." },
       { k: ["qui es-tu", "qui es tu", "tu es quoi", "c'est quoi deva", "qui est deva", "robot", "ia", "intelligence artificielle"],
-        a: "Je suis Deva, ton assistante sur EVAD. Je te guide pas à pas, je propose, et c'est toujours toi qui décides. Je fonctionne par règles, sans IA lourde : c'est plus sobre, et je ne m'invente jamais de chiffres d'impact." },
+        a: "Je suis Deva, ton assistant sur EVAD. Je te guide pas à pas, je propose, et c'est toujours toi qui décides. Je fonctionne par règles, sans IA lourde : c'est plus sobre, et je ne m'invente jamais de chiffres d'impact." },
       { k: ["carbone", "empreinte", "co2", "ecologie du site", "pollution", "sobriete", "sobriété"],
         a: "Bonne question : nos échanges ont une empreinte, affichée en bas de ce panneau. Comme je réponds localement, par règles, elle reste minime, loin d'une requête vers un gros modèle d'IA." },
       { k: ["regen", "etapes", "étapes", "parcours", "comment ca marche", "comment ça marche"],
