@@ -1,5 +1,5 @@
 /* EVAD, Deva simulée : un seul visage, cinq modes, réponses scriptées.
-   Règle absolue : Deva ne produit jamais de chiffre d'impact. Elle propose, l'humain valide. */
+   Règle absolue : Deva ne produit jamais de chiffre d'impact. Il propose, l'humain valide. */
 (function () {
   var D = window.EVAD_DATA.deva;
   var UI_KEY = "evad-demo-ui";
@@ -35,7 +35,7 @@
       '<button type="submit" class="icon-btn deva-send" aria-label="Envoyer à Deva"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
       '</form>' +
       '<button type="button" class="deva-carbone" aria-label="Empreinte carbone estimée de tes échanges avec Deva"></button>' +
-      '<div class="deva-foot"><span class="deva-avatar">' + LEAF + '</span><p class="deva-rule">Deva propose, tu décides. Elle ne calcule jamais d\'impact à ta place.</p></div>' +
+      '<div class="deva-foot"><span class="deva-avatar">' + LEAF + '</span><p class="deva-rule">Deva propose, tu décides. Il ne calcule jamais d\'impact à ta place.</p></div>' +
       '</div></div>' +
       '<button type="button" class="deva-fab" aria-label="Ouvrir le panneau de Deva">' + LEAF + '<span>Deva</span></button>';
 
@@ -191,5 +191,5 @@
     if (t) say(t, { nudge: true });
   }
 
-  window.Deva = { init: init, say: say, react: react, prompt: prompt, close: close };
+  window.Deva = { init: init, say: say, react: react, prompt: prompt, close: close, answer: answer };
 })();

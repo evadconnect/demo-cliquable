@@ -20,6 +20,7 @@
       projectId: null,
       localUpdatedAt: 0,
       prenom: "",
+      interestFam: "",
       project: { name: "", promesse: "", reve: "", collectif: "", lieu: "", loc: null, public: true },
       pinned: [],
       spaces: D.espaces.map(function (e) { return { id: e.id, nom: e.nom }; }),
@@ -154,7 +155,7 @@
   }
 
   /* ================= Barre du haut et pied de page ================= */
-  var BRAND = '<a class="brand" href="index.html" aria-label="EVAD, retour à la carte vivante"><img class="brand-logo" src="assets/logo-evad.svg" alt="EVAD" width="92" height="30"></a>';
+  var BRAND = '<a class="brand" href="index.html?intro=1" aria-label="EVAD, revenir à l\'accueil de Deva"><img class="brand-logo" src="assets/logo-evad.svg" alt="EVAD" width="92" height="30"></a>';
 
   function renderTopbar(page) {
     var top = $("#topbar"); if (!top) return;
@@ -162,9 +163,17 @@
     if (document.getElementById("deva")) {
       top.className = "topbar topbar-slim";
       var isWorkspace = D.steps.some(function (s) { return s.id === page; });
-      var right = isWorkspace ? "" : '<a class="btn btn-primary btn-sm" href="rever.html">Créer mon projet</a>';
+      // Menu global : jongler entre la carte, le Commun et la création de projet.
+      var link = function (href, label, cur) {
+        return '<a class="toplink' + (cur ? " is-current" : "") + '" href="' + href + '"' + (cur ? ' aria-current="page"' : "") + ">" + label + "</a>";
+      };
+      var nav = '<nav class="topnav" aria-label="Aller à">' +
+        link("index.html", "Carte", page === "index") +
+        link("commun.html", "Commun", page === "commun") +
+        '<a class="btn btn-primary btn-sm' + (isWorkspace ? " is-current" : "") + '" href="rever.html"' + (isWorkspace ? ' aria-current="page"' : "") + ">Créer un projet</a>" +
+        "</nav>";
       var tagline = '<span class="brand-tagline">écosystème vivant autonome et décentralisé</span>';
-      top.innerHTML = BRAND + tagline + (right ? '<div class="top-right">' + right + "</div>" : "");
+      top.innerHTML = BRAND + tagline + '<div class="top-right">' + nav + "</div>";
       return;
     }
     var steps = D.steps.map(function (s, n) {
@@ -184,45 +193,56 @@
       "</div>";
   }
 
-  // Bloc Vision 2030 en haut du rail d'accueil (Deva raconte la vision juste en dessous).
-  function renderHomeVision() {
-    var inner = document.querySelector("#deva .deva-inner"); if (!inner) return;
-    if (inner.querySelector(".deva-vision")) return;
-    inner.insertAdjacentHTML("afterbegin",
-      '<div class="deva-vision"><p class="snav-title">La vision EVAD 2030</p>' +
-      "<h1>Un monde régénératif désirable, déjà en train de pousser</h1>" +
-      "<p class=\"deva-vision-sub\">Du rêve à la preuve, et la preuve rouvre le rêve.</p></div>");
-  }
+  // (La vision EVAD 2030 est désormais portée par l'onboarding ; plus de bloc statique dans la sidebar.)
 
-  // Navigation « espace de travail » (pages du parcours, une fois le projet lancé) :
-  // mon lieu, parcours REGEN, Le Commun, déconnexion. Pas sur les pages publiques (accueil, Commun).
+  // Sidebar « espace de travail » : accès à mon lieu (le parcours REGEN est en bandeau en haut du contenu).
   function renderSidebarNav(page) {
     if (!D.steps.some(function (s) { return s.id === page; })) return;
     var inner = document.querySelector("#deva .deva-inner"); if (!inner) return;
     var st = fricheStatut();
-    var steps = D.steps.map(function (s, n) {
-      var active = s.id === page, done = stepDone(s.id);
-      var cls = active ? "is-active" : done ? "is-done" : "is-todo";
-      var etat = active ? "étape en cours" : done ? "faite" : "à venir";
-      return '<li><a class="snav-step ' + cls + '" href="' + s.href + '"' + (active ? ' aria-current="step"' : "") + ' aria-label="Étape ' + (n + 1) + ", " + s.label + ", " + etat + '">' +
-        '<span class="snav-dot" aria-hidden="true">' + (done && !active ? ICON.check : n + 1) + "</span><span>" + s.label + "</span></a></li>";
-    }).join("");
     var html = '<div class="deva-nav">' +
       '<a class="snav-place" href="index.html?focus=mine" title="Voir mon lieu sur la carte">' +
       '<span class="pill-dot st-' + st + '" aria-hidden="true"></span>' +
       '<span class="snav-place-txt"><span class="snav-kicker">Mon lieu</span><strong>' + esc(projectName()) + '</strong></span></a>' +
-      '<nav class="snav-regen" aria-label="Parcours REGEN"><p class="snav-title">Parcours REGEN</p><ol>' + steps + "</ol></nav>" +
-      '<a class="snav-commun' + (page === "commun" ? " is-current" : "") + '" href="commun.html"' + (page === "commun" ? ' aria-current="page"' : "") + ">" + ICON.commun + "<span>Le Commun</span></a>" +
       "</div>";
     var existing = inner.querySelector(".deva-nav");
     if (existing) existing.outerHTML = html; else inner.insertAdjacentHTML("afterbegin", html);
   }
+  // Bandeau horizontal du parcours REGEN, en haut du contenu (au-dessus de « Étape X sur 5 »).
+  function renderTopStepper(page) {
+    if (!D.steps.some(function (s) { return s.id === page; })) return;
+    var main = document.getElementById("main"); if (!main) return;
+    if (main.querySelector(".page-stepper")) return;
+    var steps = D.steps.map(function (s, n) {
+      var active = s.id === page, done = stepDone(s.id);
+      var cls = active ? "is-active" : done ? "is-done" : "is-todo";
+      var etat = active ? "étape en cours" : done ? "faite" : "à venir";
+      return '<li><a class="step ' + cls + '" href="' + s.href + '"' + (active ? ' aria-current="step"' : "") + ' aria-label="Étape ' + (n + 1) + ", " + s.label + ", " + etat + '">' +
+        '<span class="step-dot" aria-hidden="true">' + (done && !active ? ICON.check : n + 1) + '</span><span class="step-lbl">' + s.label + "</span></a></li>";
+    }).join("");
+    main.insertAdjacentHTML("afterbegin", '<nav class="page-stepper" aria-label="Parcours REGEN"><span class="stepper-kicker" aria-hidden="true">REGEN</span><ol>' + steps + "</ol></nav>");
+  }
   function renderFooter() {
-    var f = $("#footer"); if (!f) return;
-    f.className = "footer";
-    f.innerHTML = "<p>EVAD bêta" + (window.EvadDB && EvadDB.env !== "prod" ? " (base de test)" : "") +
+    var page = document.body.dataset.page;
+    var hasTour = page === "index" || page === "commun" || page === "rever";
+    var html = "<p>EVAD bêta" + (window.EvadDB && EvadDB.env !== "prod" ? " (base de test)" : "") +
       ". Ton projet est gardé sur cet appareil ; la carte et le Commun sont ouverts à tous.</p>" +
-      '<a class="link-btn" href="mailto:contact@evad.org?subject=Retour%20b%C3%AAta%20EVAD">Donner un retour</a>';
+      '<span class="footer-actions">' +
+      (hasTour ? '<button type="button" class="link-btn" id="replay-tour">Revoir la visite</button>' : "") +
+      '<a class="link-btn" href="mailto:contact@evad.org?subject=Retour%20b%C3%AAta%20EVAD">Donner un retour</a>' +
+      "</span>";
+    // Le bandeau se loge sous le panneau de Deva (sidebar) ; sinon, barre du bas classique.
+    var target, inner = document.querySelector("#deva .deva-inner");
+    if (inner) {
+      var box = inner.querySelector(".deva-footer");
+      if (!box) { box = document.createElement("div"); box.className = "footer deva-footer"; inner.appendChild(box); }
+      box.innerHTML = html; target = box;
+      var bottom = $("#footer"); if (bottom) { bottom.innerHTML = ""; bottom.className = ""; }
+    } else {
+      target = $("#footer"); if (!target) return; target.className = "footer"; target.innerHTML = html;
+    }
+    var rt = target.querySelector("#replay-tour");
+    if (rt) rt.addEventListener("click", function () { var t = pageTour || TOURS[page]; if (t) startTour(t); });
   }
   function refreshChrome() { renderTopbar(document.body.dataset.page); renderSidebarNav(document.body.dataset.page); }
 
@@ -385,9 +405,103 @@
   }
   function projectById(id) { return allProjects().find(function (p) { return p.id === id; }); }
 
+  /* ================= Visite guidée (coachmarks Deva) =================
+     Après chaque porte de l'accueil, Deva met en lumière les éléments clés
+     de la destination : spotlight sur une cible + bulle + Suivant / Passer. */
+  var pageTour = null; // visite guidée de la page courante, rejouable via « Revoir la visite »
+  var TOURS = {
+    commun: [
+      { sel: ".doctrine", text: "Le Commun est une bibliothèque libre de solutions. La règle : vérifié bat généré — rien n'entre sans preuve de terrain." },
+      { sel: ".commun-tools .search", text: "Cherche une solution par mot-clé : haie, compost, réparer…" },
+      { sel: "#commun-fams", text: "Ou filtre par famille pour cibler ce qui t'intéresse." },
+      { sel: "#commun-grid .card", text: "Chaque fiche montre la difficulté, le coût, et sur combien de lieux la solution a déjà été éprouvée." },
+      { sel: "#ici-grid", text: "Les ICI sont les indicateurs concrets qu'on observe sur un lieu quand ça marche." },
+      { sel: "#open-propose", text: "Tu as éprouvé quelque chose ? Propose-le : la communauté le reliera à ses preuves." }
+    ],
+    rever: [
+      { sel: ".page-stepper", text: "Créer un lieu, c'est le parcours REGEN en 5 étapes, ici en haut : Rêver, Explorer, Générer, Entreprendre, Nourrir. On démarre par Rêver." },
+      { sel: ".map-card", text: "Inspire-toi des projets qui poussent déjà autour de toi — clique un point. Clique la carte pour situer ton futur lieu." },
+      { sel: "#v-nom", text: "Donne un nom à ton lieu." },
+      { sel: "#v-geo", text: "Situe-le : tape une commune ou une adresse, puis choisis dans la liste." },
+      { sel: "#v-promesse", text: "Écris ta promesse : en une phrase, ce que le lieu change pour les gens." },
+      { sel: "#v-public", text: "Tu choisis s'il apparaît sur la carte publique. Deva propose, tu décides." },
+      { sel: "#to-explorer", text: "Dès que ton lieu a un nom, tu passes à l'étape Explorer. À toi de jouer !" }
+    ]
+  };
+  function startTour(steps) {
+    steps = (steps || []).filter(function (s) { return !s.sel || document.querySelector(s.sel); });
+    if (!steps.length) return;
+    var i = 0, raf = null;
+    var ov = document.createElement("div");
+    ov.className = "tour"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
+    ov.setAttribute("aria-label", "Visite guidée avec Deva");
+    ov.innerHTML =
+      '<div class="tour-hole" aria-hidden="true"></div>' +
+      '<div class="tour-pop">' +
+      '<div class="tour-pop-head"><img class="deva-face" src="assets/deva-avatar.png" alt="" aria-hidden="true"><strong>Deva</strong><span class="tour-count"></span></div>' +
+      '<p class="tour-text"></p>' +
+      '<div class="tour-nav"><button type="button" class="tour-skip">Passer</button>' +
+      '<button type="button" class="btn btn-primary btn-sm tour-next"></button></div>' +
+      '</div>';
+    document.body.appendChild(ov);
+    var hole = ov.querySelector(".tour-hole"), pop = ov.querySelector(".tour-pop"),
+        txt = ov.querySelector(".tour-text"), cnt = ov.querySelector(".tour-count"),
+        next = ov.querySelector(".tour-next"), skip = ov.querySelector(".tour-skip");
+    function measure() {
+      var s = steps[i], t = s.sel ? document.querySelector(s.sel) : null;
+      if (!t) {
+        hole.style.opacity = "0";
+        pop.style.left = "50%"; pop.style.top = "50%"; pop.style.transform = "translate(-50%,-50%)";
+        return;
+      }
+      pop.style.transform = "none";
+      var r = t.getBoundingClientRect(), pad = 8;
+      hole.style.opacity = "1";
+      hole.style.left = (r.left - pad) + "px"; hole.style.top = (r.top - pad) + "px";
+      hole.style.width = (r.width + pad * 2) + "px"; hole.style.height = (r.height + pad * 2) + "px";
+      var popW = Math.min(320, window.innerWidth - 32); pop.style.width = popW + "px";
+      var ph = pop.offsetHeight || 150;
+      var left = Math.min(Math.max(16, r.left), window.innerWidth - popW - 16);
+      var top = (r.bottom + ph + 16 <= window.innerHeight) ? (r.bottom + 14)
+              : (r.top - ph - 14 >= 16 ? r.top - ph - 14 : Math.max(16, (window.innerHeight - ph) / 2));
+      pop.style.left = left + "px"; pop.style.top = top + "px";
+    }
+    function onScroll() { if (raf) return; raf = requestAnimationFrame(function () { raf = null; measure(); }); }
+    var entered = -1;
+    // Certaines étapes ouvrent un élément à l'arrivée (onEnter) et le referment en partant (onLeave).
+    function leaveCurrent() {
+      if (entered >= 0 && steps[entered] && steps[entered].onLeave) { try { steps[entered].onLeave(); } catch (e) { /* ignore */ } }
+      entered = -1;
+    }
+    function goTo(n) {
+      leaveCurrent();
+      i = n; var s = steps[i];
+      if (s.onEnter) { try { s.onEnter(); } catch (e) { /* ignore */ } }
+      entered = i;
+      txt.textContent = s.text;
+      cnt.textContent = (i + 1) + " / " + steps.length;
+      next.textContent = (i === steps.length - 1) ? "Terminer" : "Suivant";
+      var t = s.sel ? document.querySelector(s.sel) : null;
+      if (t) t.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      setTimeout(measure, 60); setTimeout(measure, 340);
+    }
+    function end() {
+      leaveCurrent();
+      window.removeEventListener("resize", onScroll, true);
+      window.removeEventListener("scroll", onScroll, true);
+      ov.classList.add("is-leaving");
+      setTimeout(function () { ov.remove(); }, 240);
+    }
+    next.addEventListener("click", function () { if (i < steps.length - 1) goTo(i + 1); else end(); });
+    skip.addEventListener("click", end);
+    window.addEventListener("resize", onScroll, true);
+    window.addEventListener("scroll", onScroll, true);
+    goTo(0);
+  }
+
   /* ================= Écran 1 : accueil ================= */
   function pageIndex() {
-    var selected = null, fStat = { reve: true, encours: true, prouve: true }, fFam = "", nearMe = false;
+    var selected = null, fStat = { reve: true, encours: true, prouve: true }, fFam = state.interestFam || "", nearMe = false;
     var host = $("#map");
     function filter(p) {
       if (!fStat[p.statut]) return false;
@@ -403,7 +517,10 @@
     });
     var famSel = $("#f-famille");
     famSel.innerHTML = '<option value="">Toutes les familles</option>' + D.familles.map(function (f) { return '<option value="' + f.id + '">' + f.label + "</option>"; }).join("");
+    if (fFam) famSel.value = fFam;
     famSel.addEventListener("change", function () { fFam = famSel.value; draw(); });
+    // Pré-filtrage de la carte par famille d'intérêt (choisie dans l'onboarding).
+    function applyFamily(fam) { fFam = fam || ""; if (famSel) famSel.value = fFam; draw(); }
     $("#f-near").addEventListener("click", function () {
       if (!state.project.loc) { toast("Situe d'abord ton lieu à l'étape Rêver."); return; }
       nearMe = !nearMe; this.setAttribute("aria-pressed", String(nearMe)); draw(); });
@@ -466,9 +583,8 @@
       return w ? w.charAt(0).toUpperCase() + w.slice(1) : "";
     }
     function visitMap() {
-      if (window.Deva && Deva.close) Deva.close();
       if (host) host.scrollIntoView({ behavior: "smooth", block: "center" });
-      toast("Clique un lieu sur la carte pour découvrir son histoire.");
+      if (window.Deva && Deva.say) Deva.say("Clique un lieu sur la carte pour découvrir son histoire.", { instant: true });
     }
     function choices() {
       return [
@@ -477,17 +593,208 @@
         { label: "Créer mon lieu", primary: true, once: false, onClick: function () { location.href = "rever.html"; } }
       ];
     }
-    if (window.Deva && Deva.prompt) {
-      if (state.prenom) {
-        Deva.say("Ravie de te revoir, " + state.prenom + ". " + VISION + " Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
+    // Deva dans la sidebar, une fois la carte révélée (ou si l'intro est passée).
+    function startHomeDeva(firstTime) {
+      if (!(window.Deva && Deva.prompt)) return;
+      if (firstTime) {
+        Deva.say((state.prenom ? "Et voilà la carte vivante, " + state.prenom + ". " : "Et voilà la carte vivante. ") +
+          "Chaque point est un lieu réel. Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
+      } else if (state.prenom) {
+        Deva.say("Ravi de te revoir, " + state.prenom + ". " + VISION + " Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
       } else {
-        Deva.prompt("Bonjour, je suis Deva, ton assistante sur EVAD. Avant de commencer, comment t'appelles-tu ?", function (txt) {
+        Deva.prompt("Bonjour, je suis Deva, ton assistant sur EVAD. Avant de commencer, comment t'appelles-tu ?", function (txt) {
           var p = cleanPrenom(txt);
           if (p) { state.prenom = p; save(); refreshChrome(); }
-          return { text: (p ? "Enchantée, " + p + " ! " : "Enchantée ! ") + VISION + " Par quoi veux-tu commencer ?", actions: choices() };
+          return { text: (p ? "Enchanté, " + p + " ! " : "Enchanté ! ") + VISION + " Par quoi veux-tu commencer ?", actions: choices() };
         });
       }
+      // Personnalisation : si une famille d'intérêt a été captée, Deva le signale.
+      if (state.interestFam && FAM[state.interestFam]) {
+        Deva.say("J'ai filtré la carte sur la famille « " + FAM[state.interestFam].label + " ». Tu peux l'élargir dans les filtres.", { instant: true });
+      }
     }
+
+    /* Onboarding prototype : à l'ouverture, Deva apparaît SEULE en plein écran pour
+       présenter la vision EVAD et demander le prénom, puis s'efface sur la carte.
+       S'affiche à la première visite (pas de prénom) ; rejouable via ?intro=1, désactivable via ?intro=0. */
+    function shouldIntro() {
+      if (param("intro") === "0") return false;
+      if (param("intro") === "1") return true;
+      return !state.prenom;
+    }
+    function runIntro(done) {
+      document.body.classList.add("has-intro");
+      var ov = document.createElement("div");
+      ov.id = "intro"; ov.className = "intro"; ov.setAttribute("role", "dialog");
+      ov.setAttribute("aria-modal", "true"); ov.setAttribute("aria-label", "Bienvenue sur EVAD, présentation par Deva");
+      ov.innerHTML =
+        '<div class="intro-card">' +
+        '<div class="intro-hero"><img class="deva-face" src="assets/deva-avatar.png" alt="">' +
+        '<div><strong>Deva</strong><span>ton assistant sur EVAD</span></div></div>' +
+        '<div class="intro-log" role="log" aria-live="polite" aria-label="Présentation de Deva"></div>' +
+        '<div class="intro-foot"></div>' +
+        '<button type="button" class="intro-skip">Passer l\'intro</button>' +
+        '</div>';
+      document.body.appendChild(ov);
+      var log = ov.querySelector(".intro-log"), foot = ov.querySelector(".intro-foot");
+
+      function leave() {
+        if (ov._gone) return; ov._gone = true;
+        ov.classList.add("is-leaving");
+        setTimeout(function () { ov.remove(); document.body.classList.remove("has-intro"); if (done) done(); }, 460);
+      }
+      ov.querySelector(".intro-skip").addEventListener("click", leave);
+
+      // Une réplique de Deva : points de saisie animés, puis le texte (comme dans la sidebar).
+      function line(text) {
+        return new Promise(function (res) {
+          var t = document.createElement("div");
+          t.className = "deva-msg from-deva is-typing"; t.setAttribute("aria-hidden", "true");
+          t.innerHTML = "<span></span><span></span><span></span>";
+          log.appendChild(t); log.scrollTop = log.scrollHeight;
+          setTimeout(function () {
+            t.remove();
+            var m = document.createElement("div"); m.className = "deva-msg from-deva"; m.textContent = text;
+            log.appendChild(m); log.scrollTop = log.scrollHeight; res();
+          }, 650);
+        });
+      }
+      function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+      function askName() {
+        foot.innerHTML =
+          '<form class="intro-form"><label class="sr-only" for="intro-name">Ton prénom</label>' +
+          '<input id="intro-name" class="intro-input" type="text" autocomplete="given-name" placeholder="Ton prénom…" maxlength="24">' +
+          '<button type="submit" class="btn btn-primary">C\'est parti</button></form>';
+        var form = foot.querySelector(".intro-form"), input = foot.querySelector("#intro-name");
+        input.focus({ preventScroll: true });
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          var p = cleanPrenom(input.value);
+          if (p) { state.prenom = p; save(); refreshChrome(); }
+          foot.innerHTML = "";
+          var u = document.createElement("div"); u.className = "deva-msg from-user"; u.textContent = p || "Plus tard";
+          log.appendChild(u); log.scrollTop = log.scrollHeight;
+          line((p ? "Enchanté, " + p + " ! " : "Comme tu veux. ") + "Qu'est-ce qui t'amène sur EVAD ?").then(askIntent);
+        });
+      }
+
+      // Deva demande l'intention : texte libre + trois portes vers les parcours.
+      function nrm(s) { return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+      function detectIntent(txt) {
+        var t = " " + nrm(txt) + " ";
+        if (/(projet|creer|cree|monter|lancer|porter|entreprendre|mon lieu|me lancer|demarrer|rever|reve)/.test(t)) return "regen";
+        if (/(solution|commun|inspir|exemple|idee|methode|outil|ressource|comment faire)/.test(t)) return "commun";
+        if (/(visiter|voir|explorer|carte|lieu|autour|pres|balade|regarder|decouvrir)/.test(t)) return "carte";
+        return null;
+      }
+      // Vraie question (vs simple intention) : « ? » ou tournure interrogative en tête.
+      function isQuestion(txt) {
+        if (/[?]/.test(txt)) return true;
+        var t = nrm(txt).replace(/['’]/g, " ").replace(/\s+/g, " ").trim();
+        return /^(comment|pourquoi|quoi|que |qu |qui |quel|quelle|quels|quelles|combien|ou |c est|cest|a quoi|est ce|peux|peut|dois|faut|a t|y a)/.test(t + " ");
+      }
+      // Famille d'intérêt détectée dans la phrase → personnalise la carte.
+      function detectFamily(txt) {
+        var t = " " + nrm(txt) + " ";
+        if (/(eau|pluie|riviere|mare|zone humide|aquatique|nappe)/.test(t)) return "eau";
+        if (/(sol|terre|compost|jardin|potager|permaculture|haie|biodiversite)/.test(t)) return "sol";
+        if (/(energie|solaire|panneau|photovolta|chaleur|electricite|eolien|bois energie)/.test(t)) return "energie";
+        if (/(reemploi|reparer|reparation|recyclage|palette|dechet|ressourcerie|seconde main)/.test(t)) return "reemploi";
+        if (/(alimentation|manger|nourriture|cantine|maraich|legume|aliment|epicerie|cuisine)/.test(t)) return "alimentation";
+        if (/(gouvernance|decision|assemblee|democratie|collectif|conseil|cooperative)/.test(t)) return "gouvernance";
+        return null;
+      }
+      // Visite de la carte : définie ici pour pouvoir ouvrir/fermer une fiche projet.
+      var SAMPLE_ID = (D.projets && D.projets[0] && D.projets[0].id) || null;
+      var carteTour = [
+        { text: "Bienvenue sur la carte vivante ! Je te montre l'essentiel en quelques secondes." },
+        { sel: ".leaflet-marker-icon", text: "Chaque point est un lieu réel. Clique-le pour ouvrir sa fiche." },
+        { sel: ".map-filters", text: "Filtre par avancement — Rêvé, En cours, Prouvé — et par famille (Eau, Sol, Énergie…), ou n'affiche que ce qui pousse autour de toi." },
+        { sel: "#fiche", text: "Voici la fiche d'un lieu : sa promesse, le collectif qui le porte, les solutions posées et son impact vérifié. « Explorer ce projet » déplie le détail.",
+          onEnter: function () { if (SAMPLE_ID) openFiche(SAMPLE_ID); },
+          onLeave: function () { closeFiche(); } },
+        { sel: ".legend", text: "La couleur dit l'avancement : du rêve ambré à la preuve verte." },
+        { sel: ".top-right a[href='rever.html']", text: "Et quand tu veux passer à l'action, tu rêves ton propre lieu ici. Bonne exploration !" }
+      ];
+      pageTour = carteTour; // « Revoir la visite » (footer) rejoue la visite de la carte
+      function routeTo(kind) {
+        // REGEN et Commun : on part sur l'autre page, qui lance sa visite guidée (?tour=1).
+        if (kind === "regen") { location.href = "rever.html?tour=1"; return; }
+        if (kind === "commun") { location.href = "commun.html?tour=1"; return; }
+        // Carte : page courante — on révèle la carte puis Deva en fait le tour.
+        leave(); setTimeout(function () { startTour(carteTour); }, 680);
+      }
+      // Questions suggérées (réutilise la FAQ d'accueil de Deva).
+      var SUG = ((((D.deva || {}).modes || {}).accueil || {}).suggestions || []).slice(0, 4);
+      function askIntent() {
+        foot.innerHTML =
+          '<form class="intro-form"><label class="sr-only" for="intro-quete">Ce que tu cherches</label>' +
+          '<input id="intro-quete" class="intro-input" type="text" autocomplete="off" placeholder="Dis-moi en quelques mots…">' +
+          '<button type="submit" class="btn btn-primary intro-send" aria-label="Envoyer à Deva">' + ICON.arrow + '</button></form>' +
+          (SUG.length ? '<div class="intro-suggests" aria-label="Questions fréquentes">' +
+            SUG.map(function (s, k) { return '<button type="button" class="deva-chip" data-sug="' + k + '">' + esc(s.q) + "</button>"; }).join("") +
+            "</div>" : "") +
+          '<div class="intro-doors" role="group" aria-label="Portes d\'entrée">' +
+          '<button type="button" class="deva-door is-primary" data-go="regen">Créer un projet</button>' +
+          '<button type="button" class="deva-door" data-go="carte">Visiter des lieux</button>' +
+          '<button type="button" class="deva-door" data-go="commun">Découvrir des solutions</button>' +
+          '</div>';
+        var form = foot.querySelector(".intro-form"), input = foot.querySelector("#intro-quete");
+        input.focus({ preventScroll: true });
+        foot.querySelectorAll("[data-go]").forEach(function (b) {
+          b.addEventListener("click", function () { routeTo(b.getAttribute("data-go")); });
+        });
+        var ACK = {
+          regen: "Parfait — je t'emmène créer ton lieu, étape par étape.",
+          carte: "Allons explorer la carte vivante.",
+          commun: "Je t'emmène découvrir les solutions du Commun."
+        };
+        function userBubble(txt) { var u = document.createElement("div"); u.className = "deva-msg from-user"; u.textContent = txt; log.appendChild(u); log.scrollTop = log.scrollHeight; }
+        // Deva répond à une question via son moteur scripté, et laisse les portes ouvertes.
+        function answerInline(txt) {
+          var rep = (window.Deva && Deva.answer) ? Deva.answer(txt) : null;
+          line(rep || "Choisis une porte pour commencer — tu pourras tout explorer ensuite.");
+          input.focus({ preventScroll: true });
+        }
+        // Chips de questions suggérées : Deva donne directement la réponse curée.
+        foot.querySelectorAll("[data-sug]").forEach(function (b) {
+          b.addEventListener("click", function () { var s = SUG[+b.getAttribute("data-sug")]; if (!s) return; userBubble(s.q); line(s.a); input.focus({ preventScroll: true }); });
+        });
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          var txt = input.value.trim(); if (!txt) { input.focus(); return; }
+          userBubble(txt); input.value = "";
+          // Centre d'intérêt (famille) détecté → on personnalise et pré-filtre la carte.
+          var fam = detectFamily(txt);
+          if (fam && FAM[fam]) { state.interestFam = fam; save(); if (typeof applyFamily === "function") applyFamily(fam); }
+          // 1) Une vraie question → Deva y répond (FAQ), sans quitter l'onboarding.
+          if (isQuestion(txt)) { answerInline(txt); return; }
+          // 2) Une intention de navigation → on emmène vers la bonne porte.
+          var kind = detectIntent(txt);
+          if (kind) { foot.innerHTML = ""; line(ACK[kind]).then(function () { routeTo(kind); }); return; }
+          // 3) Ni l'un ni l'autre → on tente quand même une réponse, sinon on oriente.
+          answerInline(txt);
+        });
+      }
+
+      // Enchaînement : Deva seule présente la vision EVAD.
+      line("Bonjour, je suis Deva, l'assistant d'EVAD.")
+        .then(function () { return wait(240); })
+        .then(function () { return line("EVAD, c'est un monde régénératif désirable — déjà en train de pousser."); })
+        .then(function () { return wait(240); })
+        .then(function () { return line("Chaque lieu de la carte a d'abord été rêvé, puis modélisé, puis prouvé sur le terrain."); })
+        .then(function () { return wait(240); })
+        .then(function () { return line("Du rêve à la preuve. Et la preuve rouvre le rêve."); })
+        .then(function () { return wait(240); })
+        .then(function () {
+          if (state.prenom) return line("Ravi de te revoir, " + state.prenom + " ! Qu'est-ce qui t'amène aujourd'hui ?").then(askIntent);
+          return line("Comment t'appelles-tu ?").then(askName);
+        });
+    }
+
+    if (shouldIntro()) runIntro(function () { startHomeDeva(true); });
+    else startHomeDeva(false);
   }
 
   /* ================= Écran 2 : le Commun ================= */
@@ -677,7 +984,7 @@
     }
     drawPins();
 
-    /* Deva t'accueille : raconte ton lieu idéal, elle propose des projets voisins dont t'inspirer. */
+    /* Deva t'accueille : raconte ton lieu idéal, il propose des projets voisins dont t'inspirer. */
     var STOP = " le la les un une des de du d et a au aux en dans pour par sur avec sans vers chez que qui quoi ou mon ma mes ton ta tes son sa ses notre nos leur leurs ce cet cette ces on nous vous ils elles il elle je tu se est sont etre avoir plus moins tres bien plutot aussi comme lieu projet envie reve rever ".split(" ");
     function nrm(s) { return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
     function toks(s) { return nrm(s).split(/[^a-z0-9]+/).filter(function (w) { return w.length >= 3 && STOP.indexOf(w) < 0; }); }
@@ -1154,15 +1461,21 @@
     boot(page).then(function () {
       document.body.classList.remove("is-booting");
       renderTopbar(page);
-      renderFooter();
       var step = D.steps.find(function (s) { return s.id === page; });
       // Parcours ouvert à tous : pas de compte requis, les données restent sur l'appareil.
       if (window.Deva) {
-        if (page === "index") { Deva.init("accueil", { silent: true }); renderHomeVision(); }
+        if (page === "index") { Deva.init("accueil", { silent: true }); }
         else if (page === "commun") { Deva.init("commun"); }
-        else if (step) { Deva.init(step.deva); renderSidebarNav(page); }
+        else if (step) { Deva.init(step.deva); renderSidebarNav(page); renderTopStepper(page); }
       }
+      renderFooter(); // après Deva.init : le bandeau se loge sous le panneau de Deva
       if (PAGES[page]) PAGES[page]();
+      if (TOURS[page]) pageTour = TOURS[page];
+      // Arrivée depuis une porte de l'accueil : Deva fait la visite guidée de la page.
+      if (param("tour") === "1" && TOURS[page]) {
+        try { history.replaceState({}, "", location.pathname); } catch (e) { /* ignore */ }
+        setTimeout(function () { startTour(TOURS[page]); }, 500);
+      }
     });
     // Avant de quitter la page, on tente d'envoyer une sauvegarde en attente.
     window.addEventListener("pagehide", function () { if (syncTimer) { clearTimeout(syncTimer); syncNow(); } });
