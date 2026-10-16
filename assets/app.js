@@ -781,6 +781,8 @@
       // Enchaînement : Deva seule présente la vision EVAD.
       line("Bonjour, je suis Deva, l'assistant d'EVAD.")
         .then(function () { return wait(240); })
+        .then(function () { return line("Je suis une IA écologique : je réponds en local, par règles, sans grand modèle — une question me coûte ~0,05 g CO₂e, contre 2 à 5 g pour un gros modèle d'IA."); })
+        .then(function () { return wait(240); })
         .then(function () { return line("EVAD, c'est un monde régénératif désirable — déjà en train de pousser."); })
         .then(function () { return wait(240); })
         .then(function () { return line("Chaque lieu de la carte a d'abord été rêvé, puis modélisé, puis prouvé sur le terrain."); })
