@@ -10,6 +10,21 @@ HTML, CSS et JavaScript sans framework ni build ; comptes et données sur Supaba
 - Les comptes sont ceux de Supabase (email + mot de passe), les mêmes que le prototype EVAD.
 - Chaque testeur crée **son propre lieu** (nom, commune géolocalisée, promesse, collectif) sur un terrain vierge. Le projet est enregistré en ligne (table `regen_projets`, protégée par compte) et mis en cache sur l'appareil.
 - La carte publique montre les lieux des testeurs qui ont coché « Afficher mon lieu sur la carte » (vue `regen_carte`, colonnes limitées), plus des projets d'exemple marqués « Exemple ».
+
+### Vue `regen_carte` : ce que la carte attend
+
+Si la vue est absente (erreur 404 « Could not find the table public.regen_carte »), la carte **ne plante pas** : elle retombe sur les 8 lieux d'exemple et l'annonce par un bandeau « Carte en mode exemple : les lieux publics ne sont pas encore chargés ». À l'étape Rêver, une note sous la case « Afficher mon lieu » précise que la publication n'est pas encore active. Pour activer la carte publique, exécuter `supabase/regen-beta.sql`, qui crée la vue ainsi :
+
+| Colonne | Type | Origine |
+|---|---|---|
+| `id` | uuid | `regen_projets.id` |
+| `nom`, `promesse`, `lieu`, `collectif` | text | colonnes du projet |
+| `lat`, `lng` | double precision | position du lieu |
+| `statut` | text (`reve`, `encours`, `prouve`) | avancement |
+| `placed` | jsonb | `data -> 'placed'` (solutions posées, sans les preuves) |
+| `updated_at` | timestamptz | dernière modification |
+
+Filtre de la vue : `public = true and lat is not null and lng is not null and nom <> ''`. Droits : `grant select on public.regen_carte to anon, authenticated` (la table `regen_projets` reste, elle, protégée par RLS : chaque compte ne lit et n'écrit que ses propres lignes, aucun accès `anon`). Aucune donnée de compte ni de preuve détaillée ne transite par la vue.
 - Base utilisée : constante `ENV` en haut de `assets/backend.js` (`"staging"` = evad-dev, `"prod"` = base réelle).
 
 ### Mise en service

@@ -83,6 +83,20 @@
     el.textContent = { saving: "Enregistrement…", saved: "Enregistré en ligne", error: "Hors ligne : gardé sur cet appareil", idle: "" }[s] || "";
   }
 
+  // Repli explicite : si la vue regen_carte est absente (ou sans connexion), la carte n'affiche
+  // que les lieux d'exemple. On le dit, pour ne jamais laisser croire qu'un lieu est publié.
+  function carteEnModeExemple() {
+    return !(window.EvadDB && EvadDB.ready() && EvadDB.carteStatus && EvadDB.carteStatus() === "ok");
+  }
+  function renderMapNotice() {
+    if (!carteEnModeExemple()) return;
+    var host = $(".map-stage") || $(".map-card"); if (!host || host.querySelector(".map-notice")) return;
+    var n = document.createElement("p");
+    n.className = "map-notice"; n.setAttribute("role", "status");
+    n.textContent = "Carte en mode exemple : les lieux publics ne sont pas encore chargés.";
+    host.appendChild(n);
+  }
+
   function projectName() { return state.project.name.trim() || "Mon lieu"; }
   function verifiedCount() { return state.proofs.length; }
   function projectStatut() {
@@ -906,6 +920,13 @@
     var name = $("#v-nom"), prom = $("#v-promesse"), reve = $("#v-reve"), coll = $("#v-collectif"), pub = $("#v-public"), next = $("#to-explorer");
     name.value = state.project.name; prom.value = state.project.promesse; reve.value = state.project.reve;
     coll.value = state.project.collectif; pub.checked = state.project.public !== false;
+    // Tant que la carte publique n'est pas active, on ne laisse pas croire à une publication.
+    if (carteEnModeExemple() && pub.closest(".check-line")) {
+      var pubNote = document.createElement("p");
+      pubNote.className = "muted small"; pubNote.id = "v-public-note";
+      pubNote.textContent = "La carte publique n'est pas encore active : pour l'instant, ton lieu n'est visible que par toi, sur cet appareil.";
+      pub.closest(".check-line").insertAdjacentElement("afterend", pubNote);
+    }
     function sync() {
       state.project.name = name.value; state.project.promesse = prom.value; state.project.reve = reve.value;
       state.project.collectif = coll.value; state.project.public = pub.checked; save();
@@ -1463,6 +1484,7 @@
       }
       renderFooter(); // après Deva.init : le bandeau se loge sous le panneau de Deva
       if (PAGES[page]) PAGES[page]();
+      if (page === "index" || page === "rever") renderMapNotice();
       if (TOURS[page]) pageTour = TOURS[page];
       // Arrivée depuis une porte de l'accueil : Deva fait la visite guidée de la page.
       if (param("tour") === "1" && TOURS[page]) {

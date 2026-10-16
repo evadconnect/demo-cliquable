@@ -822,3 +822,9 @@ body.has-intro { overflow: hidden; }
 .deva-footer { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 16px 16px; }
 .deva-footer p { font-size: .76rem; line-height: 1.4; }
 .deva-footer .footer-actions { gap: 14px; flex-wrap: wrap; }
+
+/* Bandeau discret : carte en mode exemple (lieux publics non chargés) */
+.map-notice { position: absolute; z-index: 5; margin: 0; padding: 6px 12px; border-radius: 999px; background: rgba(255, 253, 247, .94); border: 1px solid var(--bord); box-shadow: var(--ombre); font-size: .8rem; color: var(--texte-2); pointer-events: none; max-width: calc(100% - 32px); }
+.map-stage .map-notice { top: 92px; right: 14px; max-width: 360px; }
+.map-card .map-notice { left: 12px; bottom: 12px; }
+@media (max-width: 900px) { .map-stage .map-notice { top: auto; bottom: 56px; left: 12px; transform: none; } }
