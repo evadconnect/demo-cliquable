@@ -857,3 +857,15 @@ body.has-intro { overflow: hidden; }
 .ml-done svg { width: 16px; height: 16px; flex: none; }
 .loop-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .ml-list .empty { padding: 10px 0; }
+
+/* Rêver : des lieux à visiter sous la mini-carte */
+.visits { padding: 10px 14px 14px; border-top: 1px solid var(--bord); background: var(--blanc); }
+.visits .mini-title { margin: 0 0 2px; }
+.visits > .muted { margin: 0 0 8px; }
+.visit-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.visit-item { display: flex; align-items: center; gap: 8px; }
+.visit-item .dot { flex: none; }
+.visit-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.visit-txt strong { font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.visit-txt .muted { font-size: .78rem; }
+.visit-item .icon-btn.is-on { color: var(--ambre); }

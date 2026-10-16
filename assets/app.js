@@ -919,7 +919,7 @@
       if (pb) pb.addEventListener("click", function () {
         var k = state.pinned.indexOf(id);
         if (k >= 0) { state.pinned.splice(k, 1); Deva.react("unpin"); } else { state.pinned.push(id); Deva.react("pin"); }
-        save(); select(id); drawPins();
+        save(); select(id); drawPins(); drawVisits();
       });
       $("#mini-title").focus({ preventScroll: true });
     }
@@ -962,7 +962,7 @@
       state.project.loc = { lat: +lat, lng: +lng };
       if (label) { state.project.lieu = label; geo.value = label; }
       geoStatus.textContent = "Lieu situé" + (label ? " : " + label : "") + ".";
-      save(); sync(); draw();
+      save(); sync(); draw(); drawVisits();
       if (recenter && host._lmap) host._lmap.setView([+lat, +lng], 13);
     }
     function search() {
@@ -994,6 +994,35 @@
     if (state.project.loc && host._lmap) host._lmap.setView([state.project.loc.lat, state.project.loc.lng], 11);
     sync();
 
+    // Des lieux à visiter : trois lieux qui ont fait leurs preuves (ou en chemin),
+    // les plus proches quand le lieu est situé. Deva propose, le porteur choisit.
+    function visitsPick() {
+      var me = state.project.loc, rank = { prouve: 0, encours: 1, reve: 2 };
+      return allProjects().filter(function (p) { return !p.isMine; }).map(function (p) {
+        var at = projectLoc(p), d = (me && at) ? distKm(me, at) : 400;
+        return { p: p, s: rank[p.statut] * 1000 + d };
+      }).sort(function (a, b) { return a.s - b.s; }).slice(0, 3).map(function (x) { return x.p; });
+    }
+    function showVisit(p) { select(p.id); var at = projectLoc(p); if (host._lmap && at) host._lmap.setView([at.lat, at.lng], 10); }
+    function drawVisits() {
+      var ul = $("#visit-list"); if (!ul) return;
+      var me = state.project.loc, list = visitsPick();
+      $("#visits-sub").textContent = me ? "Les plus proches de ton lieu, les prouvés d'abord." : "Situe ton lieu pour voir les plus proches. En attendant, des lieux qui ont fait leurs preuves.";
+      ul.innerHTML = list.map(function (p) {
+        var at = projectLoc(p), km = (me && at) ? Math.round(distKm(me, at)) : null, pinned = state.pinned.indexOf(p.id) >= 0;
+        return '<li class="visit-item"><span class="dot st-' + p.statut + '" aria-hidden="true"></span>' +
+          '<div class="visit-txt"><strong>' + esc(p.nom) + "</strong><span class=\"muted\">" + esc(p.lieu) + (km != null ? ", à " + km + " km" : "") + (p.isExample ? ", exemple" : "") + "</span></div>" +
+          '<button type="button" class="btn btn-ghost btn-sm" data-visit="' + p.id + '">Visiter</button>' +
+          '<button type="button" class="icon-btn icon-sm' + (pinned ? " is-on" : "") + '" data-visit-pin="' + p.id + '" aria-pressed="' + pinned + '" aria-label="' + (pinned ? "Retirer " + esc(p.nom) + " de mes inspirations" : "Épingler " + esc(p.nom)) + '">' + ICON.pin + "</button></li>";
+      }).join("");
+      $all("[data-visit]", ul).forEach(function (b) { b.addEventListener("click", function () { var p = projectById(b.dataset.visit); if (p) showVisit(p); }); });
+      $all("[data-visit-pin]", ul).forEach(function (b) { b.addEventListener("click", function () {
+        var id = b.dataset.visitPin, k = state.pinned.indexOf(id);
+        if (k >= 0) { state.pinned.splice(k, 1); Deva.react("unpin"); } else { state.pinned.push(id); Deva.react("pin"); }
+        save(); drawPins(); drawVisits(); if (sel) select(sel);
+      }); });
+    }
+
     function drawPins() {
       var ul = $("#pins");
       if (!state.pinned.length) { ul.innerHTML = '<li class="empty">Aucun projet épinglé. Clique un projet sur la carte pour t\'en inspirer.</li>'; return; }
@@ -1001,10 +1030,16 @@
         var p = projectById(id); if (!p) return "";
         return '<li class="pin-item"><span class="dot st-' + p.statut + '" aria-hidden="true"></span><button type="button" class="link-btn" data-show="' + id + '">' + esc(p.nom) + '</button><button type="button" class="icon-btn icon-sm" data-unpin="' + id + '" aria-label="Retirer ' + esc(p.nom) + ' de mes inspirations">' + ICON.close + "</button></li>";
       }).join("");
-      $all("[data-unpin]", ul).forEach(function (b) { b.addEventListener("click", function () { state.pinned.splice(state.pinned.indexOf(b.dataset.unpin), 1); save(); drawPins(); if (sel) select(sel); }); });
+      $all("[data-unpin]", ul).forEach(function (b) { b.addEventListener("click", function () { state.pinned.splice(state.pinned.indexOf(b.dataset.unpin), 1); save(); drawPins(); drawVisits(); if (sel) select(sel); }); });
       $all("[data-show]", ul).forEach(function (b) { b.addEventListener("click", function () { select(b.dataset.show); }); });
     }
     drawPins();
+    drawVisits();
+    var visites = visitsPick();
+    if (visites.length && window.Deva) {
+      Deva.say("Trois lieux à visiter pour t'inspirer" + (state.project.loc ? ", les plus proches de chez toi" : "") + ". Clique pour les voir sur la carte.",
+        { instant: true, actions: visites.map(function (p) { return { label: p.nom, once: false, onClick: function () { showVisit(p); } }; }) });
+    }
 
     /* Deva t'accueille : raconte ton lieu idéal, il propose des projets voisins dont t'inspirer. */
     var STOP = " le la les un une des de du d et a au aux en dans pour par sur avec sans vers chez que qui quoi ou mon ma mes ton ta tes son sa ses notre nos leur leurs ce cet cette ces on nous vous ils elles il elle je tu se est sont etre avoir plus moins tres bien plutot aussi comme lieu projet envie reve rever ".split(" ");
