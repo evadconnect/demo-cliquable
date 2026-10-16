@@ -170,11 +170,17 @@
   /* ---------- solutions posées (dessinées selon leur état) ---------- */
   var SOL = {
     citerne: function (g, i, j, c) {
-      [[0.35, 0.4], [0.65, 0.62]].forEach(function (o) {
+      // gouttière qui descend du toit vers la première cuve
+      var g0 = P(i + 0.08, j + 0.12, 32), g1 = P(i + 0.35, j + 0.4, 21);
+      el("line", { x1: g0[0] - 12, y1: g0[1] - 3, x2: g0[0], y2: g0[1], stroke: c.stroke, "stroke-width": 2.2, "stroke-linecap": "round" }, g);
+      el("line", { x1: g0[0], y1: g0[1], x2: g1[0], y2: g1[1], stroke: c.stroke, "stroke-width": 2.2, "stroke-linecap": "round" }, g);
+      [[0.35, 0.4], [0.65, 0.62]].forEach(function (o, n) {
         var b = P(i + o[0], j + o[1], 0), r = 9, h = 20;
         shadow(g, b[0] + 3, b[1] + 1, 11);
         el("path", { d: "M" + (b[0] - r) + " " + (b[1] - h) + " L" + (b[0] - r) + " " + b[1] + " A" + r + " " + r / 2 + " 0 0 0 " + (b[0] + r) + " " + b[1] + " L" + (b[0] + r) + " " + (b[1] - h) + " Z", fill: c.b, stroke: c.stroke, "stroke-width": 1, "stroke-dasharray": c.dash }, g);
         el("ellipse", { cx: b[0], cy: b[1] - h, rx: r, ry: r / 2, fill: c.c, stroke: c.stroke, "stroke-width": 1, "stroke-dasharray": c.dash }, g);
+        el("rect", { x: b[0] + r - 1, y: b[1] - 7, width: 4, height: 2, rx: 1, fill: c.stroke }, g); // robinet
+        if (n === 0 && c.verified) el("circle", { cx: g1[0], cy: g1[1] + 3, r: 1.7, fill: "#7FB0B3", class: "iso-drip" }, g); // goutte (cuve vérifiée)
       });
     },
     mare: function (g, i, j, c) {
@@ -192,8 +198,13 @@
       }
     },
     compost: function (g, i, j, c) {
-      var f = box(g, i + 0.2, j + 0.25, 0.6, 0.5, 14, { top: c.d, left: c.a, right: c.b }, 0, { stroke: c.stroke, "stroke-width": 0.8, "stroke-dasharray": c.dash });
-      [0.33, 0.66].forEach(function (v) { var a = sub(f.left, 0, v, 1, v); el("line", { x1: a[0][0], y1: a[0][1], x2: a[1][0], y2: a[1][1], stroke: c.stroke, "stroke-width": 0.8 }, g); });
+      // deux bacs à compost côte à côte, lattes apparentes, épluchures sur le dessus
+      [0.12, 0.54].forEach(function (o) {
+        var f = box(g, i + o, j + 0.28, 0.34, 0.44, 13, { top: c.d, left: c.a, right: c.b }, 0, { stroke: c.stroke, "stroke-width": 0.8, "stroke-dasharray": c.dash });
+        [0.33, 0.66].forEach(function (v) { var a = sub(f.left, 0, v, 1, v); el("line", { x1: a[0][0], y1: a[0][1], x2: a[1][0], y2: a[1][1], stroke: c.stroke, "stroke-width": 0.8 }, g); });
+        var t = P(i + o + 0.17, j + 0.5, 13);
+        [[-3, -1], [2, -2], [0, 2]].forEach(function (d) { el("circle", { cx: t[0] + d[0], cy: t[1] + d[1], r: 1.5, fill: c.a }, g); });
+      });
     },
     solaire: function (g, i, j, c) {
       [[i + 0.3, j + 0.25], [i + 0.3, j + 0.75]].forEach(function (lg) { var a = P(lg[0], lg[1], 0), b = P(lg[0], lg[1], 12); el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.stroke, "stroke-width": 2 }, g); });
@@ -237,20 +248,23 @@
         var a = k / 6 * Math.PI * 2, x = i + 0.5 + Math.cos(a) * 0.32, y = j + 0.5 + Math.sin(a) * 0.32;
         box(g, x - 0.07, y - 0.07, 0.14, 0.14, 5, { top: c.c, left: c.a, right: c.b }, 0, { stroke: c.stroke, "stroke-width": 0.6, "stroke-dasharray": c.dash });
       }
-      var p = P(i + 0.5, j + 0.5, 0); el("circle", { cx: p[0], cy: p[1], r: 3, fill: c.b }, g);
+      // table de conseil au centre du cercle
+      box(g, i + 0.38, j + 0.38, 0.24, 0.24, 8, { top: c.c, left: c.a, right: c.b }, 0, { stroke: c.stroke, "stroke-width": 0.6, "stroke-dasharray": c.dash });
     },
     panneau: function (g, i, j, c) {
-      [0.3, 0.7].forEach(function (u) { var a = P(i + u, j + 0.5, 0), b = P(i + u, j + 0.5, 26); el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.stroke, "stroke-width": 2 }, g); });
-      var q = [P(i + 0.2, j + 0.5, 32), P(i + 0.8, j + 0.5, 32), P(i + 0.8, j + 0.5, 14), P(i + 0.2, j + 0.5, 14)];
-      poly(g, q, c.a, { stroke: c.stroke, "stroke-width": 1, "stroke-dasharray": c.dash });
-      [0.3, 0.55].forEach(function (v) { var a = sub(q, 0.15, v, 0.85, v); el("line", { x1: a[0][0], y1: a[0][1], x2: a[1][0], y2: a[1][1], stroke: c.c, "stroke-width": 1.2 }, g); });
+      // urne du budget participatif : une boîte sur pied, sa fente, un bulletin glissé
+      box(g, i + 0.44, j + 0.44, 0.12, 0.12, 10, { top: c.d, left: c.a, right: c.b }, 0, { stroke: c.stroke, "stroke-width": 0.6 });
+      var f = box(g, i + 0.3, j + 0.3, 0.4, 0.4, 14, { top: c.c, left: c.a, right: c.b }, 10, { stroke: c.stroke, "stroke-width": 0.9, "stroke-dasharray": c.dash });
+      poly(g, sub(f.top, 0.22, 0.44, 0.78, 0.56), c.stroke);
+      var t = P(i + 0.5, j + 0.5, 24);
+      el("rect", { x: t[0] - 4, y: t[1] - 12, width: 8, height: 10, rx: 1, fill: "#FFFDF7", stroke: c.stroke, "stroke-width": 0.8, transform: "rotate(-14 " + t[0] + " " + t[1] + ")" }, g);
     }
   };
 
   function statusPalette(status) {
     var s = STATUS[status] || STATUS.prevu;
     var c = {}; for (var k in s) c[k] = s[k];
-    if (status === "verifie") c.fruit = "#C06848";
+    if (status === "verifie") { c.fruit = "#C06848"; c.verified = true; }
     return c;
   }
 
