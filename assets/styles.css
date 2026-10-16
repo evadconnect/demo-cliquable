@@ -830,7 +830,8 @@ body.has-intro { overflow: hidden; }
 @media (max-width: 900px) { .map-stage .map-notice { top: auto; bottom: 56px; left: 12px; transform: none; } }
 
 /* Espaces du lieu sur la maquette : contours et étiquettes */
-.iso-zone-text { font: 600 10.5px var(--f-texte); fill: var(--encre); }
+.iso-zone-text { font: 700 10.5px var(--f-texte); fill: var(--encre); }
+.iso-zone-kicker { font: 600 6.8px var(--f-texte); letter-spacing: .14em; text-transform: uppercase; fill: var(--texte-2); }
 .iso-zone[role="button"] { cursor: pointer; outline: none; }
 .iso-zone[role="button"]:hover polygon, .iso-zone[role="button"]:focus-visible polygon { stroke-width: 2.6; stroke-dasharray: none; }
 
