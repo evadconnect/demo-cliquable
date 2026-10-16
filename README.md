@@ -32,6 +32,22 @@ Filtre de la vue : `public = true and lat is not null and lng is not null and no
 2. Authentication > URL Configuration : ajouter `https://evadconnect.github.io/demo-cliquable/` (et `http://localhost:8790/`) aux Redirect URLs, pour les liens de confirmation et de mot de passe oublié.
 3. Quand c'est validé : relancer le SQL sur la base prod et passer `ENV` à `"prod"`.
 
+## Vérifications rapides
+
+Typographie : aucun tiret cadratin (U+2014) ni demi-cadratin (U+2013) dans les textes ; on écrit avec des virgules, des deux-points et des points.
+
+```bash
+grep -rnE "$(printf '\xe2\x80\x94|\xe2\x80\x93')" --include=*.html --include=*.js --include=*.md . && echo "Tirets à corriger" || echo "OK : aucun tiret cadratin"
+```
+
+Vocabulaire : les mots exclus par la doctrine ne doivent pas apparaître dans l'interface (on dit « projet régénératif », « porteur de projet », « contributeur », « financeur »).
+
+```bash
+grep -rniE "avantage|récompense|\bgagner\b|contrepartie|monnaie locale|crédits?|\bgraines?\b|vadin|bâtisseur|\bpilote\b|semeur" --include=*.html --include=*.js . || echo "OK : vocabulaire conforme"
+```
+
+Le mot « point » se vérifie à la main : il reste acceptable pour la géographie (mais on préfère « marqueur » ou « lieu » dans les textes de Deva), jamais au sens de points à gagner.
+
 ## Lancer en local
 
 Ouvrir `index.html` dans le navigateur, directement.

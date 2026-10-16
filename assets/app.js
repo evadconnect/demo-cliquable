@@ -433,7 +433,7 @@
   var pageTour = null; // visite guidée de la page courante, rejouable via « Revoir la visite »
   var TOURS = {
     commun: [
-      { sel: ".doctrine", text: "Le Commun est une bibliothèque libre de solutions. La règle : vérifié bat généré — rien n'entre sans preuve de terrain." },
+      { sel: ".doctrine", text: "Le Commun est une bibliothèque libre de solutions. La règle : vérifié bat généré : rien n'entre sans preuve de terrain." },
       { sel: ".commun-tools .search", text: "Cherche une solution par mot-clé : haie, compost, réparer…" },
       { sel: "#commun-fams", text: "Ou filtre par famille pour cibler ce qui t'intéresse." },
       { sel: "#commun-grid .card", text: "Chaque fiche montre la difficulté, le coût, et sur combien de lieux la solution a déjà été éprouvée." },
@@ -442,7 +442,7 @@
     ],
     rever: [
       { sel: ".page-stepper", text: "Créer un lieu, c'est le parcours REGEN en 5 étapes, ici en haut : Rêver, Explorer, Générer, Entreprendre, Nourrir. On démarre par Rêver." },
-      { sel: ".map-card", text: "Inspire-toi des projets qui poussent déjà autour de toi — clique un point. Clique la carte pour situer ton futur lieu." },
+      { sel: ".map-card", text: "Inspire-toi des projets qui poussent déjà autour de toi : clique un marqueur. Clique la carte pour situer ton futur lieu." },
       { sel: "#v-nom", text: "Donne un nom à ton lieu." },
       { sel: "#v-geo", text: "Situe-le : tape une commune ou une adresse, puis choisis dans la liste." },
       { sel: "#v-promesse", text: "Écris ta promesse : en une phrase, ce que le lieu change pour les gens." },
@@ -620,7 +620,7 @@
       if (!(window.Deva && Deva.prompt)) return;
       if (firstTime) {
         Deva.say((state.prenom ? "Et voilà la carte vivante, " + state.prenom + ". " : "Et voilà la carte vivante. ") +
-          "Chaque point est un lieu réel. Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
+          "Chaque marqueur est un lieu réel. Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
       } else if (state.prenom) {
         Deva.say("Ravi de te revoir, " + state.prenom + ". " + VISION + " Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
       } else {
@@ -731,8 +731,8 @@
       var SAMPLE_ID = (D.projets && D.projets[0] && D.projets[0].id) || null;
       var carteTour = [
         { text: "Bienvenue sur la carte vivante ! Je te montre l'essentiel en quelques secondes." },
-        { sel: ".leaflet-marker-icon", text: "Chaque point est un lieu réel. Clique-le pour ouvrir sa fiche." },
-        { sel: ".map-filters", text: "Filtre par avancement — Rêvé, En cours, Prouvé — et par famille (Eau, Sol, Énergie…), ou n'affiche que ce qui pousse autour de toi." },
+        { sel: ".leaflet-marker-icon", text: "Chaque marqueur est un lieu réel. Clique-le pour ouvrir sa fiche." },
+        { sel: ".map-filters", text: "Filtre par avancement (Rêvé, En cours, Prouvé) et par famille (Eau, Sol, Énergie…), ou n'affiche que ce qui pousse autour de toi." },
         { sel: "#fiche", text: "Voici la fiche d'un lieu : sa promesse, le collectif qui le porte, les solutions posées et son impact vérifié. « Explorer ce projet » déplie le détail.",
           onEnter: function () { if (SAMPLE_ID) openFiche(SAMPLE_ID); },
           onLeave: function () { closeFiche(); } },
@@ -744,7 +744,7 @@
         // REGEN et Commun : on part sur l'autre page, qui lance sa visite guidée (?tour=1).
         if (kind === "regen") { location.href = "rever.html?tour=1"; return; }
         if (kind === "commun") { location.href = "commun.html?tour=1"; return; }
-        // Carte : page courante — on révèle la carte puis Deva en fait le tour.
+        // Carte : page courante, on révèle la carte puis Deva en fait le tour.
         leave(); setTimeout(function () { startTour(carteTour); }, 680);
       }
       function askIntent() {
@@ -763,7 +763,7 @@
           b.addEventListener("click", function () { routeTo(b.getAttribute("data-go")); });
         });
         var ACK = {
-          regen: "Parfait — je t'emmène créer ton lieu, étape par étape.",
+          regen: "Parfait, je t'emmène créer ton lieu, étape par étape.",
           carte: "Allons explorer la carte vivante.",
           commun: "Je t'emmène découvrir les solutions du Commun."
         };
@@ -771,7 +771,7 @@
         // Deva répond à une question via son moteur scripté, et laisse les portes ouvertes.
         function answerInline(txt) {
           var rep = (window.Deva && Deva.answer) ? Deva.answer(txt) : null;
-          line(rep || "Choisis une porte pour commencer — tu pourras tout explorer ensuite.");
+          line(rep || "Choisis une porte pour commencer : tu pourras tout explorer ensuite.");
           input.focus({ preventScroll: true });
         }
         form.addEventListener("submit", function (e) {
@@ -794,9 +794,9 @@
       // Enchaînement : Deva seule présente la vision EVAD.
       line("Bonjour, je suis Deva, l'assistant d'EVAD.")
         .then(function () { return wait(240); })
-        .then(function () { return line("Je suis une IA écologique : je réponds en local, par règles, sans grand modèle — une question me coûte ~0,05 g CO₂e, contre 2 à 5 g pour un gros modèle d'IA."); })
+        .then(function () { return line("Je suis une IA écologique : je réponds en local, par règles, sans grand modèle : une question me coûte ~0,05 g CO₂e, contre 2 à 5 g pour un gros modèle d'IA."); })
         .then(function () { return wait(240); })
-        .then(function () { return line("EVAD, c'est un monde régénératif désirable — déjà en train de pousser."); })
+        .then(function () { return line("EVAD, c'est un monde régénératif désirable, déjà en train de pousser."); })
         .then(function () { return wait(240); })
         .then(function () { return line("Chaque lieu de la carte a d'abord été rêvé, puis modélisé, puis prouvé sur le terrain."); })
         .then(function () { return wait(240); })

@@ -346,7 +346,7 @@ window.EVAD_DATA = {
       { k: ["compte", "connecter", "connexion", "inscription", "s'inscrire", "login", "identifiant"],
         a: "Pas besoin de compte en bêta : tout est ouvert. Clique « Créer mon projet » pour lancer ton lieu tout de suite ; il est gardé sur cet appareil." },
       { k: ["qui es-tu", "qui es tu", "tu es quoi", "c'est quoi deva", "qui est deva", "robot", "ia", "intelligence artificielle", "ecologique", "ia ecologique", "ecolo", "verte", "sobre"],
-        a: "Je suis Deva, ton assistant sur EVAD — et une IA écologique : je réponds en local, par règles, sans grand modèle d'IA, donc mon empreinte reste minime (~0,05 g CO₂e par question, contre 2 à 5 g pour un gros modèle). Je te guide, je propose, c'est toujours toi qui décides, et je ne m'invente jamais de chiffres d'impact." },
+        a: "Je suis Deva, ton assistant sur EVAD, et une IA écologique : je réponds en local, par règles, sans grand modèle d'IA, donc mon empreinte reste minime (~0,05 g CO₂e par question, contre 2 à 5 g pour un gros modèle). Je te guide, je propose, c'est toujours toi qui décides, et je ne m'invente jamais de chiffres d'impact." },
       { id: "empreinte",
         k: ["ton empreinte", "empreinte de deva", "empreinte de la conversation", "empreinte de nos echanges", "nos echanges", "tu pollues", "tu consommes", "ton co2", "deva pollue", "sobriete de deva"],
         a: "Bonne question : nos échanges ont une empreinte, affichée en bas de ce panneau. Comme je réponds localement, par règles, elle reste minime, loin d'une requête vers un gros modèle d'IA." },
