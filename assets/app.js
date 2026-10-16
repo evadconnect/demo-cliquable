@@ -296,21 +296,21 @@
     out.sort(function (a, b) { return (Math.abs(a.i - 4.5) + Math.abs(a.j - 4.5)) - (Math.abs(b.i - 4.5) + Math.abs(b.j - 4.5)); });
     return out;
   }
-  function sceneOptionsFor(project) {
-    if (project.isMine || project.isPublic) {
-      var placed = project.isMine ? state.placed : project.placedRemote;
-      var vit = project.isMine ? verifiedCount() / 3 : { reve: 0, encours: 0.4, prouve: 1 }[project.statut];
-      return Object.assign({}, BLANK_SCENE, { placed: placed, solutions: SOL, vitalite: vit, label: "Maquette 2.5D de " + project.nom });
+  // Un « lieu » pour renderScene : données pures (espaces, solutions posées, vitalité, décor).
+  function myLieu() {
+    return Object.assign({}, BLANK_SCENE, { nom: projectName(), spaces: state.spaces, placed: state.placed, solutions: SOL, vitalite: verifiedCount() / 3 });
+  }
+  function lieuFor(project) {
+    if (project.isMine) return myLieu();
+    if (project.isPublic) {
+      return Object.assign({}, BLANK_SCENE, { nom: project.nom, spaces: [], placed: project.placedRemote, solutions: SOL, vitalite: { reve: 0, encours: 0.4, prouve: 1 }[project.statut] });
     }
     var structures = D.presets[project.preset] || [];
     var cells = freeCells(structures, 9, 4);
     var map = { reve: "prevu", encours: "encours", prouve: "verifie" };
     var placedEx = (project.solutions || []).map(function (s, k) { var c = cells[k * 3 % cells.length]; return { uid: project.id + k, solId: s[0], status: map[s[1]], i: c.i, j: c.j }; });
-    return { grille: 9, chemin: 4, structures: structures, placed: placedEx, solutions: SOL, personnages: [{ i: 4, j: 2, c: "#C06848" }, { i: 6, j: 4, c: "#2C5234" }],
-      vitalite: { reve: 0, encours: 0.4, prouve: 1 }[project.statut], label: "Maquette 2.5D de " + project.nom };
-  }
-  function myScene(extra) {
-    return Object.assign({}, BLANK_SCENE, { placed: state.placed, solutions: SOL, vitalite: verifiedCount() / 3, label: "Maquette 2.5D de " + projectName() }, extra || {});
+    return { nom: project.nom, grille: 9, chemin: 4, structures: structures, placed: placedEx, solutions: SOL, personnages: [{ i: 4, j: 2, c: "#C06848" }, { i: 6, j: 4, c: "#2C5234" }],
+      vitalite: { reve: 0, encours: 0.4, prouve: 1 }[project.statut] };
   }
 
   function jaugesHtml(j) {
@@ -579,7 +579,7 @@
           : '<button type="button" class="btn btn-primary" id="fiche-inspire">M\'en inspirer pour créer le mien</button>') +
         "</div>" +
         '<div class="fiche-detail" id="fiche-detail" hidden><h3 class="mini-title">Solutions du Commun sur ce lieu</h3>' + detail + "</div>";
-      EvadScene.render($("#fiche-scene"), sceneOptionsFor(p));
+      renderScene($("#fiche-scene"), lieuFor(p));
       fiche.classList.add("open"); fiche.setAttribute("aria-hidden", "false"); $(".map-stage").classList.add("has-fiche");
       $("#fiche-close").addEventListener("click", closeFiche);
       $("#fiche-explore").addEventListener("click", function () {
@@ -913,7 +913,7 @@
         '<h3 id="mini-title" tabindex="-1">' + esc(p.nom) + '</h3><p class="muted small">' + esc(p.lieu) + "</p><p>" + esc(p.promesse) + "</p>" +
         (p.isMine ? '<p class="muted small">C\'est ton projet.</p>' : '<button type="button" class="btn ' + (pinned ? "btn-ghost" : "btn-primary") + ' btn-sm" id="pin-btn" aria-pressed="' + pinned + '">' + ICON.pin + (pinned ? " Épinglé" : " Épingler") + "</button>") + "</div>";
       card.hidden = false;
-      EvadScene.render($("#mini-scene"), sceneOptionsFor(p));
+      renderScene($("#mini-scene"), lieuFor(p));
       $(".mini-close", card).addEventListener("click", function () { card.hidden = true; sel = null; draw(); });
       var pb = $("#pin-btn");
       if (pb) pb.addEventListener("click", function () {
@@ -1191,7 +1191,7 @@
       $("#cancel-arm").addEventListener("click", function () { armed = null; drawBar(); drawHint(); });
     }
     function drawScene(focusUid) {
-      api = EvadScene.render(stage, myScene({ interactive: true, label: "Maquette 2.5D de " + projectName() + ". Glisse une solution sur une case d'herbe libre." }));
+      api = renderScene(stage, myLieu(), { interactive: true, label: "Maquette 2.5D de " + projectName() + ". Glisse une solution sur une case d'herbe libre." });
       $all(".iso-item", stage).forEach(function (g) {
         g.addEventListener("click", function (e) { e.stopPropagation(); openMenu(g.dataset.uid, g); });
         g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openMenu(g.dataset.uid, g); } });
@@ -1382,7 +1382,7 @@
     });
 
     function drawScene() {
-      EvadScene.render($("#nr-scene"), myScene({ justVerified: justVerified }));
+      renderScene($("#nr-scene"), myLieu(), { justVerified: justVerified });
       var ver = state.placed.filter(function (p) { return p.status === "verifie"; }).length;
       $("#scene-state").textContent = !state.placed.length ? "Aucun élément posé." : ver === 0 ? "Rien n'est encore vérifié : le lieu attend ses premières preuves." : ver === state.placed.length ? "Tout le lieu est vérifié." : "Le lieu commence à verdir.";
     }

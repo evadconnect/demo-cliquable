@@ -373,5 +373,27 @@
     return { svg: svg, cellFromPoint: cellFromPoint, showHover: showHover, firstFree: firstFree, isFree: function (i, j) { return !occ[i + "," + j] && !isPath(i, j); } };
   }
 
-  window.EvadScene = { render: render };
+  /* ---------- composant réutilisable ----------
+     renderScene(container, lieu, options) : un lieu décrit par ses données
+     (espaces, solutions posées, vitalité, éventuels bâtiments) et des options d'affichage.
+     Utilisé par Générer, Nourrir, la fiche lieu de la carte et la page Mon lieu. */
+  function renderScene(container, lieu, options) {
+    lieu = lieu || {}; options = options || {};
+    var opt = {
+      grille: lieu.grille || 9,
+      chemin: lieu.chemin === undefined ? null : lieu.chemin,
+      structures: lieu.structures || [],
+      personnages: lieu.personnages || [],
+      placed: lieu.placed || [],
+      solutions: lieu.solutions || {},
+      vitalite: lieu.vitalite || 0,
+      interactive: !!options.interactive,
+      label: options.label || ("Maquette 2.5D de " + (lieu.nom || "mon lieu")),
+      justVerified: options.justVerified || null
+    };
+    return render(container, opt);
+  }
+
+  window.EvadScene = { render: render, renderScene: renderScene };
+  window.renderScene = renderScene;
 })();
