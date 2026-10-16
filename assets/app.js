@@ -359,6 +359,9 @@
     var projects = allProjects();
     var map = host._lmap;
     if (!map) {
+      // Un conteneur sans hauteur au moment de l'init laisse Leaflet sans tuiles (marqueurs sur fond uni) :
+      // on garantit une hauteur, puis on recalcule la taille une fois le rendu posé et à chaque redimensionnement.
+      if (!host.clientHeight) host.style.minHeight = "280px";
       map = L.map(host, { zoomControl: false, attributionControl: true });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -368,6 +371,11 @@
       host._lmap = map;
       host._lmarkers = L.layerGroup().addTo(map);
       map.on("click", function (e) { if (host._locateMove) host._locateMove(e.latlng.lat, e.latlng.lng); });
+      var refit = function () { if (host._lmap) host._lmap.invalidateSize(); };
+      map.whenReady(function () { requestAnimationFrame(refit); setTimeout(refit, 350); });
+      window.addEventListener("load", refit);
+      if (window.ResizeObserver) new ResizeObserver(refit).observe(host);
+      else window.addEventListener("resize", refit);
     }
     host._locateMove = opts.locate ? opts.locate.onMove : null;
     var layer = host._lmarkers; layer.clearLayers();

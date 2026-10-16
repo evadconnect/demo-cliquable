@@ -452,7 +452,7 @@ body[data-page="index"] .stage { padding: 0; }
 /* ---------- Rêver ---------- */
 .split { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); gap: 20px; align-items: start; }
 .map-card { position: relative; background: var(--creme); border: 1px solid var(--bord); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--ombre); }
-.map-card #map { aspect-ratio: 610 / 440; }
+.map-card #map { aspect-ratio: 610 / 440; min-height: 280px; }
 .split .map-card { position: sticky; top: calc(var(--top-h) + 16px); }
 .map-hint { position: absolute; top: 12px; left: 12px; background: rgba(255, 253, 247, .94); border-radius: 999px; padding: 6px 14px; font-size: .84rem; border: 1px solid var(--bord); }
 .mini-fiche { position: relative; margin: 0 12px 12px; display: grid; grid-template-columns: 170px 1fr; gap: 12px; background: var(--blanc); border-radius: var(--r); box-shadow: var(--ombre-haute); padding: 10px 14px 12px 8px; animation: pop .25s ease-out; }
