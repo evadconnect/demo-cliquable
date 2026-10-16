@@ -23,8 +23,8 @@
       interestFam: "",
       project: { name: "", promesse: "", reve: "", collectif: "", lieu: "", loc: null, public: true },
       pinned: [],
-      spaces: D.espaces.map(function (e) { return { id: e.id, nom: e.nom }; }),
-      selectedSpace: D.espaces[0].id,
+      spaces: [],          // le porteur crée ses espaces à l'étape Explorer ; Deva en propose, il décide
+      selectedSpace: null,
       chosen: [],
       icis: [],
       placed: [],
@@ -105,7 +105,7 @@
     return "reve";
   }
   var fricheStatut = projectStatut;
-  function spaceName(id) { var s = state.spaces.find(function (x) { return x.id === id; }); return s ? s.nom : "Lieu"; }
+  function spaceName(id) { if (!id) return "aucun espace"; var s = state.spaces.find(function (x) { return x.id === id; }); return s ? s.nom : "Lieu"; }
   function stepDone(id) {
     if (id === "rever") return !!state.project.name.trim();
     if (id === "explorer") return state.chosen.length > 0;
@@ -1092,9 +1092,33 @@
   }
   function pageExplorer() {
     var fam = "", pulse = null;
+    if (!state.spaces.some(function (s) { return s.id === state.selectedSpace; })) state.selectedSpace = state.spaces[0] ? state.spaces[0].id : null;
+
+    // Ajout d'un espace (saisi, ou proposé par Deva parmi les quatre classiques).
+    function addSpace(id, nom) {
+      if (state.spaces.length >= 8) { toast("Huit espaces, c'est déjà un beau lieu. Regroupe avant d'en ajouter."); return; }
+      var s = { id: id || uid("s"), nom: nom }; state.spaces.push(s); state.selectedSpace = s.id; save();
+      pulse = s.id; drawAll(); Deva.react("espace");
+    }
+    function drawSpaceSugg() {
+      var box = $("#space-sugg"); if (!box) return;
+      var rest = D.espaces.filter(function (e) { return !state.spaces.some(function (s) { return s.id === e.id; }); });
+      if (!rest.length || state.spaces.length >= 8) { box.innerHTML = ""; return; }
+      box.innerHTML = '<span class="sugg-lbl">' + leafSvg("") + "Deva propose, tu décides :</span>" +
+        rest.map(function (e) { return '<button type="button" class="deva-chip" data-space-add="' + e.id + '">+ ' + esc(e.nom) + "</button>"; }).join("");
+      $all("[data-space-add]", box).forEach(function (b) { b.addEventListener("click", function () {
+        var e = D.espaces.find(function (x) { return x.id === b.dataset.spaceAdd; }); if (e) addSpace(e.id, e.nom);
+      }); });
+    }
     function chosenIn(spaceId) { return state.chosen.filter(function (c) { return c.spaceId === spaceId; }); }
 
     function drawMind() {
+      drawSpaceSugg();
+      if (!state.spaces.length) {
+        $("#mind").innerHTML = '<div class="mind-empty"><p>Ton lieu n\'a pas encore d\'espace. Commence par en créer un : un jardin, un atelier, un café, un coin pour décider ensemble. Deva en propose ci-dessous, tu décides.</p></div>';
+        $("#sel-space").textContent = "aucun pour l'instant";
+        return;
+      }
       var W = 620, H = 450, cx = 310, cy = 222, n = state.spaces.length;
       var svg = '<svg viewBox="0 0 ' + W + " " + H + '" class="mind-svg" role="group" aria-label="Carte mentale des espaces du projet">';
       var nodes = state.spaces.map(function (s, k) {
@@ -1141,6 +1165,7 @@
         return iciCard(x, on ? '<span class="added">' + ICON.check + ' Suivi dans mon projet</span><button type="button" class="link-btn" data-ici-off="' + x.id + '">Retirer</button>' : '<button type="button" class="btn btn-amber btn-sm" data-ici="' + x.id + '">Ajouter à mon projet</button>');
       }).join("");
       $all("[data-add]").forEach(function (b) { b.addEventListener("click", function () {
+        if (!state.selectedSpace) { toast("Crée d'abord un espace, ou prends-en un proposé par Deva, puis accroche-lui cette solution."); $("#space-name").focus(); return; }
         state.chosen.push({ id: uid("c"), solId: b.dataset.add, spaceId: state.selectedSpace }); save();
         pulse = state.selectedSpace; drawAll(); Deva.react("add:" + b.dataset.add, "add");
         var again = $('[data-remove="' + b.dataset.add + '"]'); if (again) again.focus();
@@ -1157,7 +1182,7 @@
 
     function drawChosen() {
       var ul = $("#chosen");
-      if (!state.chosen.length) { ul.innerHTML = '<li class="empty">Aucune solution choisie. Sélectionne un espace, puis ajoute des solutions du Commun à droite.</li>'; return; }
+      if (!state.chosen.length) { ul.innerHTML = '<li class="empty">Aucune solution choisie. Crée ou sélectionne un espace, puis ajoute des solutions du Commun à droite.</li>'; return; }
       ul.innerHTML = state.chosen.map(function (c) {
         return '<li class="chosen-item fam-' + SOL[c.solId].famille + '"><span class="fam-dot" aria-hidden="true"></span><span><strong>' + esc(SOL[c.solId].nom) + '</strong> <span class="muted">dans ' + esc(spaceName(c.spaceId)) + '</span></span><button type="button" class="icon-btn icon-sm" data-unchoose="' + c.id + '" aria-label="Retirer ' + esc(SOL[c.solId].nom) + '">' + ICON.close + "</button></li>";
       }).join("");
@@ -1172,9 +1197,7 @@
     $("#add-space").addEventListener("submit", function (e) {
       e.preventDefault();
       var input = $("#space-name"), nom = input.value.trim() || "Nouvel espace";
-      if (state.spaces.length >= 8) { toast("Huit espaces, c'est déjà un beau lieu. Regroupe avant d'en ajouter."); return; }
-      var s = { id: uid("s"), nom: nom }; state.spaces.push(s); state.selectedSpace = s.id; save();
-      input.value = ""; pulse = s.id; drawAll(); Deva.react("espace");
+      input.value = ""; addSpace(null, nom);
     });
     drawAll();
   }
@@ -1200,8 +1223,13 @@
       if (!state.chosen.length) {
         bar.innerHTML = '<p class="empty">Tu n\'as pas encore choisi de solutions. <a href="explorer.html">Retourner à Explorer</a> ou <button type="button" class="link-btn" id="take-sugg">reprendre les suggestions de Deva</button>.</p>';
         $("#take-sugg").addEventListener("click", function () {
+          // les suggestions s'accrochent à trois espaces classiques : on les crée s'ils manquent
+          ["jardin", "atelier", "cafe"].forEach(function (sid) {
+            if (!state.spaces.some(function (s) { return s.id === sid; })) { var e = D.espaces.find(function (x) { return x.id === sid; }); if (e) state.spaces.push({ id: e.id, nom: e.nom }); }
+          });
+          if (!state.selectedSpace) state.selectedSpace = state.spaces[0].id;
           ["haie", "recup-eau", "solaire", "four"].forEach(function (id, k) { if (!state.chosen.some(function (c) { return c.solId === id; })) state.chosen.push({ id: uid("c"), solId: id, spaceId: ["jardin", "jardin", "atelier", "cafe"][k] }); });
-          save(); drawBar(); refreshChrome(); Deva.say("Voici quatre solutions éprouvées du Commun. Tu restes libre de les poser ou non.");
+          save(); drawScene(); drawBar(); refreshChrome(); Deva.say("Voici quatre solutions éprouvées du Commun. Tu restes libre de les poser ou non.");
         });
         return;
       }

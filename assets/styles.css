@@ -869,3 +869,10 @@ body.has-intro { overflow: hidden; }
 .visit-txt strong { font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .visit-txt .muted { font-size: .78rem; }
 .visit-item .icon-btn.is-on { color: var(--ambre); }
+
+/* Explorer : lieu sans espace au départ, espaces proposés par Deva */
+.mind-empty { display: grid; place-items: center; min-height: 220px; padding: 24px; text-align: center; color: var(--texte-2); background: var(--creme); border: 1px dashed var(--bord); border-radius: var(--r-lg); }
+.mind-empty p { max-width: 42ch; margin: 0; }
+.space-sugg { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+.sugg-lbl { display: inline-flex; align-items: center; gap: 6px; font-size: .84rem; color: var(--texte-2); margin-right: 4px; }
+.sugg-lbl .leaf { width: 14px; height: 14px; }
