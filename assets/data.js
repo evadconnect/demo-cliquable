@@ -234,6 +234,15 @@ window.EVAD_DATA = {
           { q: "Faut-il un compte ?", a: "Non, le Commun est libre d'accès. Tu peux tout consulter sans te connecter." }
         ]
       },
+      monlieu: {
+        label: "Mon lieu",
+        intro: "Voici ton lieu au quotidien : ce qu'il y a à faire aujourd'hui, les preuves attendues, et ce qui a avancé cette semaine. Clique un espace de la maquette pour te concentrer dessus.",
+        suggestions: [
+          { q: "Que faire aujourd'hui ?", a: "Regarde le bloc Aujourd'hui : d'abord ce qui attend une preuve, puis les quêtes à lancer. Une seule à la fois, c'est déjà bien." },
+          { q: "Comment lire l'élan de la semaine ?", a: "Par famille d'ICI, des repères qualitatifs : prévu, en cours, vérifié. Jamais un chiffre d'impact : ce sont tes preuves qui font avancer le lieu." },
+          { q: "Pourquoi un espace est vide ?", a: "Aucune solution n'y est posée. Passe par Explorer pour en accrocher une, puis par Générer pour la poser sur la maquette." }
+        ]
+      },
       orientation: {
         label: "Orientation",
         intro: "Bonjour, je suis Deva. On commence par rêver ton lieu. Regarde les projets autour de toi, épingle ceux qui te parlent, puis donne un nom à ton projet.",

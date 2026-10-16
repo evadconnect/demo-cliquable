@@ -176,7 +176,7 @@
     // Pages avec sidebar : barre du haut réduite au logo (+ accès sur les pages publiques).
     if (document.getElementById("deva")) {
       top.className = "topbar topbar-slim";
-      var isWorkspace = D.steps.some(function (s) { return s.id === page; });
+      var isWorkspace = page === "monlieu" || D.steps.some(function (s) { return s.id === page; });
       // Menu global : jongler entre la carte, le Commun et la création de projet.
       var link = function (href, label, cur) {
         return '<a class="toplink' + (cur ? " is-current" : "") + '" href="' + href + '"' + (cur ? ' aria-current="page"' : "") + ">" + label + "</a>";
@@ -215,7 +215,7 @@
     var inner = document.querySelector("#deva .deva-inner"); if (!inner) return;
     var st = fricheStatut();
     var html = '<div class="deva-nav">' +
-      '<a class="snav-place" href="index.html?focus=mine" title="Voir mon lieu sur la carte">' +
+      '<a class="snav-place" href="mon-lieu.html" title="Ouvrir mon lieu">' +
       '<span class="pill-dot st-' + st + '" aria-hidden="true"></span>' +
       '<span class="snav-place-txt"><span class="snav-kicker">Mon lieu</span><strong>' + esc(projectName()) + '</strong></span></a>' +
       "</div>";
@@ -1460,8 +1460,60 @@
     drawAll();
   }
 
+  /* ================= Mon lieu : tableau de bord quotidien du porteur ================= */
+  function pageMonLieu() {
+    var filter = null;
+    var hasLieu = !!state.project.name.trim() || state.placed.length || state.chosen.length;
+    $("#ml-title").textContent = projectName();
+    $("#ml-promesse").textContent = state.project.promesse.trim() || "Ta promesse s'écrit à l'étape Rêver.";
+    if (!hasLieu) { $("#ml-empty").hidden = false; $("#ml-grid").hidden = true; return; }
+
+    function drawScene() {
+      renderScene($("#ml-scene"), myLieu(), {
+        label: "Maquette vivante de " + projectName(),
+        activeZone: filter,
+        onZone: function (id) { filter = filter === id ? null : id; drawAll(); }
+      });
+      $("#ml-scene-state").textContent = filter
+        ? "Espace " + spaceName(filter) + ". Clique-le à nouveau pour revoir tout le lieu."
+        : "Clique un espace de la maquette pour te concentrer sur ses quêtes.";
+    }
+    // Aujourd'hui : d'abord ce qui attend une preuve, puis les quêtes à lancer.
+    function drawToday() {
+      var ul = $("#ml-today"), list = state.placed.filter(function (p) { return !filter || p.spaceId === filter; });
+      $("#ml-filter").textContent = filter ? "Quêtes de l'espace " + spaceName(filter) : "Toutes les quêtes du lieu";
+      $("#ml-all").hidden = !filter;
+      if (!list.length) {
+        ul.innerHTML = '<li class="empty">' + (filter ? "Rien n'est posé dans cet espace pour l'instant." : "Aucune solution posée. Passe par Générer pour poser tes premières solutions.") + "</li>";
+        return;
+      }
+      var html = "";
+      list.filter(function (p) { return p.status === "encours"; }).forEach(function (p) {
+        var q = questFor(p);
+        html += '<li class="ml-item"><span class="dot st-encours" aria-hidden="true"></span><div><strong>À vérifier : ' + esc(q.titre) + '</strong>' +
+          '<p class="muted small">Preuve attendue : une photo, une mesure, une date. Espace ' + esc(spaceName(p.spaceId)) + ".</p></div>" +
+          '<a class="btn btn-primary btn-sm" href="nourrir.html?pour=' + p.uid + '">Apporter la preuve</a></li>';
+      });
+      list.filter(function (p) { return p.status === "prevu"; }).forEach(function (p) {
+        var q = questFor(p);
+        html += '<li class="ml-item"><span class="dot st-reve" aria-hidden="true"></span><div><strong>À faire : ' + esc(q.titre) + '</strong>' +
+          '<p class="muted small">' + esc(q.aide) + " Espace " + esc(spaceName(p.spaceId)) + ".</p></div>" +
+          '<a class="btn btn-ghost btn-sm" href="entreprendre.html">Ouvrir la quête</a></li>';
+      });
+      var done = list.filter(function (p) { return p.status === "verifie"; });
+      if (done.length) html += '<li class="ml-done">' + ICON.check + " " + done.map(function (p) { return esc(SOL[p.solId].nom); }).join(", ") + (done.length > 1 ? " sont vérifiés" : " est vérifié") + ".</li>";
+      if (!html) html = '<li class="empty">Tout est vérifié ici. Beau travail de terrain.</li>';
+      ul.innerHTML = html;
+    }
+    // Élan de la semaine : repères qualitatifs par famille d'ICI (feuilles), jamais un chiffre.
+    function drawElan() { $("#ml-elan").innerHTML = vadanceHtml(); }
+    function drawAll() { drawScene(); drawToday(); drawElan(); }
+    $("#ml-all").addEventListener("click", function () { filter = null; drawAll(); });
+    drawAll();
+  }
+
   /* ================= Démarrage ================= */
-  var PAGES = { index: pageIndex, commun: pageCommun, rever: pageRever, explorer: pageExplorer, generer: pageGenerer, entreprendre: pageEntreprendre, nourrir: pageNourrir };
+  var PAGES = { index: pageIndex, commun: pageCommun, rever: pageRever, explorer: pageExplorer, generer: pageGenerer, entreprendre: pageEntreprendre, nourrir: pageNourrir, monlieu: pageMonLieu };
   // Charge le compte, son projet (en ligne, ou le cache local s'il est plus récent) et les lieux publics.
   function boot(page) {
     var hasMap = page === "index" || page === "rever";
@@ -1499,6 +1551,7 @@
       if (window.Deva) {
         if (page === "index") { Deva.init("accueil", { silent: true }); }
         else if (page === "commun") { Deva.init("commun"); }
+        else if (page === "monlieu") { Deva.init("monlieu"); }
         else if (step) { Deva.init(step.deva); renderSidebarNav(page); renderTopStepper(page); }
       }
       renderFooter(); // après Deva.init : le bandeau se loge sous le panneau de Deva

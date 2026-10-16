@@ -841,3 +841,19 @@ body.has-intro { overflow: hidden; }
 .iso-drip { animation: drip 1.9s ease-in infinite; }
 @keyframes drip { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 85% { transform: translateY(13px); opacity: .9; } 100% { transform: translateY(15px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .iso-canopy, .iso-structure:nth-child(odd) .iso-canopy, .iso-drip { animation: none; } }
+
+/* ---------- Mon lieu : tableau de bord quotidien ---------- */
+.ml-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.ml-grid { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
+@media (min-width: 1200px) { .ml-grid { grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr); } }
+.ml-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ml-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.ml-item { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--bord); }
+.ml-item .dot { flex: none; margin-top: 6px; }
+.ml-item > div { flex: 1 1 220px; min-width: 0; }
+.ml-item strong { display: block; margin-bottom: 2px; }
+.ml-item .btn { flex: none; margin-left: auto; }
+.ml-done { display: flex; align-items: center; gap: 8px; padding: 12px 0 2px; border-top: 1px solid var(--bord); color: var(--foret); font-size: .9rem; }
+.ml-done svg { width: 16px; height: 16px; flex: none; }
+.loop-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.ml-list .empty { padding: 10px 0; }
