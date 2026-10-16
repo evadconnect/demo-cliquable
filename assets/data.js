@@ -299,6 +299,8 @@ window.EVAD_DATA = {
       "Bien vu, c'est une vraie question de terrain.",
       "Merci de me le dire, je garde ça en tête pour ton projet."
     ],
+    /* Règle prioritaire : Deva ne calcule jamais l'impact d'un lieu (CO₂, chiffres, résultats). */
+    impactLieu: "Je ne calcule pas l'impact à ta place. Ce que ton lieu change se lit dans Vadance (prévu) et Vadité (vérifié), nourries par tes preuves à l'étape Nourrir.",
     /* Petit moteur conversationnel : Deva reconnaît des mots-clés et répond sans IA. */
     salutations: [
       "Bonjour ! Ravi de te voir. Tu veux explorer la carte, créer ton projet, ou que je t'explique EVAD ?",
@@ -345,7 +347,8 @@ window.EVAD_DATA = {
         a: "Pas besoin de compte en bêta : tout est ouvert. Clique « Créer mon projet » pour lancer ton lieu tout de suite ; il est gardé sur cet appareil." },
       { k: ["qui es-tu", "qui es tu", "tu es quoi", "c'est quoi deva", "qui est deva", "robot", "ia", "intelligence artificielle", "ecologique", "ia ecologique", "ecolo", "verte", "sobre"],
         a: "Je suis Deva, ton assistant sur EVAD — et une IA écologique : je réponds en local, par règles, sans grand modèle d'IA, donc mon empreinte reste minime (~0,05 g CO₂e par question, contre 2 à 5 g pour un gros modèle). Je te guide, je propose, c'est toujours toi qui décides, et je ne m'invente jamais de chiffres d'impact." },
-      { k: ["carbone", "empreinte", "co2", "ecologie du site", "pollution", "sobriete", "sobriété"],
+      { id: "empreinte",
+        k: ["ton empreinte", "empreinte de deva", "empreinte de la conversation", "empreinte de nos echanges", "nos echanges", "tu pollues", "tu consommes", "ton co2", "deva pollue", "sobriete de deva"],
         a: "Bonne question : nos échanges ont une empreinte, affichée en bas de ce panneau. Comme je réponds localement, par règles, elle reste minime, loin d'une requête vers un gros modèle d'IA." },
       { k: ["regen", "etapes", "étapes", "parcours", "comment ca marche", "comment ça marche"],
         a: "Le parcours REGEN a 5 étapes : Rêver, Explorer, Générer, Entreprendre, Nourrir. On part du rêve, on modélise, on agit, puis on prouve. Et la preuve rouvre le rêve." },
