@@ -64,11 +64,13 @@
     var b = P(x, y, 0);
     shadow(g, b[0] + 4, b[1] + 1, 13 * s);
     el("rect", { x: b[0] - 2, y: b[1] - 16 * s, width: 4, height: 16 * s, rx: 1.5, fill: c.trunk }, g);
-    el("circle", { cx: b[0], cy: b[1] - 24 * s, r: 13 * s, fill: c.leaf }, g);
-    el("circle", { cx: b[0] - 4 * s, cy: b[1] - 28 * s, r: 7 * s, fill: c.light }, g);
+    // le feuillage est groupé pour pouvoir osciller doucement (CSS, désactivé si prefers-reduced-motion)
+    var can = el("g", { class: "iso-canopy" }, g);
+    el("circle", { cx: b[0], cy: b[1] - 24 * s, r: 13 * s, fill: c.leaf }, can);
+    el("circle", { cx: b[0] - 4 * s, cy: b[1] - 28 * s, r: 7 * s, fill: c.light }, can);
     if (c.fruit) {
       [[5, -20], [-6, -18], [2, -31], [8, -27]].forEach(function (f) {
-        el("circle", { cx: b[0] + f[0] * s, cy: b[1] + f[1] * s, r: 1.8, fill: c.fruit }, g);
+        el("circle", { cx: b[0] + f[0] * s, cy: b[1] + f[1] * s, r: 1.8, fill: c.fruit }, can);
       });
     }
   }
@@ -361,11 +363,30 @@
 
     var hover = poly(svg, [P(0, 0, 0), P(1, 0, 0), P(1, 1, 0), P(0, 1, 0)], "rgba(217,160,63,.35)", { stroke: "#D9A03F", "stroke-width": 2, class: "iso-hover", visibility: "hidden" });
 
+    // un peu de vie : un arbre et une ou deux silhouettes dans chaque espace actif (positions stables)
+    var life = { structures: [], personnages: [] };
+    if (opt.life !== false && zones.length) {
+      var PCOL = ["#C06848", "#2C5234", "#D9A03F", "#5F7F52", "#7B6A9A"];
+      zones.forEach(function (z, k) {
+        if (!placed.some(function (p) { return p.spaceId === z.id; })) return;
+        var cands = [[z.i0 + z.w - 1, z.j0 + z.d - 1], [z.i0, z.j0 + z.d - 1], [z.i0 + z.w - 1, z.j0], [z.i0 + Math.floor(z.w / 2), z.j0 + z.d - 1], [z.i0 + z.w - 1, z.j0 + Math.floor(z.d / 2)], [z.i0, z.j0]];
+        var used = 0;
+        cands.forEach(function (c, n) {
+          if (used >= 3) return;
+          var key = c[0] + "," + c[1];
+          if (occ[key] || isPath(c[0], c[1])) return;
+          if (used === 0) life.structures.push({ type: k % 2 ? "fruitier" : "arbre", i: c[0], j: c[1] });
+          else life.personnages.push({ i: c[0], j: c[1], c: PCOL[(k + n) % PCOL.length] });
+          occ[key] = "vie"; used++;
+        });
+      });
+    }
+
     // objets triés par profondeur
     var items = [];
-    structures.forEach(function (s) { items.push({ k: s.i + (s.w || 1) + s.j + (s.d || 1), kind: "s", s: s }); });
+    structures.concat(life.structures).forEach(function (s) { items.push({ k: s.i + (s.w || 1) + s.j + (s.d || 1), kind: "s", s: s }); });
     placed.forEach(function (p) { items.push({ k: p.i + p.j + 2, kind: "p", p: p }); });
-    (opt.personnages || []).forEach(function (h) { items.push({ k: h.i + h.j + 1.2, kind: "h", h: h }); });
+    (opt.personnages || []).concat(life.personnages).forEach(function (h) { items.push({ k: h.i + h.j + 1.2, kind: "h", h: h }); });
     items.sort(function (a, b) { return a.k - b.k; });
 
     var objects = el("g", { class: "iso-objects" }, svg);
@@ -464,7 +485,8 @@
       justVerified: options.justVerified || null,
       zones: layoutZones(lieu.spaces || [], lieu.grille || 9),
       onZone: options.onZone || null,
-      activeZone: options.activeZone || null
+      activeZone: options.activeZone || null,
+      life: options.life !== false
     };
     return render(container, opt);
   }

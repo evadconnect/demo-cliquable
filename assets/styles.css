@@ -833,3 +833,11 @@ body.has-intro { overflow: hidden; }
 .iso-zone-text { font: 600 10.5px var(--f-texte); fill: var(--encre); }
 .iso-zone[role="button"] { cursor: pointer; outline: none; }
 .iso-zone[role="button"]:hover polygon, .iso-zone[role="button"]:focus-visible polygon { stroke-width: 2.6; stroke-dasharray: none; }
+
+/* Un peu de vie sur la maquette : feuillage qui oscille, goutte de la cuve vérifiée */
+.iso-canopy { transform-box: fill-box; transform-origin: 50% 100%; animation: sway 7s ease-in-out infinite alternate; }
+.iso-structure:nth-child(odd) .iso-canopy { animation-duration: 8.5s; animation-delay: -3s; }
+@keyframes sway { from { transform: rotate(-1.6deg); } to { transform: rotate(1.6deg); } }
+.iso-drip { animation: drip 1.9s ease-in infinite; }
+@keyframes drip { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 85% { transform: translateY(13px); opacity: .9; } 100% { transform: translateY(15px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .iso-canopy, .iso-structure:nth-child(odd) .iso-canopy, .iso-drip { animation: none; } }
