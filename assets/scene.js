@@ -254,6 +254,24 @@
     return c;
   }
 
+  /* ---------- espaces du lieu : zones nommées sur la grille ---------- */
+  var ZONE_PAL = ["#BFDCC6", "#E6D4B2", "#C9D6E8", "#E8CFC6", "#DEDCB4", "#D6CCE6", "#C3DBDF", "#E4D6CC"];
+  // Répartit les espaces en colonnes et lignes sur la grille (jusqu'à 8 espaces).
+  function layoutZones(spaces, N) {
+    var n = (spaces || []).length; if (!n) return [];
+    var cols = n <= 1 ? 1 : n <= 4 ? 2 : n <= 6 ? 3 : 4, rows = Math.ceil(n / cols);
+    return spaces.map(function (s, k) {
+      var c = k % cols, r = Math.floor(k / cols);
+      var i0 = Math.floor(c * N / cols), i1 = Math.floor((c + 1) * N / cols);
+      var j0 = Math.floor(r * N / rows), j1 = Math.floor((r + 1) * N / rows);
+      return { id: s.id, nom: s.nom, i0: i0, j0: j0, w: i1 - i0, d: j1 - j0, color: ZONE_PAL[k % ZONE_PAL.length] };
+    });
+  }
+  function zoneAt(zones, i, j) {
+    for (var k = 0; k < zones.length; k++) { var z = zones[k]; if (i >= z.i0 && i < z.i0 + z.w && j >= z.j0 && j < z.j0 + z.d) return z; }
+    return null;
+  }
+
   /* ---------- rendu ---------- */
   function render(container, opt) {
     opt = opt || {};
@@ -263,6 +281,7 @@
     var structures = opt.structures || [];
     var placed = opt.placed || [];
     var solutions = opt.solutions || {};
+    var zones = opt.zones || [];
 
     container.innerHTML = "";
     var minX = -N * TW - 12, width = N * TW * 2 + 24;
@@ -296,6 +315,8 @@
     for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) {
       var tp = [P(i, j, 0), P(i + 1, j, 0), P(i + 1, j + 1, 0), P(i, j + 1, 0)];
       var fill = isPath(i, j) ? (hash(i, j) > 0.5 ? "#EADFC2" : "#E4D7B6") : (hash(i, j) > 0.5 ? grassA : grassB);
+      var zt = zones.length ? zoneAt(zones, i, j) : null;
+      if (zt && !isPath(i, j)) fill = mix(fill, zt.color, 0.55);
       poly(tiles, tp, fill, { stroke: "rgba(255,253,247,.18)", "stroke-width": 0.6 });
       if (!isPath(i, j) && !occ[i + "," + j] && hash(j, i) > 0.72) {
         var t = P(i + 0.3 + hash(i, j) * 0.4, j + 0.5, 0);
@@ -307,6 +328,21 @@
     placed.forEach(function (p) {
       var c = STATUS[p.status] || STATUS.prevu;
       poly(tiles, [P(p.i + 0.04, p.j + 0.04, 0), P(p.i + 0.96, p.j + 0.04, 0), P(p.i + 0.96, p.j + 0.96, 0), P(p.i + 0.04, p.j + 0.96, 0)], c.tile, { stroke: c.stroke, "stroke-width": 1.4, "stroke-dasharray": p.status === "prevu" ? "5 4" : null, class: "iso-mark" });
+    });
+
+    // contours des espaces, au sol ; cliquables si la page fournit onZone
+    var zoneG = el("g", { class: "iso-zones" }, svg);
+    zones.forEach(function (z) {
+      var q = [P(z.i0 + 0.04, z.j0 + 0.04, 0), P(z.i0 + z.w - 0.04, z.j0 + 0.04, 0), P(z.i0 + z.w - 0.04, z.j0 + z.d - 0.04, 0), P(z.i0 + 0.04, z.j0 + z.d - 0.04, 0)];
+      var active = opt.activeZone === z.id;
+      var g = el("g", { class: "iso-zone" + (active ? " is-active" : ""), "data-zone": z.id }, zoneG);
+      poly(g, q, "rgba(255,253,247,0)", { stroke: mix(z.color, "#1C2E26", active ? 0.55 : 0.35), "stroke-width": active ? 2.2 : 1.2, "stroke-dasharray": active ? null : "6 4" });
+      if (opt.onZone) {
+        g.setAttribute("role", "button"); g.setAttribute("tabindex", "0");
+        g.setAttribute("aria-label", "Espace " + z.nom + (active ? ", sélectionné" : ""));
+        g.addEventListener("click", function () { opt.onZone(z.id); });
+        g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); opt.onZone(z.id); } });
+      }
     });
 
     var hover = poly(svg, [P(0, 0, 0), P(1, 0, 0), P(1, 1, 0), P(0, 1, 0)], "rgba(217,160,63,.35)", { stroke: "#D9A03F", "stroke-width": 2, class: "iso-hover", visibility: "hidden" });
@@ -347,6 +383,16 @@
       }
     });
 
+    // étiquettes des espaces, posées au coin arrière de chaque zone
+    var labels = el("g", { class: "iso-zone-labels" }, svg);
+    zones.forEach(function (z) {
+      var tp0 = P(z.i0, z.j0, 0), nom = z.nom.length > 22 ? z.nom.slice(0, 21) + "…" : z.nom;
+      var w = Math.min(150, nom.length * 6.6 + 18), h = 18;
+      var g = el("g", { class: "iso-zone-label", "data-zone": z.id }, labels);
+      el("rect", { x: tp0[0] - w / 2, y: tp0[1] - h - 6, width: w, height: h, rx: 9, fill: "rgba(255,253,247,.92)", stroke: mix(z.color, "#1C2E26", 0.35), "stroke-width": 1 }, g);
+      el("text", { x: tp0[0], y: tp0[1] - 10.5, "text-anchor": "middle", class: "iso-zone-text" }, g).textContent = nom;
+    });
+
     function cellFromPoint(clientX, clientY) {
       var pt = svg.createSVGPoint(); pt.x = clientX; pt.y = clientY;
       var m = svg.getScreenCTM(); if (!m) return null;
@@ -370,7 +416,19 @@
       for (var k = 0; k < order.length; k++) { var c = order[k]; if (!occ[c.i + "," + c.j] && !isPath(c.i, c.j)) return c; }
       return null;
     }
-    return { svg: svg, cellFromPoint: cellFromPoint, showHover: showHover, firstFree: firstFree, isFree: function (i, j) { return !occ[i + "," + j] && !isPath(i, j); } };
+    // première case libre à l'intérieur d'un espace (sinon n'importe où)
+    function firstFreeIn(zoneId, prefer) {
+      var z = zoneAt(zones, -1, -1); zones.forEach(function (x) { if (x.id === zoneId) z = x; });
+      if (!z) return firstFree(prefer);
+      var order = [];
+      for (var a = z.i0; a < z.i0 + z.w; a++) for (var b = z.j0; b < z.j0 + z.d; b++) order.push({ i: a, j: b });
+      if (prefer) order.sort(function (x, y) { return prefer(x) - prefer(y); });
+      for (var k = 0; k < order.length; k++) { var c = order[k]; if (!occ[c.i + "," + c.j] && !isPath(c.i, c.j)) return c; }
+      return null;
+    }
+    return { svg: svg, zones: zones, cellFromPoint: cellFromPoint, showHover: showHover, firstFree: firstFree, firstFreeIn: firstFreeIn,
+      zoneAt: function (i, j) { var z = zoneAt(zones, i, j); return z ? z.id : null; },
+      isFree: function (i, j) { return !occ[i + "," + j] && !isPath(i, j); } };
   }
 
   /* ---------- composant réutilisable ----------
@@ -389,11 +447,14 @@
       vitalite: lieu.vitalite || 0,
       interactive: !!options.interactive,
       label: options.label || ("Maquette 2.5D de " + (lieu.nom || "mon lieu")),
-      justVerified: options.justVerified || null
+      justVerified: options.justVerified || null,
+      zones: layoutZones(lieu.spaces || [], lieu.grille || 9),
+      onZone: options.onZone || null,
+      activeZone: options.activeZone || null
     };
     return render(container, opt);
   }
 
-  window.EvadScene = { render: render, renderScene: renderScene };
+  window.EvadScene = { render: render, renderScene: renderScene, layoutZones: layoutZones };
   window.renderScene = renderScene;
 })();

@@ -1186,8 +1186,8 @@
       if (!armed) { h.hidden = true; wrap.classList.remove("is-armed"); return; }
       var c = state.chosen.find(function (x) { return x.id === armed; });
       h.hidden = false; wrap.classList.add("is-armed");
-      h.innerHTML = "Clique une case d'herbe libre pour poser <strong>" + esc(SOL[c.solId].nom) + '</strong>. <button type="button" class="link-btn" id="auto-place">Poser sur une case libre</button> <button type="button" class="link-btn" id="cancel-arm">Annuler</button>';
-      $("#auto-place").addEventListener("click", function () { var cell = api.firstFree(function (x) { return Math.abs(x.i - 4) + Math.abs(x.j - 4); }); if (cell) place(armed, cell.i, cell.j); });
+      h.innerHTML = "Clique une case dans <strong>" + esc(spaceName(c.spaceId)) + "</strong> pour poser <strong>" + esc(SOL[c.solId].nom) + '</strong>. <button type="button" class="link-btn" id="auto-place">Poser dans son espace</button> <button type="button" class="link-btn" id="cancel-arm">Annuler</button>';
+      $("#auto-place").addEventListener("click", function () { var cell = api.firstFreeIn(c.spaceId, function (x) { return Math.abs(x.i - 4) + Math.abs(x.j - 4); }); if (cell) place(armed, cell.i, cell.j); });
       $("#cancel-arm").addEventListener("click", function () { armed = null; drawBar(); drawHint(); });
     }
     function drawScene(focusUid) {
@@ -1201,7 +1201,18 @@
     function drawVadance() { $("#vadance").innerHTML = vadanceHtml(); }
     function place(chosenId, i, j) {
       var c = state.chosen.find(function (x) { return x.id === chosenId; }); if (!c) return;
-      if (!api.isFree(i, j)) { toast("Cette case est occupée. Choisis une case d'herbe libre."); return; }
+      // Une solution se pose dans l'espace auquel elle est rattachée : lâchée ailleurs
+      // (ou sur une case prise), elle rejoint son espace, sur la case libre la plus proche.
+      var zone = (api.zones || []).filter(function (z) { return z.id === c.spaceId; })[0];
+      if (zone) {
+        var dansZone = api.zoneAt(i, j) === zone.id;
+        if (!dansZone || !api.isFree(i, j)) {
+          var cell = api.firstFreeIn(zone.id, function (x) { return Math.abs(x.i - i) + Math.abs(x.j - j); });
+          if (!cell) { toast("Plus de place dans " + zone.nom + ". Retire un élément ou ajoute un espace."); return; }
+          if (!dansZone) Deva.say("Je l'ai posée dans " + zone.nom + ", son espace.", { instant: true });
+          i = cell.i; j = cell.j;
+        }
+      } else if (!api.isFree(i, j)) { toast("Cette case est occupée. Choisis une case d'herbe libre."); return; }
       var p = { uid: uid("p"), chosenId: c.id, solId: c.solId, spaceId: c.spaceId, i: i, j: j, status: "prevu" };
       state.placed.push(p); save(); armed = null;
       drawScene(p.uid); drawBar(); drawHint(); drawVadance(); refreshChrome();

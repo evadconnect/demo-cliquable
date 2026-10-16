@@ -828,3 +828,8 @@ body.has-intro { overflow: hidden; }
 .map-stage .map-notice { top: 92px; right: 14px; max-width: 360px; }
 .map-card .map-notice { left: 12px; bottom: 12px; }
 @media (max-width: 900px) { .map-stage .map-notice { top: auto; bottom: 56px; left: 12px; transform: none; } }
+
+/* Espaces du lieu sur la maquette : contours et étiquettes */
+.iso-zone-text { font: 600 10.5px var(--f-texte); fill: var(--encre); }
+.iso-zone[role="button"] { cursor: pointer; outline: none; }
+.iso-zone[role="button"]:hover polygon, .iso-zone[role="button"]:focus-visible polygon { stroke-width: 2.6; stroke-dasharray: none; }
