@@ -477,19 +477,21 @@
   function startTour(steps) {
     steps = (steps || []).filter(function (s) { return !s.sel || document.querySelector(s.sel); });
     if (!steps.length) return;
-    var i = 0, raf = null;
+    // Deva guide depuis le chat quand son panneau est visible ; sur écran étroit (tiroir), bulle près de l'élément.
+    var chat = !!(window.Deva && Deva.say && document.querySelector("#deva .deva-log")) && !window.matchMedia("(max-width: 900px)").matches;
+    var i = 0, raf = null, entered = -1;
     var ov = document.createElement("div");
-    ov.className = "tour"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
-    ov.setAttribute("aria-label", "Visite guidée avec Deva");
-    ov.innerHTML =
-      '<div class="tour-hole" aria-hidden="true"></div>' +
+    ov.className = "tour" + (chat ? " tour-is-chat" : ""); ov.setAttribute("role", chat ? "presentation" : "dialog");
+    if (!chat) { ov.setAttribute("aria-modal", "true"); ov.setAttribute("aria-label", "Visite guidée avec Deva"); }
+    ov.innerHTML = '<div class="tour-hole" aria-hidden="true"></div>' + (chat ? "" :
       '<div class="tour-pop">' +
       '<div class="tour-pop-head"><img class="deva-face" src="assets/deva-avatar.png" alt="" aria-hidden="true"><strong>Deva</strong><span class="tour-count"></span></div>' +
       '<p class="tour-text"></p>' +
       '<div class="tour-nav"><button type="button" class="tour-skip">Passer</button>' +
       '<button type="button" class="btn btn-primary btn-sm tour-next"></button></div>' +
-      '</div>';
+      '</div>');
     document.body.appendChild(ov);
+    if (chat) document.body.classList.add("tour-chat");
     var hole = ov.querySelector(".tour-hole"), pop = ov.querySelector(".tour-pop"),
         txt = ov.querySelector(".tour-text"), cnt = ov.querySelector(".tour-count"),
         next = ov.querySelector(".tour-next"), skip = ov.querySelector(".tour-skip");
@@ -497,14 +499,15 @@
       var s = steps[i], t = s.sel ? document.querySelector(s.sel) : null;
       if (!t) {
         hole.style.opacity = "0";
-        pop.style.left = "50%"; pop.style.top = "50%"; pop.style.transform = "translate(-50%,-50%)";
+        if (pop) { pop.style.left = "50%"; pop.style.top = "50%"; pop.style.transform = "translate(-50%,-50%)"; }
         return;
       }
-      pop.style.transform = "none";
       var r = t.getBoundingClientRect(), pad = 8;
       hole.style.opacity = "1";
       hole.style.left = (r.left - pad) + "px"; hole.style.top = (r.top - pad) + "px";
       hole.style.width = (r.width + pad * 2) + "px"; hole.style.height = (r.height + pad * 2) + "px";
+      if (!pop) return;
+      pop.style.transform = "none";
       var popW = Math.min(320, window.innerWidth - 32); pop.style.width = popW + "px";
       var ph = pop.offsetHeight || 150;
       var left = Math.min(Math.max(16, r.left), window.innerWidth - popW - 16);
@@ -513,33 +516,41 @@
       pop.style.left = left + "px"; pop.style.top = top + "px";
     }
     function onScroll() { if (raf) return; raf = requestAnimationFrame(function () { raf = null; measure(); }); }
-    var entered = -1;
-    // Certaines étapes ouvrent un élément à l'arrivée (onEnter) et le referment en partant (onLeave).
     function leaveCurrent() {
       if (entered >= 0 && steps[entered] && steps[entered].onLeave) { try { steps[entered].onLeave(); } catch (e) { /* ignore */ } }
       entered = -1;
     }
     function goTo(n) {
       leaveCurrent();
-      i = n; var s = steps[i];
+      i = n; var s = steps[i], last = i === steps.length - 1;
       if (s.onEnter) { try { s.onEnter(); } catch (e) { /* ignore */ } }
       entered = i;
-      txt.textContent = s.text;
-      cnt.textContent = (i + 1) + " / " + steps.length;
-      next.textContent = (i === steps.length - 1) ? "Terminer" : "Suivant";
+      if (chat) {
+        Deva.say((i + 1) + "/" + steps.length + " · " + s.text, { instant: true, actions: [
+          { label: last ? "Terminer la visite" : "Suivant", primary: true, onClick: function () { if (!last) goTo(i + 1); else end(); } },
+          { label: "Passer la visite", onClick: end }
+        ] });
+      } else {
+        txt.textContent = s.text;
+        cnt.textContent = (i + 1) + " / " + steps.length;
+        next.textContent = last ? "Terminer" : "Suivant";
+      }
       var t = s.sel ? document.querySelector(s.sel) : null;
       if (t) t.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
       setTimeout(measure, 60); setTimeout(measure, 340);
     }
     function end() {
+      if (ov._ended) return; ov._ended = true;
       leaveCurrent();
       window.removeEventListener("resize", onScroll, true);
       window.removeEventListener("scroll", onScroll, true);
       ov.classList.add("is-leaving");
-      setTimeout(function () { ov.remove(); }, 240);
+      setTimeout(function () { ov.remove(); document.body.classList.remove("tour-chat"); }, 240);
+      if (chat) Deva.say("Fin de la visite. Je reste à côté si tu as une question.", { instant: true });
     }
-    next.addEventListener("click", function () { if (i < steps.length - 1) goTo(i + 1); else end(); });
-    skip.addEventListener("click", end);
+    if (next) next.addEventListener("click", function () { if (i < steps.length - 1) goTo(i + 1); else end(); });
+    if (skip) skip.addEventListener("click", end);
+    document.addEventListener("keydown", function esc(e) { if (e.key === "Escape") { end(); document.removeEventListener("keydown", esc); } });
     window.addEventListener("resize", onScroll, true);
     window.addEventListener("scroll", onScroll, true);
     goTo(0);
@@ -681,6 +692,20 @@
       }
     }
 
+    // Visite de la carte : définie au niveau de la page (hors intro) pour que « Revoir la visite » marche toujours, et pour ouvrir/fermer une fiche.
+    var SAMPLE_ID = (D.projets && D.projets[0] && D.projets[0].id) || null;
+    var carteTour = [
+      { text: "Bienvenue sur la carte vivante ! Je te montre l'essentiel en quelques secondes." },
+      { sel: ".leaflet-marker-icon", text: "Chaque marqueur est un lieu réel. Clique-le pour ouvrir sa fiche." },
+      { sel: ".map-filters", text: "Filtre par avancement (Rêvé, En cours, Prouvé) et par famille (Eau, Sol, Énergie…), ou n'affiche que ce qui pousse autour de toi." },
+      { sel: "#fiche", text: "Voici la fiche d'un lieu : sa promesse, le collectif qui le porte, les solutions posées et son impact vérifié. « Explorer ce projet » déplie le détail.",
+        onEnter: function () { if (SAMPLE_ID) openFiche(SAMPLE_ID); },
+        onLeave: function () { closeFiche(); } },
+      { sel: ".legend", text: "La couleur dit l'avancement : du rêve ambré à la preuve verte." },
+      { sel: ".top-right a[href='rever.html']", text: "Et quand tu veux passer à l'action, tu rêves ton propre lieu ici. Bonne exploration !" }
+    ];
+    pageTour = carteTour; // « Revoir la visite » (footer) rejoue la visite de la carte
+
     /* Onboarding prototype : à l'ouverture, Deva apparaît SEULE en plein écran pour
        présenter la vision EVAD et demander le prénom, puis s'efface sur la carte.
        S'affiche à la première visite (pas de prénom) ; rejouable via ?intro=1, désactivable via ?intro=0. */
@@ -797,19 +822,6 @@
         if (/(gouvernance|decision|assemblee|democratie|collectif|conseil|cooperative)/.test(t)) return "gouvernance";
         return null;
       }
-      // Visite de la carte : définie ici pour pouvoir ouvrir/fermer une fiche projet.
-      var SAMPLE_ID = (D.projets && D.projets[0] && D.projets[0].id) || null;
-      var carteTour = [
-        { text: "Bienvenue sur la carte vivante ! Je te montre l'essentiel en quelques secondes." },
-        { sel: ".leaflet-marker-icon", text: "Chaque marqueur est un lieu réel. Clique-le pour ouvrir sa fiche." },
-        { sel: ".map-filters", text: "Filtre par avancement (Rêvé, En cours, Prouvé) et par famille (Eau, Sol, Énergie…), ou n'affiche que ce qui pousse autour de toi." },
-        { sel: "#fiche", text: "Voici la fiche d'un lieu : sa promesse, le collectif qui le porte, les solutions posées et son impact vérifié. « Explorer ce projet » déplie le détail.",
-          onEnter: function () { if (SAMPLE_ID) openFiche(SAMPLE_ID); },
-          onLeave: function () { closeFiche(); } },
-        { sel: ".legend", text: "La couleur dit l'avancement : du rêve ambré à la preuve verte." },
-        { sel: ".top-right a[href='rever.html']", text: "Et quand tu veux passer à l'action, tu rêves ton propre lieu ici. Bonne exploration !" }
-      ];
-      pageTour = carteTour; // « Revoir la visite » (footer) rejoue la visite de la carte
       function routeTo(kind) {
         // REGEN et Commun : la construction commence ici et se poursuit sur l'autre page (drapeau de session).
         if (kind === "regen" || kind === "commun") {
