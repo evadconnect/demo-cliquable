@@ -969,3 +969,39 @@ body.tour-chat #deva { z-index: 2200; }
 .intro-hero, .intro-foot, .intro-skip { flex-shrink: 0; }
 .intro-foot { min-height: 0; }
 .intro-log { flex: 1 1 0; min-height: 56px; }
+
+
+/* ===== Deva toujours flottant (bureau) : une carte fixe à gauche, repliable en pastille ===== */
+@media (min-width: 901px) {
+  .shell, body.deva-closed .shell, body[data-page="index"] .shell { grid-template-columns: minmax(0, 1fr); position: static; }
+  body[data-page] .deva { position: fixed; left: 16px; top: calc(var(--top-h) + 16px); width: var(--deva-w); height: var(--chat-h); max-height: none;
+    border: 1px solid var(--bord); border-radius: var(--r-lg); box-shadow: var(--ombre-haute); overflow: hidden; z-index: 40; }
+  body[data-page] .deva-inner { height: 100%; max-height: none; }
+  body[data-page] .deva-log { flex: 1 1 auto; max-height: none; }
+  body:not([data-page="index"]) #main.stage { padding-left: calc(var(--deva-w) + 48px); transition: padding-left .25s; }
+  body.deva-closed:not([data-page="index"]) #main.stage { padding-left: 32px; }
+  .deva-toggle { display: inline-flex; }
+  body[data-page] .deva.is-closed { width: auto; height: auto; top: auto; bottom: 20px; border: 0; background: transparent; box-shadow: none; overflow: visible; }
+  body[data-page] .deva.is-closed .deva-fab { display: flex; flex-direction: row; align-items: center; gap: 8px; width: auto; padding: 8px 16px 8px 8px; background: var(--blanc); border: 1px solid var(--bord); border-radius: 999px; box-shadow: var(--ombre-haute); font-size: .92rem; font-weight: 600; color: var(--foret); cursor: pointer; }
+  body[data-page] .deva.is-closed .deva-fab .deva-face { height: 38px; }
+  .build-frame { z-index: 35; }
+}
+
+/* ===== Le Commun, plus moderne et plus épuré ===== */
+.doctrine.doctrine-slim { grid-template-columns: auto 1fr; gap: 12px; align-items: center; background: transparent; color: var(--texte-2);
+  border: 1px solid var(--bord); border-left: 4px solid var(--mousse); border-radius: var(--r); padding: 10px 16px; margin: 0 0 16px; }
+.doctrine-slim p { margin: 0; color: var(--texte-2); font-size: .9rem; max-width: none; }
+.doctrine-slim strong { color: var(--foret); }
+.doctrine-slim svg { width: 26px; height: 26px; }
+body[data-page="commun"] .page-head { margin-bottom: 14px; }
+body[data-page="commun"] .commun-tools { position: sticky; top: var(--top-h); z-index: 5; background: var(--creme); padding: 10px 0 12px; margin: 0 0 18px; border-bottom: 1px solid var(--bord); }
+body[data-page="commun"] .grid { gap: 18px; }
+.sol-card { border-top: 1px solid var(--bord); border-left: 4px solid var(--fam, var(--mousse)); box-shadow: none; transition: transform .15s ease, box-shadow .15s ease; }
+.sol-card:hover { transform: translateY(-2px); box-shadow: var(--ombre); }
+.sol-card h3 { font-size: 1.05rem; margin: 8px 0 4px; }
+.sol-card > p { font-size: .9rem; color: var(--texte-2); margin: 0 0 6px; }
+.sol-card .meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 6px 0 10px; font-size: .8rem; }
+.sol-card .meta div { flex-direction: row; align-items: center; gap: 6px; }
+.sol-card .meta div:last-child { grid-column: auto; }
+.sol-card .meta dt { font-size: .64rem; }
+.sol-card .ici-chip { background: transparent; border: 1px solid var(--bord); color: var(--texte-2); }

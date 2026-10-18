@@ -226,8 +226,7 @@
   }
 
   function setOpen(open, silent) {
-    // Desktop : jamais de rétraction, la sidebar reste ouverte.
-    if (!window.matchMedia("(max-width: 900px)").matches) open = true;
+    // Le panneau flottant se replie en pastille (bureau comme mobile).
     root.classList.toggle("is-open", open);
     root.classList.toggle("is-closed", !open);
     document.body.classList.toggle("deva-closed", !open);
