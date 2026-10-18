@@ -1040,3 +1040,14 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   body[data-page="index"] .map-stage .map-notice { top: calc(var(--top-h) + 32px); }
   body[data-page="index"] .fiche { top: calc(var(--top-h) + 28px); right: 16px; bottom: 16px; border: 1px solid var(--bord); border-radius: var(--r-lg); }
 }
+
+/* ===== Carte : les filtres en barre horizontale en bas, la légende juste au-dessus ===== */
+@media (min-width: 901px) {
+  body[data-page="index"] .map-filters { top: auto; bottom: 18px; left: calc(var(--deva-w) + 36px); max-width: none; border-radius: 999px; padding: 8px 12px; }
+  body[data-page="index"] .map-filters-head { display: none; }
+  body[data-page="index"] .map-filters-body { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  body[data-page="index"] .map-filters .f-title { display: none; }
+  body[data-page="index"] .map-filters .row { display: flex; gap: 6px; }
+  body[data-page="index"] .map-filters select { min-height: 36px; border-radius: 999px; padding: 6px 32px 6px 12px; }
+  body[data-page="index"] .legend { bottom: 76px; left: calc(var(--deva-w) + 36px); }
+}
