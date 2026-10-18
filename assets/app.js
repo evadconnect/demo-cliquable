@@ -23,8 +23,8 @@
       interestFam: "",
       project: { name: "", promesse: "", reve: "", collectif: "", lieu: "", loc: null, public: true },
       pinned: [],
-      spaces: D.espaces.map(function (e) { return { id: e.id, nom: e.nom }; }),
-      selectedSpace: D.espaces[0].id,
+      spaces: [],          // le porteur crée ses espaces à l'étape Explorer ; Deva en propose, il décide
+      selectedSpace: null,
       chosen: [],
       icis: [],
       placed: [],
@@ -107,7 +107,7 @@
     return "reve";
   }
   var fricheStatut = projectStatut;
-  function spaceName(id) { var s = state.spaces.find(function (x) { return x.id === id; }); return s ? s.nom : "Lieu"; }
+  function spaceName(id) { if (!id) return "aucun espace"; var s = state.spaces.find(function (x) { return x.id === id; }); return s ? s.nom : "Lieu"; }
   function stepDone(id) {
     if (id === "rever") return !!state.project.name.trim();
     if (id === "explorer") return state.chosen.length > 0;
@@ -178,7 +178,7 @@
     // Pages avec sidebar : barre du haut réduite au logo (+ accès sur les pages publiques).
     if (document.getElementById("deva")) {
       top.className = "topbar topbar-slim";
-      var isWorkspace = D.steps.some(function (s) { return s.id === page; });
+      var isWorkspace = page === "monlieu" || D.steps.some(function (s) { return s.id === page; });
       // Menu global : jongler entre la carte, le Commun et la création de projet.
       var link = function (href, label, cur) {
         return '<a class="toplink' + (cur ? " is-current" : "") + '" href="' + href + '"' + (cur ? ' aria-current="page"' : "") + ">" + label + "</a>";
@@ -217,7 +217,7 @@
     var inner = document.querySelector("#deva .deva-inner"); if (!inner) return;
     var st = fricheStatut();
     var html = '<div class="deva-nav">' +
-      '<a class="snav-place" href="index.html?focus=mine" title="Voir mon lieu sur la carte">' +
+      '<a class="snav-place" href="mon-lieu.html" title="Ouvrir mon lieu">' +
       '<span class="pill-dot st-' + st + '" aria-hidden="true"></span>' +
       '<span class="snav-place-txt"><span class="snav-kicker">Mon lieu</span><strong>' + esc(projectName()) + '</strong></span></a>' +
       "</div>";
@@ -298,21 +298,21 @@
     out.sort(function (a, b) { return (Math.abs(a.i - 4.5) + Math.abs(a.j - 4.5)) - (Math.abs(b.i - 4.5) + Math.abs(b.j - 4.5)); });
     return out;
   }
-  function sceneOptionsFor(project) {
-    if (project.isMine || project.isPublic) {
-      var placed = project.isMine ? state.placed : project.placedRemote;
-      var vit = project.isMine ? verifiedCount() / 3 : { reve: 0, encours: 0.4, prouve: 1 }[project.statut];
-      return Object.assign({}, BLANK_SCENE, { placed: placed, solutions: SOL, vitalite: vit, label: "Maquette 2.5D de " + project.nom });
+  // Un « lieu » pour renderScene : données pures (espaces, solutions posées, vitalité, décor).
+  function myLieu() {
+    return Object.assign({}, BLANK_SCENE, { nom: projectName(), spaces: state.spaces, placed: state.placed, solutions: SOL, vitalite: verifiedCount() / 3 });
+  }
+  function lieuFor(project) {
+    if (project.isMine) return myLieu();
+    if (project.isPublic) {
+      return Object.assign({}, BLANK_SCENE, { nom: project.nom, spaces: [], placed: project.placedRemote, solutions: SOL, vitalite: { reve: 0, encours: 0.4, prouve: 1 }[project.statut] });
     }
     var structures = D.presets[project.preset] || [];
     var cells = freeCells(structures, 9, 4);
     var map = { reve: "prevu", encours: "encours", prouve: "verifie" };
     var placedEx = (project.solutions || []).map(function (s, k) { var c = cells[k * 3 % cells.length]; return { uid: project.id + k, solId: s[0], status: map[s[1]], i: c.i, j: c.j }; });
-    return { grille: 9, chemin: 4, structures: structures, placed: placedEx, solutions: SOL, personnages: [{ i: 4, j: 2, c: "#C06848" }, { i: 6, j: 4, c: "#2C5234" }],
-      vitalite: { reve: 0, encours: 0.4, prouve: 1 }[project.statut], label: "Maquette 2.5D de " + project.nom };
-  }
-  function myScene(extra) {
-    return Object.assign({}, BLANK_SCENE, { placed: state.placed, solutions: SOL, vitalite: verifiedCount() / 3, label: "Maquette 2.5D de " + projectName() }, extra || {});
+    return { nom: project.nom, grille: 9, chemin: 4, structures: structures, placed: placedEx, solutions: SOL, personnages: [{ i: 4, j: 2, c: "#C06848" }, { i: 6, j: 4, c: "#2C5234" }],
+      vitalite: { reve: 0, encours: 0.4, prouve: 1 }[project.statut] };
   }
 
   function jaugesHtml(j) {
@@ -583,7 +583,7 @@
           : '<button type="button" class="btn btn-primary" id="fiche-inspire">M\'en inspirer pour créer le mien</button>') +
         "</div>" +
         '<div class="fiche-detail" id="fiche-detail" hidden><h3 class="mini-title">Solutions du Commun sur ce lieu</h3>' + detail + "</div>";
-      EvadScene.render($("#fiche-scene"), sceneOptionsFor(p));
+      renderScene($("#fiche-scene"), lieuFor(p));
       fiche.classList.add("open"); fiche.setAttribute("aria-hidden", "false"); $(".map-stage").classList.add("has-fiche");
       $("#fiche-close").addEventListener("click", closeFiche);
       $("#fiche-explore").addEventListener("click", function () {
@@ -917,13 +917,13 @@
         '<h3 id="mini-title" tabindex="-1">' + esc(p.nom) + '</h3><p class="muted small">' + esc(p.lieu) + "</p><p>" + esc(p.promesse) + "</p>" +
         (p.isMine ? '<p class="muted small">C\'est ton projet.</p>' : '<button type="button" class="btn ' + (pinned ? "btn-ghost" : "btn-primary") + ' btn-sm" id="pin-btn" aria-pressed="' + pinned + '">' + ICON.pin + (pinned ? " Épinglé" : " Épingler") + "</button>") + "</div>";
       card.hidden = false;
-      EvadScene.render($("#mini-scene"), sceneOptionsFor(p));
+      renderScene($("#mini-scene"), lieuFor(p));
       $(".mini-close", card).addEventListener("click", function () { card.hidden = true; sel = null; draw(); });
       var pb = $("#pin-btn");
       if (pb) pb.addEventListener("click", function () {
         var k = state.pinned.indexOf(id);
         if (k >= 0) { state.pinned.splice(k, 1); Deva.react("unpin"); } else { state.pinned.push(id); Deva.react("pin"); }
-        save(); select(id); drawPins();
+        save(); select(id); drawPins(); drawVisits();
       });
       $("#mini-title").focus({ preventScroll: true });
     }
@@ -966,7 +966,7 @@
       state.project.loc = { lat: +lat, lng: +lng };
       if (label) { state.project.lieu = label; geo.value = label; }
       geoStatus.textContent = "Lieu situé" + (label ? " : " + label : "") + ".";
-      save(); sync(); draw();
+      save(); sync(); draw(); drawVisits();
       if (recenter && host._lmap) host._lmap.setView([+lat, +lng], 13);
     }
     function search() {
@@ -998,6 +998,35 @@
     if (state.project.loc && host._lmap) host._lmap.setView([state.project.loc.lat, state.project.loc.lng], 11);
     sync();
 
+    // Des lieux à visiter : trois lieux qui ont fait leurs preuves (ou en chemin),
+    // les plus proches quand le lieu est situé. Deva propose, le porteur choisit.
+    function visitsPick() {
+      var me = state.project.loc, rank = { prouve: 0, encours: 1, reve: 2 };
+      return allProjects().filter(function (p) { return !p.isMine; }).map(function (p) {
+        var at = projectLoc(p), d = (me && at) ? distKm(me, at) : 400;
+        return { p: p, s: rank[p.statut] * 1000 + d };
+      }).sort(function (a, b) { return a.s - b.s; }).slice(0, 3).map(function (x) { return x.p; });
+    }
+    function showVisit(p) { select(p.id); var at = projectLoc(p); if (host._lmap && at) host._lmap.setView([at.lat, at.lng], 10); }
+    function drawVisits() {
+      var ul = $("#visit-list"); if (!ul) return;
+      var me = state.project.loc, list = visitsPick();
+      $("#visits-sub").textContent = me ? "Les plus proches de ton lieu, les prouvés d'abord." : "Situe ton lieu pour voir les plus proches. En attendant, des lieux qui ont fait leurs preuves.";
+      ul.innerHTML = list.map(function (p) {
+        var at = projectLoc(p), km = (me && at) ? Math.round(distKm(me, at)) : null, pinned = state.pinned.indexOf(p.id) >= 0;
+        return '<li class="visit-item"><span class="dot st-' + p.statut + '" aria-hidden="true"></span>' +
+          '<div class="visit-txt"><strong>' + esc(p.nom) + "</strong><span class=\"muted\">" + esc(p.lieu) + (km != null ? ", à " + km + " km" : "") + (p.isExample ? ", exemple" : "") + "</span></div>" +
+          '<button type="button" class="btn btn-ghost btn-sm" data-visit="' + p.id + '">Visiter</button>' +
+          '<button type="button" class="icon-btn icon-sm' + (pinned ? " is-on" : "") + '" data-visit-pin="' + p.id + '" aria-pressed="' + pinned + '" aria-label="' + (pinned ? "Retirer " + esc(p.nom) + " de mes inspirations" : "Épingler " + esc(p.nom)) + '">' + ICON.pin + "</button></li>";
+      }).join("");
+      $all("[data-visit]", ul).forEach(function (b) { b.addEventListener("click", function () { var p = projectById(b.dataset.visit); if (p) showVisit(p); }); });
+      $all("[data-visit-pin]", ul).forEach(function (b) { b.addEventListener("click", function () {
+        var id = b.dataset.visitPin, k = state.pinned.indexOf(id);
+        if (k >= 0) { state.pinned.splice(k, 1); Deva.react("unpin"); } else { state.pinned.push(id); Deva.react("pin"); }
+        save(); drawPins(); drawVisits(); if (sel) select(sel);
+      }); });
+    }
+
     function drawPins() {
       var ul = $("#pins");
       if (!state.pinned.length) { ul.innerHTML = '<li class="empty">Aucun projet épinglé. Clique un projet sur la carte pour t\'en inspirer.</li>'; return; }
@@ -1005,10 +1034,16 @@
         var p = projectById(id); if (!p) return "";
         return '<li class="pin-item"><span class="dot st-' + p.statut + '" aria-hidden="true"></span><button type="button" class="link-btn" data-show="' + id + '">' + esc(p.nom) + '</button><button type="button" class="icon-btn icon-sm" data-unpin="' + id + '" aria-label="Retirer ' + esc(p.nom) + ' de mes inspirations">' + ICON.close + "</button></li>";
       }).join("");
-      $all("[data-unpin]", ul).forEach(function (b) { b.addEventListener("click", function () { state.pinned.splice(state.pinned.indexOf(b.dataset.unpin), 1); save(); drawPins(); if (sel) select(sel); }); });
+      $all("[data-unpin]", ul).forEach(function (b) { b.addEventListener("click", function () { state.pinned.splice(state.pinned.indexOf(b.dataset.unpin), 1); save(); drawPins(); drawVisits(); if (sel) select(sel); }); });
       $all("[data-show]", ul).forEach(function (b) { b.addEventListener("click", function () { select(b.dataset.show); }); });
     }
     drawPins();
+    drawVisits();
+    var visites = visitsPick();
+    if (visites.length && window.Deva) {
+      Deva.say("Trois lieux à visiter pour t'inspirer" + (state.project.loc ? ", les plus proches de chez toi" : "") + ". Clique pour les voir sur la carte.",
+        { instant: true, actions: visites.map(function (p) { return { label: p.nom, once: false, onClick: function () { showVisit(p); } }; }) });
+    }
 
     /* Deva t'accueille : raconte ton lieu idéal, il propose des projets voisins dont t'inspirer. */
     var STOP = " le la les un une des de du d et a au aux en dans pour par sur avec sans vers chez que qui quoi ou mon ma mes ton ta tes son sa ses notre nos leur leurs ce cet cette ces on nous vous ils elles il elle je tu se est sont etre avoir plus moins tres bien plutot aussi comme lieu projet envie reve rever ".split(" ");
@@ -1061,9 +1096,33 @@
   }
   function pageExplorer() {
     var fam = "", pulse = null;
+    if (!state.spaces.some(function (s) { return s.id === state.selectedSpace; })) state.selectedSpace = state.spaces[0] ? state.spaces[0].id : null;
+
+    // Ajout d'un espace (saisi, ou proposé par Deva parmi les quatre classiques).
+    function addSpace(id, nom) {
+      if (state.spaces.length >= 8) { toast("Huit espaces, c'est déjà un beau lieu. Regroupe avant d'en ajouter."); return; }
+      var s = { id: id || uid("s"), nom: nom }; state.spaces.push(s); state.selectedSpace = s.id; save();
+      pulse = s.id; drawAll(); Deva.react("espace");
+    }
+    function drawSpaceSugg() {
+      var box = $("#space-sugg"); if (!box) return;
+      var rest = D.espaces.filter(function (e) { return !state.spaces.some(function (s) { return s.id === e.id; }); });
+      if (!rest.length || state.spaces.length >= 8) { box.innerHTML = ""; return; }
+      box.innerHTML = '<span class="sugg-lbl">' + leafSvg("") + "Deva propose, tu décides :</span>" +
+        rest.map(function (e) { return '<button type="button" class="deva-chip" data-space-add="' + e.id + '">+ ' + esc(e.nom) + "</button>"; }).join("");
+      $all("[data-space-add]", box).forEach(function (b) { b.addEventListener("click", function () {
+        var e = D.espaces.find(function (x) { return x.id === b.dataset.spaceAdd; }); if (e) addSpace(e.id, e.nom);
+      }); });
+    }
     function chosenIn(spaceId) { return state.chosen.filter(function (c) { return c.spaceId === spaceId; }); }
 
     function drawMind() {
+      drawSpaceSugg();
+      if (!state.spaces.length) {
+        $("#mind").innerHTML = '<div class="mind-empty"><p>Ton lieu n\'a pas encore d\'espace. Commence par en créer un : un jardin, un atelier, un café, un coin pour décider ensemble. Deva en propose ci-dessous, tu décides.</p></div>';
+        $("#sel-space").textContent = "aucun pour l'instant";
+        return;
+      }
       var W = 620, H = 450, cx = 310, cy = 222, n = state.spaces.length;
       var svg = '<svg viewBox="0 0 ' + W + " " + H + '" class="mind-svg" role="group" aria-label="Carte mentale des espaces du projet">';
       var nodes = state.spaces.map(function (s, k) {
@@ -1110,6 +1169,7 @@
         return iciCard(x, on ? '<span class="added">' + ICON.check + ' Suivi dans mon projet</span><button type="button" class="link-btn" data-ici-off="' + x.id + '">Retirer</button>' : '<button type="button" class="btn btn-amber btn-sm" data-ici="' + x.id + '">Ajouter à mon projet</button>');
       }).join("");
       $all("[data-add]").forEach(function (b) { b.addEventListener("click", function () {
+        if (!state.selectedSpace) { toast("Crée d'abord un espace, ou prends-en un proposé par Deva, puis accroche-lui cette solution."); $("#space-name").focus(); return; }
         state.chosen.push({ id: uid("c"), solId: b.dataset.add, spaceId: state.selectedSpace }); save();
         pulse = state.selectedSpace; drawAll(); Deva.react("add:" + b.dataset.add, "add");
         var again = $('[data-remove="' + b.dataset.add + '"]'); if (again) again.focus();
@@ -1126,7 +1186,7 @@
 
     function drawChosen() {
       var ul = $("#chosen");
-      if (!state.chosen.length) { ul.innerHTML = '<li class="empty">Aucune solution choisie. Sélectionne un espace, puis ajoute des solutions du Commun à droite.</li>'; return; }
+      if (!state.chosen.length) { ul.innerHTML = '<li class="empty">Aucune solution choisie. Crée ou sélectionne un espace, puis ajoute des solutions du Commun à droite.</li>'; return; }
       ul.innerHTML = state.chosen.map(function (c) {
         return '<li class="chosen-item fam-' + SOL[c.solId].famille + '"><span class="fam-dot" aria-hidden="true"></span><span><strong>' + esc(SOL[c.solId].nom) + '</strong> <span class="muted">dans ' + esc(spaceName(c.spaceId)) + '</span></span><button type="button" class="icon-btn icon-sm" data-unchoose="' + c.id + '" aria-label="Retirer ' + esc(SOL[c.solId].nom) + '">' + ICON.close + "</button></li>";
       }).join("");
@@ -1141,9 +1201,7 @@
     $("#add-space").addEventListener("submit", function (e) {
       e.preventDefault();
       var input = $("#space-name"), nom = input.value.trim() || "Nouvel espace";
-      if (state.spaces.length >= 8) { toast("Huit espaces, c'est déjà un beau lieu. Regroupe avant d'en ajouter."); return; }
-      var s = { id: uid("s"), nom: nom }; state.spaces.push(s); state.selectedSpace = s.id; save();
-      input.value = ""; pulse = s.id; drawAll(); Deva.react("espace");
+      input.value = ""; addSpace(null, nom);
     });
     drawAll();
   }
@@ -1169,8 +1227,13 @@
       if (!state.chosen.length) {
         bar.innerHTML = '<p class="empty">Tu n\'as pas encore choisi de solutions. <a href="explorer.html">Retourner à Explorer</a> ou <button type="button" class="link-btn" id="take-sugg">reprendre les suggestions de Deva</button>.</p>';
         $("#take-sugg").addEventListener("click", function () {
+          // les suggestions s'accrochent à trois espaces classiques : on les crée s'ils manquent
+          ["jardin", "atelier", "cafe"].forEach(function (sid) {
+            if (!state.spaces.some(function (s) { return s.id === sid; })) { var e = D.espaces.find(function (x) { return x.id === sid; }); if (e) state.spaces.push({ id: e.id, nom: e.nom }); }
+          });
+          if (!state.selectedSpace) state.selectedSpace = state.spaces[0].id;
           ["haie", "recup-eau", "solaire", "four"].forEach(function (id, k) { if (!state.chosen.some(function (c) { return c.solId === id; })) state.chosen.push({ id: uid("c"), solId: id, spaceId: ["jardin", "jardin", "atelier", "cafe"][k] }); });
-          save(); drawBar(); refreshChrome(); Deva.say("Voici quatre solutions éprouvées du Commun. Tu restes libre de les poser ou non.");
+          save(); drawScene(); drawBar(); refreshChrome(); Deva.say("Voici quatre solutions éprouvées du Commun. Tu restes libre de les poser ou non.");
         });
         return;
       }
@@ -1190,12 +1253,12 @@
       if (!armed) { h.hidden = true; wrap.classList.remove("is-armed"); return; }
       var c = state.chosen.find(function (x) { return x.id === armed; });
       h.hidden = false; wrap.classList.add("is-armed");
-      h.innerHTML = "Clique une case d'herbe libre pour poser <strong>" + esc(SOL[c.solId].nom) + '</strong>. <button type="button" class="link-btn" id="auto-place">Poser sur une case libre</button> <button type="button" class="link-btn" id="cancel-arm">Annuler</button>';
-      $("#auto-place").addEventListener("click", function () { var cell = api.firstFree(function (x) { return Math.abs(x.i - 4) + Math.abs(x.j - 4); }); if (cell) place(armed, cell.i, cell.j); });
+      h.innerHTML = "Clique une case dans <strong>" + esc(spaceName(c.spaceId)) + "</strong> pour poser <strong>" + esc(SOL[c.solId].nom) + '</strong>. <button type="button" class="link-btn" id="auto-place">Poser dans son espace</button> <button type="button" class="link-btn" id="cancel-arm">Annuler</button>';
+      $("#auto-place").addEventListener("click", function () { var cell = api.firstFreeIn(c.spaceId, function (x) { return Math.abs(x.i - 4) + Math.abs(x.j - 4); }); if (cell) place(armed, cell.i, cell.j); });
       $("#cancel-arm").addEventListener("click", function () { armed = null; drawBar(); drawHint(); });
     }
     function drawScene(focusUid) {
-      api = EvadScene.render(stage, myScene({ interactive: true, label: "Maquette 2.5D de " + projectName() + ". Glisse une solution sur une case d'herbe libre." }));
+      api = renderScene(stage, myLieu(), { interactive: true, label: "Maquette 2.5D de " + projectName() + ". Glisse une solution sur une case d'herbe libre." });
       $all(".iso-item", stage).forEach(function (g) {
         g.addEventListener("click", function (e) { e.stopPropagation(); openMenu(g.dataset.uid, g); });
         g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openMenu(g.dataset.uid, g); } });
@@ -1205,7 +1268,18 @@
     function drawVadance() { $("#vadance").innerHTML = vadanceHtml(); }
     function place(chosenId, i, j) {
       var c = state.chosen.find(function (x) { return x.id === chosenId; }); if (!c) return;
-      if (!api.isFree(i, j)) { toast("Cette case est occupée. Choisis une case d'herbe libre."); return; }
+      // Une solution se pose dans l'espace auquel elle est rattachée : lâchée ailleurs
+      // (ou sur une case prise), elle rejoint son espace, sur la case libre la plus proche.
+      var zone = (api.zones || []).filter(function (z) { return z.id === c.spaceId; })[0];
+      if (zone) {
+        var dansZone = api.zoneAt(i, j) === zone.id;
+        if (!dansZone || !api.isFree(i, j)) {
+          var cell = api.firstFreeIn(zone.id, function (x) { return Math.abs(x.i - i) + Math.abs(x.j - j); });
+          if (!cell) { toast("Plus de place dans " + zone.nom + ". Retire un élément ou ajoute un espace."); return; }
+          if (!dansZone) Deva.say("Je l'ai posée dans " + zone.nom + ", son espace.", { instant: true });
+          i = cell.i; j = cell.j;
+        }
+      } else if (!api.isFree(i, j)) { toast("Cette case est occupée. Choisis une case d'herbe libre."); return; }
       var p = { uid: uid("p"), chosenId: c.id, solId: c.solId, spaceId: c.spaceId, i: i, j: j, status: "prevu" };
       state.placed.push(p); save(); armed = null;
       drawScene(p.uid); drawBar(); drawHint(); drawVadance(); refreshChrome();
@@ -1386,7 +1460,7 @@
     });
 
     function drawScene() {
-      EvadScene.render($("#nr-scene"), myScene({ justVerified: justVerified }));
+      renderScene($("#nr-scene"), myLieu(), { justVerified: justVerified });
       var ver = state.placed.filter(function (p) { return p.status === "verifie"; }).length;
       $("#scene-state").textContent = !state.placed.length ? "Aucun élément posé." : ver === 0 ? "Rien n'est encore vérifié : le lieu attend ses premières preuves." : ver === state.placed.length ? "Tout le lieu est vérifié." : "Le lieu commence à verdir.";
     }
@@ -1453,8 +1527,60 @@
     drawAll();
   }
 
+  /* ================= Mon lieu : tableau de bord quotidien du porteur ================= */
+  function pageMonLieu() {
+    var filter = null;
+    var hasLieu = !!state.project.name.trim() || state.placed.length || state.chosen.length;
+    $("#ml-title").textContent = projectName();
+    $("#ml-promesse").textContent = state.project.promesse.trim() || "Ta promesse s'écrit à l'étape Rêver.";
+    if (!hasLieu) { $("#ml-empty").hidden = false; $("#ml-grid").hidden = true; return; }
+
+    function drawScene() {
+      renderScene($("#ml-scene"), myLieu(), {
+        label: "Maquette vivante de " + projectName(),
+        activeZone: filter,
+        onZone: function (id) { filter = filter === id ? null : id; drawAll(); }
+      });
+      $("#ml-scene-state").textContent = filter
+        ? "Espace " + spaceName(filter) + ". Clique-le à nouveau pour revoir tout le lieu."
+        : "Clique un espace de la maquette pour te concentrer sur ses quêtes.";
+    }
+    // Aujourd'hui : d'abord ce qui attend une preuve, puis les quêtes à lancer.
+    function drawToday() {
+      var ul = $("#ml-today"), list = state.placed.filter(function (p) { return !filter || p.spaceId === filter; });
+      $("#ml-filter").textContent = filter ? "Quêtes de l'espace " + spaceName(filter) : "Toutes les quêtes du lieu";
+      $("#ml-all").hidden = !filter;
+      if (!list.length) {
+        ul.innerHTML = '<li class="empty">' + (filter ? "Rien n'est posé dans cet espace pour l'instant." : "Aucune solution posée. Passe par Générer pour poser tes premières solutions.") + "</li>";
+        return;
+      }
+      var html = "";
+      list.filter(function (p) { return p.status === "encours"; }).forEach(function (p) {
+        var q = questFor(p);
+        html += '<li class="ml-item"><span class="dot st-encours" aria-hidden="true"></span><div><strong>À vérifier : ' + esc(q.titre) + '</strong>' +
+          '<p class="muted small">Preuve attendue : une photo, une mesure, une date. Espace ' + esc(spaceName(p.spaceId)) + ".</p></div>" +
+          '<a class="btn btn-primary btn-sm" href="nourrir.html?pour=' + p.uid + '">Apporter la preuve</a></li>';
+      });
+      list.filter(function (p) { return p.status === "prevu"; }).forEach(function (p) {
+        var q = questFor(p);
+        html += '<li class="ml-item"><span class="dot st-reve" aria-hidden="true"></span><div><strong>À faire : ' + esc(q.titre) + '</strong>' +
+          '<p class="muted small">' + esc(q.aide) + " Espace " + esc(spaceName(p.spaceId)) + ".</p></div>" +
+          '<a class="btn btn-ghost btn-sm" href="entreprendre.html">Ouvrir la quête</a></li>';
+      });
+      var done = list.filter(function (p) { return p.status === "verifie"; });
+      if (done.length) html += '<li class="ml-done">' + ICON.check + " " + done.map(function (p) { return esc(SOL[p.solId].nom); }).join(", ") + (done.length > 1 ? " sont vérifiés" : " est vérifié") + ".</li>";
+      if (!html) html = '<li class="empty">Tout est vérifié ici. Beau travail de terrain.</li>';
+      ul.innerHTML = html;
+    }
+    // Élan de la semaine : repères qualitatifs par famille d'ICI (feuilles), jamais un chiffre.
+    function drawElan() { $("#ml-elan").innerHTML = vadanceHtml(); }
+    function drawAll() { drawScene(); drawToday(); drawElan(); }
+    $("#ml-all").addEventListener("click", function () { filter = null; drawAll(); });
+    drawAll();
+  }
+
   /* ================= Démarrage ================= */
-  var PAGES = { index: pageIndex, commun: pageCommun, rever: pageRever, explorer: pageExplorer, generer: pageGenerer, entreprendre: pageEntreprendre, nourrir: pageNourrir };
+  var PAGES = { index: pageIndex, commun: pageCommun, rever: pageRever, explorer: pageExplorer, generer: pageGenerer, entreprendre: pageEntreprendre, nourrir: pageNourrir, monlieu: pageMonLieu };
   // Charge le compte, son projet (en ligne, ou le cache local s'il est plus récent) et les lieux publics.
   function boot(page) {
     var hasMap = page === "index" || page === "rever";
@@ -1494,6 +1620,7 @@
       if (window.Deva) {
         if (page === "index") { Deva.init("accueil", { silent: true }); }
         else if (page === "commun") { Deva.init("commun"); }
+        else if (page === "monlieu") { Deva.init("monlieu"); }
         else if (step) { Deva.init(step.deva); renderSidebarNav(page); renderTopStepper(page); }
       }
       renderFooter(); // après Deva.init : le bandeau se loge sous le panneau de Deva

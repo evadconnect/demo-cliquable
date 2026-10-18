@@ -64,12 +64,20 @@
     var b = P(x, y, 0);
     shadow(g, b[0] + 4, b[1] + 1, 13 * s);
     el("rect", { x: b[0] - 2, y: b[1] - 16 * s, width: 4, height: 16 * s, rx: 1.5, fill: c.trunk }, g);
-    el("circle", { cx: b[0], cy: b[1] - 24 * s, r: 13 * s, fill: c.leaf }, g);
-    el("circle", { cx: b[0] - 4 * s, cy: b[1] - 28 * s, r: 7 * s, fill: c.light }, g);
+    // le feuillage est groupé pour pouvoir osciller doucement (CSS, désactivé si prefers-reduced-motion)
+    var can = el("g", { class: "iso-canopy" }, g);
+    el("circle", { cx: b[0], cy: b[1] - 24 * s, r: 13 * s, fill: c.leaf }, can);
+    el("circle", { cx: b[0] - 4 * s, cy: b[1] - 28 * s, r: 7 * s, fill: c.light }, can);
     if (c.fruit) {
       [[5, -20], [-6, -18], [2, -31], [8, -27]].forEach(function (f) {
-        el("circle", { cx: b[0] + f[0] * s, cy: b[1] + f[1] * s, r: 1.8, fill: c.fruit }, g);
+        el("circle", { cx: b[0] + f[0] * s, cy: b[1] + f[1] * s, r: 1.8, fill: c.fruit }, can);
       });
+    }
+    if (c.face) { // petit visage, comme sur la maquette de référence
+      var fy = b[1] - 23 * s;
+      el("circle", { cx: b[0] - 4 * s, cy: fy, r: 1.3, fill: "#1C2E26" }, can);
+      el("circle", { cx: b[0] + 4 * s, cy: fy, r: 1.3, fill: "#1C2E26" }, can);
+      el("path", { d: "M" + (b[0] - 3.5 * s) + " " + (fy + 4 * s) + " Q" + b[0] + " " + (fy + 7.5 * s) + " " + (b[0] + 3.5 * s) + " " + (fy + 4 * s), stroke: "#1C2E26", "stroke-width": 1, fill: "none", "stroke-linecap": "round" }, can);
     }
   }
   function person(g, x, y, color) {
@@ -164,17 +172,27 @@
       });
     },
     arbre: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 1.25, { trunk: BASE.trunk, leaf: "#4E8C6C", light: "#79A98C" }); },
+    arbreface: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 1.2, { trunk: BASE.trunk, leaf: "#4E8C6C", light: "#79A98C", face: true }); },
+    fruitierface: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 1.0, { trunk: BASE.trunk, leaf: "#5E9B79", light: "#9BC7AC", fruit: "#C06848", face: true }); },
+    haieI: function (g, s) { for (var k = 0; k < 3; k++) { var b = P(s.i + 0.2 + k * 0.3, s.j + 0.5, 0); el("circle", { cx: b[0], cy: b[1] - 7, r: 7.5, fill: k % 2 ? "#5E9B79" : "#4E8C6C" }, g); el("circle", { cx: b[0] - 2, cy: b[1] - 10, r: 3, fill: "#9BC7AC" }, g); } },
+    haieJ: function (g, s) { for (var k = 0; k < 3; k++) { var b = P(s.i + 0.5, s.j + 0.2 + k * 0.3, 0); el("circle", { cx: b[0], cy: b[1] - 7, r: 7.5, fill: k % 2 ? "#5E9B79" : "#4E8C6C" }, g); el("circle", { cx: b[0] - 2, cy: b[1] - 10, r: 3, fill: "#9BC7AC" }, g); } },
     fruitier: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 0.95, { trunk: BASE.trunk, leaf: "#5E9B79", light: "#9BC7AC", fruit: "#C06848" }); }
   };
 
   /* ---------- solutions posées (dessinées selon leur état) ---------- */
   var SOL = {
     citerne: function (g, i, j, c) {
-      [[0.35, 0.4], [0.65, 0.62]].forEach(function (o) {
+      // gouttière qui descend du toit vers la première cuve
+      var g0 = P(i + 0.08, j + 0.12, 32), g1 = P(i + 0.35, j + 0.4, 21);
+      el("line", { x1: g0[0] - 12, y1: g0[1] - 3, x2: g0[0], y2: g0[1], stroke: c.stroke, "stroke-width": 2.2, "stroke-linecap": "round" }, g);
+      el("line", { x1: g0[0], y1: g0[1], x2: g1[0], y2: g1[1], stroke: c.stroke, "stroke-width": 2.2, "stroke-linecap": "round" }, g);
+      [[0.35, 0.4], [0.65, 0.62]].forEach(function (o, n) {
         var b = P(i + o[0], j + o[1], 0), r = 9, h = 20;
         shadow(g, b[0] + 3, b[1] + 1, 11);
         el("path", { d: "M" + (b[0] - r) + " " + (b[1] - h) + " L" + (b[0] - r) + " " + b[1] + " A" + r + " " + r / 2 + " 0 0 0 " + (b[0] + r) + " " + b[1] + " L" + (b[0] + r) + " " + (b[1] - h) + " Z", fill: c.b, stroke: c.stroke, "stroke-width": 1, "stroke-dasharray": c.dash }, g);
         el("ellipse", { cx: b[0], cy: b[1] - h, rx: r, ry: r / 2, fill: c.c, stroke: c.stroke, "stroke-width": 1, "stroke-dasharray": c.dash }, g);
+        el("rect", { x: b[0] + r - 1, y: b[1] - 7, width: 4, height: 2, rx: 1, fill: c.stroke }, g); // robinet
+        if (n === 0 && c.verified) el("circle", { cx: g1[0], cy: g1[1] + 3, r: 1.7, fill: "#7FB0B3", class: "iso-drip" }, g); // goutte (cuve vérifiée)
       });
     },
     mare: function (g, i, j, c) {
@@ -192,8 +210,13 @@
       }
     },
     compost: function (g, i, j, c) {
-      var f = box(g, i + 0.2, j + 0.25, 0.6, 0.5, 14, { top: c.d, left: c.a, right: c.b }, 0, { stroke: c.stroke, "stroke-width": 0.8, "stroke-dasharray": c.dash });
-      [0.33, 0.66].forEach(function (v) { var a = sub(f.left, 0, v, 1, v); el("line", { x1: a[0][0], y1: a[0][1], x2: a[1][0], y2: a[1][1], stroke: c.stroke, "stroke-width": 0.8 }, g); });
+      // deux bacs à compost côte à côte, lattes apparentes, épluchures sur le dessus
+      [0.12, 0.54].forEach(function (o) {
+        var f = box(g, i + o, j + 0.28, 0.34, 0.44, 13, { top: c.d, left: c.a, right: c.b }, 0, { stroke: c.stroke, "stroke-width": 0.8, "stroke-dasharray": c.dash });
+        [0.33, 0.66].forEach(function (v) { var a = sub(f.left, 0, v, 1, v); el("line", { x1: a[0][0], y1: a[0][1], x2: a[1][0], y2: a[1][1], stroke: c.stroke, "stroke-width": 0.8 }, g); });
+        var t = P(i + o + 0.17, j + 0.5, 13);
+        [[-3, -1], [2, -2], [0, 2]].forEach(function (d) { el("circle", { cx: t[0] + d[0], cy: t[1] + d[1], r: 1.5, fill: c.a }, g); });
+      });
     },
     solaire: function (g, i, j, c) {
       [[i + 0.3, j + 0.25], [i + 0.3, j + 0.75]].forEach(function (lg) { var a = P(lg[0], lg[1], 0), b = P(lg[0], lg[1], 12); el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.stroke, "stroke-width": 2 }, g); });
@@ -237,21 +260,54 @@
         var a = k / 6 * Math.PI * 2, x = i + 0.5 + Math.cos(a) * 0.32, y = j + 0.5 + Math.sin(a) * 0.32;
         box(g, x - 0.07, y - 0.07, 0.14, 0.14, 5, { top: c.c, left: c.a, right: c.b }, 0, { stroke: c.stroke, "stroke-width": 0.6, "stroke-dasharray": c.dash });
       }
-      var p = P(i + 0.5, j + 0.5, 0); el("circle", { cx: p[0], cy: p[1], r: 3, fill: c.b }, g);
+      // table de conseil au centre du cercle
+      box(g, i + 0.38, j + 0.38, 0.24, 0.24, 8, { top: c.c, left: c.a, right: c.b }, 0, { stroke: c.stroke, "stroke-width": 0.6, "stroke-dasharray": c.dash });
     },
     panneau: function (g, i, j, c) {
-      [0.3, 0.7].forEach(function (u) { var a = P(i + u, j + 0.5, 0), b = P(i + u, j + 0.5, 26); el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.stroke, "stroke-width": 2 }, g); });
-      var q = [P(i + 0.2, j + 0.5, 32), P(i + 0.8, j + 0.5, 32), P(i + 0.8, j + 0.5, 14), P(i + 0.2, j + 0.5, 14)];
-      poly(g, q, c.a, { stroke: c.stroke, "stroke-width": 1, "stroke-dasharray": c.dash });
-      [0.3, 0.55].forEach(function (v) { var a = sub(q, 0.15, v, 0.85, v); el("line", { x1: a[0][0], y1: a[0][1], x2: a[1][0], y2: a[1][1], stroke: c.c, "stroke-width": 1.2 }, g); });
+      // urne du budget participatif : une boîte sur pied, sa fente, un bulletin glissé
+      box(g, i + 0.44, j + 0.44, 0.12, 0.12, 10, { top: c.d, left: c.a, right: c.b }, 0, { stroke: c.stroke, "stroke-width": 0.6 });
+      var f = box(g, i + 0.3, j + 0.3, 0.4, 0.4, 14, { top: c.c, left: c.a, right: c.b }, 10, { stroke: c.stroke, "stroke-width": 0.9, "stroke-dasharray": c.dash });
+      poly(g, sub(f.top, 0.22, 0.44, 0.78, 0.56), c.stroke);
+      var t = P(i + 0.5, j + 0.5, 24);
+      el("rect", { x: t[0] - 4, y: t[1] - 12, width: 8, height: 10, rx: 1, fill: "#FFFDF7", stroke: c.stroke, "stroke-width": 0.8, transform: "rotate(-14 " + t[0] + " " + t[1] + ")" }, g);
     }
   };
 
   function statusPalette(status) {
     var s = STATUS[status] || STATUS.prevu;
     var c = {}; for (var k in s) c[k] = s[k];
-    if (status === "verifie") c.fruit = "#C06848";
+    if (status === "verifie") { c.fruit = "#C06848"; c.verified = true; }
     return c;
+  }
+
+  /* ---------- espaces du lieu : zones nommées sur la grille ---------- */
+  var ZONE_PAL = ["#CFE1CC", "#CBD5E3", "#EBD4D4", "#D9D3E9", "#E9E3D2", "#D3E4EC", "#E6D9C4", "#D7E2D9"];
+  // Répartit les espaces en sols colorés séparés par des allées d'une case, avec une pelouse
+  // autour quand la place le permet (jusqu'à 9 espaces). Le résultat porte aussi
+  // zones.walk (cases d'allée) et zones.margin (largeur de la pelouse).
+  function layoutZones(spaces, N) {
+    var n = (spaces || []).length; if (!n) return [];
+    var cols = n <= 1 ? 1 : n <= 4 ? 2 : 3, rows = Math.ceil(n / cols);
+    var m = (cols <= 2 && rows <= 2) ? 1 : 0, inner = N - 2 * m;
+    function split(c) {
+      var total = inner - (c - 1), base = Math.floor(total / c), rest = total - base * c, out = [], pos = m;
+      for (var k = 0; k < c; k++) { var w = base + (k < rest ? 1 : 0); out.push({ a: pos, w: w }); pos += w + 1; }
+      return out;
+    }
+    var cw = split(cols), rh = split(rows);
+    var zones = spaces.map(function (s, k) {
+      var c = k % cols, r = Math.floor(k / cols);
+      return { id: s.id, nom: s.nom, i0: cw[c].a, j0: rh[r].a, w: cw[c].w, d: rh[r].w, color: ZONE_PAL[k % ZONE_PAL.length] };
+    });
+    var walk = {};
+    for (var a = 1; a < cols; a++) { var x = cw[a].a - 1; for (var j = m; j < N - m; j++) walk[x + "," + j] = true; }
+    for (var b = 1; b < rows; b++) { var y = rh[b].a - 1; for (var i = m; i < N - m; i++) walk[i + "," + y] = true; }
+    zones.walk = walk; zones.margin = m;
+    return zones;
+  }
+  function zoneAt(zones, i, j) {
+    for (var k = 0; k < zones.length; k++) { var z = zones[k]; if (i >= z.i0 && i < z.i0 + z.w && j >= z.j0 && j < z.j0 + z.d) return z; }
+    return null;
   }
 
   /* ---------- rendu ---------- */
@@ -263,6 +319,7 @@
     var structures = opt.structures || [];
     var placed = opt.placed || [];
     var solutions = opt.solutions || {};
+    var zones = opt.zones || [], walk = zones.walk || {};
 
     container.innerHTML = "";
     var minX = -N * TW - 12, width = N * TW * 2 + 24;
@@ -275,7 +332,7 @@
       for (var a = 0; a < (s.w || 1); a++) for (var b = 0; b < (s.d || 1); b++) occ[(s.i + a) + "," + (s.j + b)] = "structure";
     });
     placed.forEach(function (p) { occ[p.i + "," + p.j] = p.uid; });
-    function isPath(i, j) { return pathLine !== null && pathLine !== false && (i === pathLine || j === pathLine); }
+    function isPath(i, j) { return !!walk[i + "," + j] || (pathLine !== null && pathLine !== false && (i === pathLine || j === pathLine)); }
 
     // socle de terre
     var ground = el("g", {}, svg);
@@ -295,7 +352,9 @@
     var tiles = el("g", { class: "iso-tiles" }, svg);
     for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) {
       var tp = [P(i, j, 0), P(i + 1, j, 0), P(i + 1, j + 1, 0), P(i, j + 1, 0)];
-      var fill = isPath(i, j) ? (hash(i, j) > 0.5 ? "#EADFC2" : "#E4D7B6") : (hash(i, j) > 0.5 ? grassA : grassB);
+      var zt = zones.length ? zoneAt(zones, i, j) : null;
+      var fill = isPath(i, j) ? (hash(i, j) > 0.5 ? "#EFE9DA" : "#E9E2D0") : (hash(i, j) > 0.5 ? grassA : grassB);
+      if (zt && !isPath(i, j)) fill = mix(zt.color, "#FFFFFF", hash(i, j) > 0.5 ? 0.1 : 0);
       poly(tiles, tp, fill, { stroke: "rgba(255,253,247,.18)", "stroke-width": 0.6 });
       if (!isPath(i, j) && !occ[i + "," + j] && hash(j, i) > 0.72) {
         var t = P(i + 0.3 + hash(i, j) * 0.4, j + 0.5, 0);
@@ -309,13 +368,58 @@
       poly(tiles, [P(p.i + 0.04, p.j + 0.04, 0), P(p.i + 0.96, p.j + 0.04, 0), P(p.i + 0.96, p.j + 0.96, 0), P(p.i + 0.04, p.j + 0.96, 0)], c.tile, { stroke: c.stroke, "stroke-width": 1.4, "stroke-dasharray": p.status === "prevu" ? "5 4" : null, class: "iso-mark" });
     });
 
+    // contours des espaces, au sol ; cliquables si la page fournit onZone
+    var zoneG = el("g", { class: "iso-zones" }, svg);
+    zones.forEach(function (z) {
+      var q = [P(z.i0 + 0.04, z.j0 + 0.04, 0), P(z.i0 + z.w - 0.04, z.j0 + 0.04, 0), P(z.i0 + z.w - 0.04, z.j0 + z.d - 0.04, 0), P(z.i0 + 0.04, z.j0 + z.d - 0.04, 0)];
+      var active = opt.activeZone === z.id;
+      var g = el("g", { class: "iso-zone" + (active ? " is-active" : ""), "data-zone": z.id }, zoneG);
+      poly(g, q, "rgba(255,253,247,0)", { stroke: active ? mix(z.color, "#1C2E26", 0.5) : "rgba(255,253,247,.85)", "stroke-width": active ? 2.4 : 1.6, "stroke-linejoin": "round" });
+      if (opt.onZone) {
+        g.setAttribute("role", "button"); g.setAttribute("tabindex", "0");
+        g.setAttribute("aria-label", "Espace " + z.nom + (active ? ", sélectionné" : ""));
+        g.addEventListener("click", function () { opt.onZone(z.id); });
+        g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); opt.onZone(z.id); } });
+      }
+    });
+
+    // pelouse autour des sols : haies sur les deux bords avant, quelques arbres à l'arrière
+    var decor = [];
+    if (zones.length && zones.margin === 1) {
+      for (var e = 1; e < N - 1; e++) {
+        if (!walk[(N - 2) + "," + e]) decor.push({ type: "haieJ", i: N - 1, j: e });
+        if (!walk[e + "," + (N - 2)]) decor.push({ type: "haieI", i: e, j: N - 1 });
+      }
+      [[0, 0], [0, N - 3], [N - 3, 0]].forEach(function (c) { decor.push({ type: "arbreface", i: c[0], j: c[1] }); });
+      decor.forEach(function (d) { occ[d.i + "," + d.j] = "decor"; });
+    }
+
     var hover = poly(svg, [P(0, 0, 0), P(1, 0, 0), P(1, 1, 0), P(0, 1, 0)], "rgba(217,160,63,.35)", { stroke: "#D9A03F", "stroke-width": 2, class: "iso-hover", visibility: "hidden" });
+
+    // un peu de vie : un arbre et une ou deux silhouettes dans chaque espace actif (positions stables)
+    var life = { structures: [], personnages: [] };
+    if (opt.life !== false && zones.length) {
+      var PCOL = ["#C06848", "#2C5234", "#D9A03F", "#5F7F52", "#7B6A9A"];
+      zones.forEach(function (z, k) {
+        if (!placed.some(function (p) { return p.spaceId === z.id; })) return;
+        var cands = [[z.i0 + z.w - 1, z.j0 + z.d - 1], [z.i0, z.j0 + z.d - 1], [z.i0 + z.w - 1, z.j0], [z.i0 + Math.floor(z.w / 2), z.j0 + z.d - 1], [z.i0 + z.w - 1, z.j0 + Math.floor(z.d / 2)], [z.i0, z.j0]];
+        var used = 0;
+        cands.forEach(function (c, n) {
+          if (used >= 3) return;
+          var key = c[0] + "," + c[1];
+          if (occ[key] || isPath(c[0], c[1])) return;
+          if (used === 0) life.structures.push({ type: k % 2 ? "fruitierface" : "arbreface", i: c[0], j: c[1] });
+          else life.personnages.push({ i: c[0], j: c[1], c: PCOL[(k + n) % PCOL.length] });
+          occ[key] = "vie"; used++;
+        });
+      });
+    }
 
     // objets triés par profondeur
     var items = [];
-    structures.forEach(function (s) { items.push({ k: s.i + (s.w || 1) + s.j + (s.d || 1), kind: "s", s: s }); });
+    structures.concat(decor, life.structures).forEach(function (s) { items.push({ k: s.i + (s.w || 1) + s.j + (s.d || 1), kind: "s", s: s }); });
     placed.forEach(function (p) { items.push({ k: p.i + p.j + 2, kind: "p", p: p }); });
-    (opt.personnages || []).forEach(function (h) { items.push({ k: h.i + h.j + 1.2, kind: "h", h: h }); });
+    (opt.personnages || []).concat(life.personnages).forEach(function (h) { items.push({ k: h.i + h.j + 1.2, kind: "h", h: h }); });
     items.sort(function (a, b) { return a.k - b.k; });
 
     var objects = el("g", { class: "iso-objects" }, svg);
@@ -347,6 +451,23 @@
       }
     });
 
+    // étiquettes des espaces : centrées, avec un surtitre (familles des solutions posées) et un repère au sol
+    var FAMLBL = { eau: "Eau", sol: "Sol", energie: "Énergie", reemploi: "Réemploi", alimentation: "Alimentation", gouvernance: "Gouvernance" };
+    var labels = el("g", { class: "iso-zone-labels" }, svg);
+    zones.forEach(function (z) {
+      var c = P(z.i0 + z.w / 2, z.j0 + z.d / 2, 0), fams = [];
+      placed.forEach(function (p) { if (p.spaceId !== z.id) return; var so = solutions[p.solId], f = so && FAMLBL[so.famille]; if (f && fams.indexOf(f) < 0) fams.push(f); });
+      var kicker = fams.length ? fams.slice(0, 2).join(" · ") : "À aménager";
+      var nom = z.nom.length > 22 ? z.nom.slice(0, 21) + "…" : z.nom;
+      var w = Math.max(nom.length * 6.6, kicker.length * 5.8) + 22, h = 32, top = c[1] - 26 - h;
+      var g = el("g", { class: "iso-zone-label", "data-zone": z.id }, labels);
+      el("line", { x1: c[0], y1: c[1], x2: c[0], y2: top + h, stroke: "rgba(28,46,38,.35)", "stroke-width": 1 }, g);
+      el("circle", { cx: c[0], cy: c[1], r: 2.6, fill: "#FFFDF7", stroke: mix(z.color, "#1C2E26", 0.5), "stroke-width": 1.2 }, g);
+      el("rect", { x: c[0] - w / 2, y: top, width: w, height: h, rx: 11, fill: "rgba(255,253,247,.96)", stroke: mix(z.color, "#1C2E26", 0.3), "stroke-width": 1 }, g);
+      el("text", { x: c[0], y: top + 12, "text-anchor": "middle", class: "iso-zone-kicker" }, g).textContent = kicker;
+      el("text", { x: c[0], y: top + 25, "text-anchor": "middle", class: "iso-zone-text" }, g).textContent = nom;
+    });
+
     function cellFromPoint(clientX, clientY) {
       var pt = svg.createSVGPoint(); pt.x = clientX; pt.y = clientY;
       var m = svg.getScreenCTM(); if (!m) return null;
@@ -370,8 +491,46 @@
       for (var k = 0; k < order.length; k++) { var c = order[k]; if (!occ[c.i + "," + c.j] && !isPath(c.i, c.j)) return c; }
       return null;
     }
-    return { svg: svg, cellFromPoint: cellFromPoint, showHover: showHover, firstFree: firstFree, isFree: function (i, j) { return !occ[i + "," + j] && !isPath(i, j); } };
+    // première case libre à l'intérieur d'un espace (sinon n'importe où)
+    function firstFreeIn(zoneId, prefer) {
+      var z = zoneAt(zones, -1, -1); zones.forEach(function (x) { if (x.id === zoneId) z = x; });
+      if (!z) return firstFree(prefer);
+      var order = [];
+      for (var a = z.i0; a < z.i0 + z.w; a++) for (var b = z.j0; b < z.j0 + z.d; b++) order.push({ i: a, j: b });
+      if (prefer) order.sort(function (x, y) { return prefer(x) - prefer(y); });
+      for (var k = 0; k < order.length; k++) { var c = order[k]; if (!occ[c.i + "," + c.j] && !isPath(c.i, c.j)) return c; }
+      return null;
+    }
+    return { svg: svg, zones: zones, cellFromPoint: cellFromPoint, showHover: showHover, firstFree: firstFree, firstFreeIn: firstFreeIn,
+      zoneAt: function (i, j) { var z = zoneAt(zones, i, j); return z ? z.id : null; },
+      isFree: function (i, j) { return !occ[i + "," + j] && !isPath(i, j); } };
   }
 
-  window.EvadScene = { render: render };
+  /* ---------- composant réutilisable ----------
+     renderScene(container, lieu, options) : un lieu décrit par ses données
+     (espaces, solutions posées, vitalité, éventuels bâtiments) et des options d'affichage.
+     Utilisé par Générer, Nourrir, la fiche lieu de la carte et la page Mon lieu. */
+  function renderScene(container, lieu, options) {
+    lieu = lieu || {}; options = options || {};
+    var opt = {
+      grille: lieu.grille || 9,
+      chemin: lieu.chemin === undefined ? null : lieu.chemin,
+      structures: lieu.structures || [],
+      personnages: lieu.personnages || [],
+      placed: lieu.placed || [],
+      solutions: lieu.solutions || {},
+      vitalite: lieu.vitalite || 0,
+      interactive: !!options.interactive,
+      label: options.label || ("Maquette 2.5D de " + (lieu.nom || "mon lieu")),
+      justVerified: options.justVerified || null,
+      zones: layoutZones(lieu.spaces || [], lieu.grille || 9),
+      onZone: options.onZone || null,
+      activeZone: options.activeZone || null,
+      life: options.life !== false
+    };
+    return render(container, opt);
+  }
+
+  window.EvadScene = { render: render, renderScene: renderScene, layoutZones: layoutZones };
+  window.renderScene = renderScene;
 })();

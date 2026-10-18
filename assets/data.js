@@ -234,6 +234,15 @@ window.EVAD_DATA = {
           { q: "Faut-il un compte ?", a: "Non, le Commun est libre d'accès. Tu peux tout consulter sans te connecter." }
         ]
       },
+      monlieu: {
+        label: "Mon lieu",
+        intro: "Voici ton lieu au quotidien : ce qu'il y a à faire aujourd'hui, les preuves attendues, et ce qui a avancé cette semaine. Clique un espace de la maquette pour te concentrer dessus.",
+        suggestions: [
+          { q: "Que faire aujourd'hui ?", a: "Regarde le bloc Aujourd'hui : d'abord ce qui attend une preuve, puis les quêtes à lancer. Une seule à la fois, c'est déjà bien." },
+          { q: "Comment lire l'élan de la semaine ?", a: "Par famille d'ICI, des repères qualitatifs : prévu, en cours, vérifié. Jamais un chiffre d'impact : ce sont tes preuves qui font avancer le lieu." },
+          { q: "Pourquoi un espace est vide ?", a: "Aucune solution n'y est posée. Passe par Explorer pour en accrocher une, puis par Générer pour la poser sur la maquette." }
+        ]
+      },
       orientation: {
         label: "Orientation",
         intro: "Bonjour, je suis Deva. On commence par rêver ton lieu. Regarde les projets autour de toi, épingle ceux qui te parlent, puis donne un nom à ton projet.",
@@ -246,7 +255,7 @@ window.EVAD_DATA = {
       },
       solutions: {
         label: "Solutions",
-        intro: "Découpons ton lieu en espaces. Clique un espace, puis ajoute des solutions du Commun : elles ont déjà été éprouvées ailleurs.",
+        intro: "Découpons ton lieu en espaces. Crée ton premier espace, ou prends-en un que je te propose, puis accroche-lui des solutions du Commun : elles ont déjà été éprouvées ailleurs.",
         suggestions: [
           { q: "Que proposes-tu pour le jardin ?", a: "Pour un jardin sur une ancienne dalle, le Commun propose les planches en lasagnes, une haie fruitière et la récupération d'eau de pluie. À toi de choisir." },
           { q: "Comment choisir entre deux solutions ?", a: "Regarde sur combien de projets elles ont été éprouvées, et quels ICI elles nourrissent. Vérifié bat généré." },
