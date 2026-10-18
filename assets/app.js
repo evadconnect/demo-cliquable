@@ -588,6 +588,11 @@
       ftoggle.setAttribute("aria-expanded", String(!collapsed));
       ftoggle.setAttribute("aria-label", collapsed ? "Afficher les filtres" : "Réduire les filtres");
     });
+    // La légende se cale au-dessus de la barre de filtres, quelle que soit sa hauteur (retour à la ligne compris).
+    var stage = $(".map-stage");
+    function calerLegende() { if (stage && filters) stage.style.setProperty("--filters-h", filters.offsetHeight + "px"); }
+    if (window.ResizeObserver) new ResizeObserver(calerLegende).observe(filters); else window.addEventListener("resize", calerLegende);
+    calerLegende();
 
     var fiche = $("#fiche");
     function closeFiche() { $(".map-stage").classList.remove("has-fiche"); fiche.classList.remove("open"); fiche.setAttribute("aria-hidden", "true"); selected = null; draw(); }
