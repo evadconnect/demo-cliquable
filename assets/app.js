@@ -653,7 +653,7 @@
           if (p) { state.prenom = p; save(); refreshChrome(); }
           return { text: (p ? "Enchanté, " + p + " ! " : "Enchanté ! ") + VISION + " Par quoi veux-tu commencer ?", actions: choices() };
         };
-        Deva.prompt("Bonjour, je suis Deva, ton assistant sur EVAD. Avant de commencer, comment t'appelles-tu ?", demande);
+        Deva.prompt("Bonjour, je suis Deva, l'assistant IA d'EVAD. Bienvenue dans l'univers d'EVAD. Comment t'appelles-tu ?", demande);
       }
       // Personnalisation : si une famille d'intérêt a été captée, Deva le signale.
       if (state.interestFam && FAM[state.interestFam]) {
