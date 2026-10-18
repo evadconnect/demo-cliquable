@@ -434,6 +434,23 @@
      de la destination : spotlight sur une cible + bulle + Suivant / Passer. */
   var bootedEarly = false; // l'interface a démarré sans attendre Supabase
   var redrawMap = null;    // redessine la carte de la page courante (arrivée tardive des lieux publics)
+  /* ================= Passage : la fenêtre se construit sous les yeux du visiteur ================= */
+  function titreDe(kind) { return { carte: "Carte vivante", regen: "Parcours REGEN", commun: "Le Commun" }[kind] || "EVAD"; }
+  // Cadre lumineux qui se trace autour d'une zone, avec son étiquette, puis s'efface.
+  function buildFrame(host, titre) {
+    if (!host) return null;
+    if (getComputedStyle(host).position === "static") host.style.position = "relative";
+    var f = document.createElement("div"); f.className = "build-frame"; f.setAttribute("aria-hidden", "true");
+    f.innerHTML = '<svg><defs><linearGradient id="bf-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9BC7AC"/><stop offset="1" stop-color="#D59154"/></linearGradient></defs>' +
+      '<rect x="1" y="1" width="99.6%" height="99.6%" rx="18" pathLength="1000"/></svg>' +
+      '<span class="build-chip"><i></i>' + esc(titre) + ' se construit pour toi</span>';
+    host.appendChild(f);
+    setTimeout(function () { f.classList.add("is-done"); }, 60);
+    setTimeout(function () { if (f.parentNode) f.remove(); }, 3000);
+    return f;
+  }
+  // Montage des blocs d'une zone (les enfants apparaissent un à un).
+  function buildIn(el, ms) { if (!el) return; el.classList.add("is-building"); setTimeout(function () { el.classList.remove("is-building"); }, ms || 1800); }
   var pageTour = null; // visite guidée de la page courante, rejouable via « Revoir la visite »
   var TOURS = {
     commun: [
@@ -690,6 +707,24 @@
         ov.classList.add("is-leaving");
         setTimeout(function () { ov.remove(); document.body.classList.remove("has-intro"); if (done) done(); }, 460);
       }
+      // Passage vers la suite : la carte de Deva glisse et se fond à la place de la sidebar,
+      // pendant que la fenêtre de destination se trace et se monte.
+      function dock(kind, next) {
+        if (ov._gone) return; ov._gone = true;
+        var card = ov.querySelector(".intro-card"), target = document.getElementById("deva");
+        var narrow = window.matchMedia("(max-width: 900px)").matches;
+        var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        ov.classList.add("is-docking");
+        if (card && target && !narrow && !reduce) {
+          var a = card.getBoundingClientRect(), b = target.getBoundingClientRect();
+          card.style.transform = "translate(" + (b.left - a.left) + "px," + (b.top - a.top) + "px) scale(" + (b.width / a.width) + "," + (b.height / a.height) + ")";
+        } else if (card) { card.style.opacity = "0"; }
+        var zone = document.querySelector(".map-stage") || document.getElementById("main");
+        buildFrame(zone, titreDe(kind));
+        if (kind === "carte") buildIn(zone, 2000); // la carte se monte pendant que Deva glisse
+        setTimeout(function () { ov.classList.add("is-gone"); }, reduce ? 0 : 650);
+        setTimeout(function () { ov.remove(); document.body.classList.remove("has-intro"); if (done) done(); if (next) next(); }, reduce ? 150 : 950);
+      }
       ov.querySelector(".intro-skip").addEventListener("click", leave);
 
       // Une réplique de Deva : points de saisie animés, puis le texte (comme dans la sidebar).
@@ -773,11 +808,14 @@
       ];
       pageTour = carteTour; // « Revoir la visite » (footer) rejoue la visite de la carte
       function routeTo(kind) {
-        // REGEN et Commun : on part sur l'autre page, qui lance sa visite guidée (?tour=1).
-        if (kind === "regen") { location.href = "rever.html?tour=1"; return; }
-        if (kind === "commun") { location.href = "commun.html?tour=1"; return; }
-        // Carte : page courante, on révèle la carte puis Deva en fait le tour.
-        leave(); setTimeout(function () { startTour(carteTour); }, 680);
+        // REGEN et Commun : la construction commence ici et se poursuit sur l'autre page (drapeau de session).
+        if (kind === "regen" || kind === "commun") {
+          try { sessionStorage.setItem("evad-arrive", kind); } catch (e) { /* ignore */ }
+          dock(kind, function () { location.href = (kind === "regen" ? "rever.html" : "commun.html") + "?tour=1"; });
+          return;
+        }
+        // Carte : page courante, la carte se monte puis Deva en fait le tour.
+        dock("carte", function () { setTimeout(function () { startTour(carteTour); }, 900); });
       }
       function askIntent() {
         foot.innerHTML =
@@ -1678,13 +1716,21 @@
       }
       if (window.Deva && Deva.setContext) Deva.setContext(devaContext);
       renderFooter(); // après Deva.init : le bandeau se loge sous le panneau de Deva
+      // Arrivée depuis l'onboarding : la fenêtre finit de se construire ici.
+      var arrive = null;
+      try { arrive = sessionStorage.getItem("evad-arrive"); sessionStorage.removeItem("evad-arrive"); } catch (e) { /* ignore */ }
+      if (arrive) {
+        document.body.classList.add("is-arriving");
+        buildFrame(document.getElementById("main"), titreDe(arrive));
+        setTimeout(function () { document.body.classList.remove("is-arriving"); }, 2200);
+      }
       if (PAGES[page]) PAGES[page]();
       if (page === "index" || page === "rever") renderMapNotice();
       if (TOURS[page]) pageTour = TOURS[page];
       // Arrivée depuis une porte de l'accueil : Deva fait la visite guidée de la page.
       if (param("tour") === "1" && TOURS[page]) {
         try { history.replaceState({}, "", location.pathname); } catch (e) { /* ignore */ }
-        setTimeout(function () { startTour(TOURS[page]); }, 500);
+        setTimeout(function () { startTour(TOURS[page]); }, arrive ? 1500 : 500);
       }
     }
     // L'interface ne doit jamais attendre le réseau : passé 3 secondes, on démarre avec l'état
