@@ -1361,9 +1361,9 @@
         return '<button type="button" class="sol-chip fam-' + s.famille + (armed === c.id ? " is-armed" : "") + '" draggable="true" data-chosen="' + c.id + '" aria-pressed="' + (armed === c.id) + '"><span class="fam-dot" aria-hidden="true"></span>' + esc(s.nom) + "</button>";
       }).join("");
       $all(".sol-chip", bar).forEach(function (b) {
-        b.addEventListener("dragstart", function (e) { armed = b.dataset.chosen; e.dataTransfer.setData("text/plain", b.dataset.chosen); e.dataTransfer.effectAllowed = "copy"; wrap.classList.add("is-dropping"); });
+        b.addEventListener("dragstart", function (e) { armed = b.dataset.chosen; e.dataTransfer.setData("text/plain", b.dataset.chosen); e.dataTransfer.effectAllowed = "copy"; wrap.classList.add("is-dropping"); setTimeout(drawScene, 0); });
         b.addEventListener("dragend", function () { wrap.classList.remove("is-dropping"); if (api) api.showHover(null); });
-        b.addEventListener("click", function () { armed = armed === b.dataset.chosen ? null : b.dataset.chosen; drawBar(); drawHint(); var again = $('[data-chosen="' + b.dataset.chosen + '"]'); if (again) again.focus(); });
+        b.addEventListener("click", function () { armed = armed === b.dataset.chosen ? null : b.dataset.chosen; drawBar(); drawHint(); drawScene(); var again = $('[data-chosen="' + b.dataset.chosen + '"]'); if (again) again.focus(); });
       });
     }
     function drawHint() {
@@ -1373,10 +1373,12 @@
       h.hidden = false; wrap.classList.add("is-armed");
       h.innerHTML = "Clique une case dans <strong>" + esc(spaceName(c.spaceId)) + "</strong> pour poser <strong>" + esc(SOL[c.solId].nom) + '</strong>. <button type="button" class="link-btn" id="auto-place">Poser dans son espace</button> <button type="button" class="link-btn" id="cancel-arm">Annuler</button>';
       $("#auto-place").addEventListener("click", function () { var cell = api.firstFreeIn(c.spaceId, function (x) { return Math.abs(x.i - 4) + Math.abs(x.j - 4); }); if (cell) place(armed, cell.i, cell.j); });
-      $("#cancel-arm").addEventListener("click", function () { armed = null; drawBar(); drawHint(); });
+      $("#cancel-arm").addEventListener("click", function () { armed = null; drawBar(); drawHint(); drawScene(); });
     }
     function drawScene(focusUid) {
-      api = renderScene(stage, myLieu(), { interactive: true, label: "Maquette 2.5D de " + projectName() + ". Glisse une solution sur une case d'herbe libre." });
+      // l'espace de la solution armée s'allume : on voit où elle va se poser
+      var arm = armed ? state.chosen.find(function (x) { return x.id === armed; }) : null;
+      api = renderScene(stage, myLieu(), { interactive: true, activeZone: arm ? arm.spaceId : null, label: "Maquette 2.5D de " + projectName() + ". Glisse une solution sur une case d'herbe libre." });
       $all(".iso-item", stage).forEach(function (g) {
         g.addEventListener("click", function (e) { e.stopPropagation(); openMenu(g.dataset.uid, g); });
         g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openMenu(g.dataset.uid, g); } });
@@ -1453,7 +1455,7 @@
       }
     });
     document.addEventListener("click", function (e) { if (!menu.contains(e.target) && !e.target.closest(".iso-item")) closeMenu(); });
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && armed) { armed = null; drawBar(); drawHint(); } });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && armed) { armed = null; drawBar(); drawHint(); drawScene(); } });
 
     $("#luanti").addEventListener("click", function () {
       openModal("Visiter en 3D dans Luanti", "<p><strong>Bientôt disponible.</strong></p><p>Tu pourras te promener dans ta maquette en 3D, dans Luanti, un monde libre et ouvert, avant même le premier coup de pioche. Idéal pour la montrer aux voisins et aux partenaires.</p>", '<button type="button" class="btn btn-primary" data-close>J\'ai compris</button>');
