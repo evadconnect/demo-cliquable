@@ -945,3 +945,8 @@ body.is-arriving #deva { animation: glisser .6s ease-out both; }
   body[data-page="index"] .map-filters { left: calc(var(--deva-w) + 36px); }
   body[data-page="index"] .legend { left: calc(var(--deva-w) + 36px); }
 }
+
+
+/* Visite guidée racontée dans le chat : le panneau de Deva reste au-dessus du voile */
+body.tour-chat #deva { z-index: 2200; }
+.tour.tour-is-chat .tour-hole { outline-width: 2.5px; }
