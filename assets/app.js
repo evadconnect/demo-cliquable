@@ -89,8 +89,10 @@
     return !(window.EvadDB && EvadDB.ready() && EvadDB.carteStatus && EvadDB.carteStatus() === "ok");
   }
   function renderMapNotice() {
-    if (!carteEnModeExemple()) return;
-    var host = $(".map-stage") || $(".map-card"); if (!host || host.querySelector(".map-notice")) return;
+    var host = $(".map-stage") || $(".map-card"); if (!host) return;
+    var old = host.querySelector(".map-notice");
+    if (!carteEnModeExemple()) { if (old) old.remove(); return; }
+    if (old) return;
     var n = document.createElement("p");
     n.className = "map-notice"; n.setAttribute("role", "status");
     n.textContent = "Carte en mode exemple : les lieux publics ne sont pas encore chargés.";
@@ -430,6 +432,8 @@
   /* ================= Visite guidée (coachmarks Deva) =================
      Après chaque porte de l'accueil, Deva met en lumière les éléments clés
      de la destination : spotlight sur une cible + bulle + Suivant / Passer. */
+  var bootedEarly = false; // l'interface a démarré sans attendre Supabase
+  var redrawMap = null;    // redessine la carte de la page courante (arrivée tardive des lieux publics)
   var pageTour = null; // visite guidée de la page courante, rejouable via « Revoir la visite »
   var TOURS = {
     commun: [
@@ -532,7 +536,7 @@
       return true;
     }
     function draw() { renderMap(host, { onSelect: openFiche, selected: selected, filter: filter }); }
-    draw();
+    draw(); redrawMap = draw;
 
     $all("[data-fstat]").forEach(function (b) {
       b.addEventListener("click", function () { var k = b.dataset.fstat; fStat[k] = !fStat[k]; b.setAttribute("aria-pressed", String(fStat[k])); draw(); });
@@ -923,7 +927,7 @@
       });
       $("#mini-title").focus({ preventScroll: true });
     }
-    draw();
+    draw(); redrawMap = draw;
 
     var name = $("#v-nom"), prom = $("#v-promesse"), reve = $("#v-reve"), coll = $("#v-collectif"), pub = $("#v-public"), next = $("#to-explorer");
     name.value = state.project.name; prom.value = state.project.promesse; reve.value = state.project.reve;
@@ -1459,6 +1463,7 @@
     if (!db) return places.then(function (pl) { publicPlaces = pl; });
     return db.getUser().then(function (u) {
       user = u;
+      if (bootedEarly) return; // l'interface est déjà rendue depuis le cache : on garde l'état local
       // Sans compte : le projet vit sur l'appareil (localStorage).
       if (!user) { var local = loadCache(); if (local) state = local; return; }
       var cache = loadCache();
@@ -1478,9 +1483,10 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    var page = document.body.dataset.page;
+    var page = document.body.dataset.page, started = false;
     document.body.classList.add("is-booting");
-    boot(page).then(function () {
+    function start() {
+      if (started) return; started = true;
       document.body.classList.remove("is-booting");
       renderTopbar(page);
       var step = D.steps.find(function (s) { return s.id === page; });
@@ -1499,6 +1505,25 @@
         try { history.replaceState({}, "", location.pathname); } catch (e) { /* ignore */ }
         setTimeout(function () { startTour(TOURS[page]); }, 500);
       }
+    }
+    // L'interface ne doit jamais attendre le réseau : passé 4 secondes, on démarre avec l'état
+    // local (Supabase lent, en pause ou injoignable) ; la carte publique se rafraîchira si elle arrive.
+    var limite = setTimeout(function () {
+      if (started) return;
+      bootedEarly = true;
+      var local = loadCache(); if (local) state = local;
+      console.warn("[EVAD] démarrage sans attendre Supabase (lent ou indisponible)");
+      start();
+    }, 4000);
+    boot(page).then(function () {
+      clearTimeout(limite);
+      if (!started) { start(); return; }
+      if (redrawMap) redrawMap();
+      if (page === "index" || page === "rever") renderMapNotice();
+    }).catch(function (e) {
+      console.warn("[EVAD] démarrage dégradé :", e && e.message);
+      clearTimeout(limite);
+      if (!started) { var local = loadCache(); if (local) state = local; start(); }
     });
     // Avant de quitter la page, on tente d'envoyer une sauvegarde en attente.
     window.addEventListener("pagehide", function () { if (syncTimer) { clearTimeout(syncTimer); syncNow(); } });
