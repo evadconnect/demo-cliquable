@@ -775,7 +775,17 @@
         // Deva répond à une question via son moteur scripté, et laisse les portes ouvertes.
         function answerInline(txt) {
           var rep = (window.Deva && Deva.answer) ? Deva.answer(txt) : null;
-          line(rep || "Choisis une porte pour commencer : tu pourras tout explorer ensuite.");
+          var text = rep && rep.text ? rep.text : rep;
+          line(text || "Choisis une porte pour commencer : tu pourras tout explorer ensuite.").then(function () {
+            if (!rep || !rep.actions || !rep.actions.length) return;
+            var box = document.createElement("div"); box.className = "deva-chips";
+            rep.actions.forEach(function (a) {
+              var b = document.createElement("button"); b.type = "button"; b.className = "deva-chip"; b.textContent = a.label;
+              b.addEventListener("click", function () { userBubble(a.label); answerInline(a.label); });
+              box.appendChild(b);
+            });
+            log.appendChild(box); log.scrollTop = log.scrollHeight;
+          });
           input.focus({ preventScroll: true });
         }
         form.addEventListener("submit", function (e) {
@@ -1579,6 +1589,27 @@
     drawAll();
   }
 
+  /* ================= Deva : réponses contextuelles ================= */
+  // Fournies au moteur de Deva : elles dépendent de l'état du lieu sur cet appareil.
+  function devaContext(t) {
+    var nom = projectName(), hasLieu = !!state.project.name.trim() || state.placed.length || state.chosen.length || state.spaces.length;
+    if (/(ou j en suis|ou en suis|ou en est|prochaine etape|etape suivante|je fais quoi|quoi faire maintenant|par ou commencer|par quoi commencer|que faire maintenant|la suite|et apres|et après|on continue)/.test(t)) {
+      if (!hasLieu) return "Tu n'as pas encore de lieu sur cet appareil. Commence par Rêver : un nom, une promesse, et des lieux à visiter pour t'inspirer.";
+      var next = D.steps.find(function (s) { return !stepDone(s.id); });
+      if (!next) return "Les cinq étapes sont faites pour " + nom + " : il est prouvé. La suite, c'est le quotidien dans Mon lieu : les quêtes, de nouvelles preuves, et la carte qui inspire les autres.";
+      var conseils = { rever: "donne un nom à ton lieu et situe-le.", explorer: "crée un premier espace, puis accroche-lui des solutions du Commun.", generer: "pose tes solutions sur la maquette.", entreprendre: "passe une première quête en cours.", nourrir: "apporte trois preuves de terrain pour que le lieu passe au vert." };
+      return "Pour " + nom + ", la prochaine étape est " + next.label + " : " + conseils[next.id];
+    }
+    if (/(mon lieu|mon projet|resume de mon|résumé|recap|récap|ou est mon)/.test(t) && !/(creer|lancer|demarrer|publier|afficher|modifier|supprimer)/.test(t)) {
+      if (!hasLieu) return "Pas encore de lieu sur cet appareil. Rêver est la première étape ; ensuite la page Mon lieu devient ton tableau de bord.";
+      var nbE = state.spaces.length, nbS = state.placed.length, nbV = state.placed.filter(function (p) { return p.status === "verifie"; }).length, nbP = state.proofs.length;
+      return nom + " : " + nbE + (nbE > 1 ? " espaces, " : " espace, ") + nbS + (nbS > 1 ? " solutions posées" : " solution posée") +
+        (nbV ? ", dont " + nbV + " vérifiée" + (nbV > 1 ? "s" : "") : "") + (nbP ? ", " + nbP + " preuve" + (nbP > 1 ? "s" : "") + " au journal" : "") +
+        ". Tout est rassemblé dans la page Mon lieu.";
+    }
+    return null;
+  }
+
   /* ================= Démarrage ================= */
   var PAGES = { index: pageIndex, commun: pageCommun, rever: pageRever, explorer: pageExplorer, generer: pageGenerer, entreprendre: pageEntreprendre, nourrir: pageNourrir, monlieu: pageMonLieu };
   // Charge le compte, son projet (en ligne, ou le cache local s'il est plus récent) et les lieux publics.
@@ -1623,6 +1654,7 @@
         else if (page === "monlieu") { Deva.init("monlieu"); }
         else if (step) { Deva.init(step.deva); renderSidebarNav(page); renderTopStepper(page); }
       }
+      if (window.Deva && Deva.setContext) Deva.setContext(devaContext);
       renderFooter(); // après Deva.init : le bandeau se loge sous le panneau de Deva
       if (PAGES[page]) PAGES[page]();
       if (page === "index" || page === "rever") renderMapNotice();

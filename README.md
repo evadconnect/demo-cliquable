@@ -84,3 +84,14 @@ En ligne de commande : `npx vercel` depuis ce dossier.
 - Deux niveaux d'accès : les pages publiques (accueil, Le Commun) sont ouvertes à tous, avec Deva et un bouton « Se connecter » ; l'espace de travail (les 5 étapes du parcours) demande un accès. Entrer dans le parcours (ou cliquer « Créer mon projet ») ouvre l'écran d'accès « Créer un accès / J'ai déjà un accès ». Bêta sans backend : pas de mot de passe, un simple prénom crée une session locale (`state.session`) stockée sur l'appareil ; « Déconnexion » l'efface.
 - Sur l'accueil (public), la sidebar de gauche est Deva en mode accueil : elle présente la Vision 2030 et propose les portes (créer un projet, visiter la carte, parcourir le Commun). La carte occupe la droite.
 - Parcours type : accueil → « Créer mon projet » → « Utiliser l'exemple » → ajouter 3 ou 4 solutions → les poser sur la maquette → « C'est parti » → saisir 3 preuves → « Voir la carte ».
+
+## Enrichir Deva (réponses par règles)
+
+Deva répond sans modèle de langage, par règles, dans cet ordre : salutations et politesses, réponses contextuelles de la page (où j'en suis, prochaine étape, mon lieu), règle de doctrine sur l'impact (jamais de chiffre), réponses construites depuis les données (une solution, un ICI, les solutions d'une famille), puis la FAQ à mots-clés (expressions exactes prioritaires, une faute de frappe tolérée sur les mots de cinq lettres et plus), et enfin un repli qui propose trois questions proches.
+
+Pour ajouter une réponse : une entrée dans `D.deva.faq` de `assets/data.js`, avec `q` (la question telle qu'on la propose en chip), `k` (les mots-clés, en minuscules, avec et sans accents) et `a` (la réponse, sans tiret cadratin et sans chiffre d'impact).
+
+```js
+{ q: "Peut-on venir visiter ?", k: ["visiter un lieu", "portes ouvertes", "venir voir"],
+  a: "Chaque lieu prouvé indique dans sa fiche comment le contacter : écris au collectif, il te dira quand passer." }
+```

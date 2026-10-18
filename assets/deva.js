@@ -53,7 +53,7 @@
       user(txt);
       countQuestion();
       if (pending) { var h = pending; pending = null; var res = h(txt); if (res) say(res.text || res, res); }
-      else say(answer(txt));
+      else respond(txt);
     });
     root.querySelector(".deva-carbone").addEventListener("click", function () {
       var c = D.carbone || {};
@@ -103,31 +103,126 @@
     el.title = D.carbone.note || "";
   }
 
-  /* Moteur conversationnel scripté : salutations, remerciements, puis reconnaissance de mots-clés. */
-  function norm(s) { return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+  /* Moteur conversationnel par règles (sans modèle de langage) : salutations, remerciements,
+     réponses contextuelles fournies par la page, règles de doctrine (impact), réponses construites
+     depuis les données (solutions par famille, fiche d'une solution ou d'un ICI), FAQ à mots-clés
+     avec tolérance aux fautes de frappe, et repli avec trois questions proposées. */
+  var ALL = window.EVAD_DATA || {};
+  var ctx = null; // fonction fournie par la page : (texte normalisé) -> réponse ou null
+  function norm(s) { return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/['’]/g, " ").replace(/\s+/g, " "); }
   function pick(a) { return (a && a.length) ? a[Math.floor(Math.random() * a.length)] : ""; }
+  function toks(t) { return t.split(/[^a-z0-9]+/).filter(Boolean); }
+  function hasWord(t, w) { return (" " + t + " ").indexOf(" " + w + " ") >= 0; }
+  // distance d'édition ≤ 1 (une lettre en plus, en moins ou différente)
+  function lev1(a, b) {
+    if (a === b) return true;
+    var la = a.length, lb = b.length; if (Math.abs(la - lb) > 1) return false;
+    var i = 0, j = 0, d = 0;
+    while (i < la && j < lb) {
+      if (a[i] === b[j]) { i++; j++; continue; }
+      if (++d > 1) return false;
+      if (la > lb) i++; else if (lb > la) j++; else { i++; j++; }
+    }
+    return d + (la - i) + (lb - j) <= 1;
+  }
+  function matchKw(t, tokens, kw) {
+    var k = norm(kw);
+    if (t.indexOf(k) >= 0) return k.indexOf(" ") >= 0 ? 2 : 1; // une expression exacte pèse double
+    if (k.length >= 5 && k.indexOf(" ") < 0) for (var n = 0; n < tokens.length; n++) if (tokens[n].length >= 5 && lev1(tokens[n], k)) return 0.8;
+    return 0;
+  }
+  function faqBest(t, tokens) {
+    var best = null, score = 0;
+    (D.faq || []).forEach(function (e) {
+      var s = 0; e.k.forEach(function (kw) { s += matchKw(t, tokens, kw); });
+      if (s > score) { score = s; best = e; }
+    });
+    return score > 0 ? best : null;
+  }
+  var GREET = /(^| )(bonjour|salut|coucou|bonsoir|hello|hey|yo|bonne journee)( |$)/;
+  var GREET_WORDS = ["bonjour", "salut", "coucou", "bonsoir", "hello", "hey", "yo", "bonne", "journee", "deva"];
+  var FAM_RX = {
+    eau: /(\beau\b|pluie|riviere|mare|humide|aquatique|nappe|arros)/,
+    sol: /(\bsol\b|terre|compost|jardin|potager|permaculture|haie|biodiversite|plante)/,
+    energie: /(energie|solaire|panneau|photovolta|chaleur|electricite|eolien|chauff)/,
+    reemploi: /(reemploi|reparer|reparation|recyclage|palette|dechet|ressourcerie|seconde main|recup)/,
+    alimentation: /(alimentation|manger|nourriture|cantine|maraich|legume|aliment|epicerie|cuisine|poule|oeuf)/,
+    gouvernance: /(gouvernance|decision|assemblee|democratie|collectif|conseil|cooperative|budget participatif)/
+  };
+  function famille(t) { for (var f in FAM_RX) if (FAM_RX[f].test(t)) return f; return null; }
+  function famLabel(id) { var f = (ALL.familles || []).filter(function (x) { return x.id === id; })[0]; return f ? f.label : id; }
+  var STOP_NOM = ["lieu", "pain", "culture", "ouvert", "partage", "citoyens", "cafe", "quartier", "toutes", "tous", "entre", "local", "locale", "bois", "taille"];
+  function nameTokens(nom) { return toks(norm(nom)).filter(function (w) { return w.length >= 4 && STOP_NOM.indexOf(w) < 0; }); }
+  function findByName(list, t, tokens) {
+    for (var n = 0; n < (list || []).length; n++) {
+      var it = list[n], full = norm(it.nom);
+      if (t.indexOf(full) >= 0) return it;
+      var nt = nameTokens(it.nom);
+      for (var k = 0; k < nt.length; k++) if (hasWord(t, nt[k]) || tokens.some(function (w) { return w.length >= 6 && lev1(w, nt[k]); })) return it;
+    }
+    return null;
+  }
+  function askAction(q) { return { label: q, once: false, onClick: function () { user(q); respond(q); } }; }
+  function solutionsPour(f) {
+    var list = (ALL.solutions || []).filter(function (s) { return s.famille === f; });
+    if (!list.length) return null;
+    return { text: "Pour la famille " + famLabel(f) + ", le Commun propose : " + list.map(function (s) { return s.nom; }).join(", ") + ". Chacune a déjà été éprouvée ailleurs. Demande-moi « c'est quoi … » pour une solution, ou ouvre le Commun.",
+      actions: list.slice(0, 3).map(function (s) { return askAction("C'est quoi " + s.nom.toLowerCase() + " ?"); }) };
+  }
+  function suggestions(tokens) {
+    var scored = (D.faq || []).map(function (e) {
+      var corpus = norm(e.k.join(" ") + " " + e.a), s = 0;
+      tokens.forEach(function (w) { if (w.length >= 4 && corpus.indexOf(w) >= 0) s++; });
+      return { e: e, s: s };
+    }).filter(function (x) { return x.s > 0 && x.e.q; }).sort(function (a, b) { return b.s - a.s; }).slice(0, 3);
+    var qs = scored.map(function (x) { return x.e.q; });
+    if (!qs.length) qs = ["C'est quoi EVAD ?", "Comment lire la carte ?", "C'est quoi le Commun ?"];
+    return qs.map(askAction);
+  }
   function answer(txt) {
-    var t = " " + norm(txt) + " ";
-    if (/(^| )(bonjour|salut|coucou|bonsoir|hello|hey|yo|bonne journee)( |$)/.test(t)) return pick(D.salutations);
-    if (/(^| )(merci|mercii|super|genial|parfait|nickel|top|cool|bravo|ok merci)( |$)/.test(t)) return pick(D.remerciements);
+    var full = norm(txt).replace(/[.,;:!()«»"]/g, " ");
+    // plusieurs questions dans le même message : on répond à la première
+    var parts = full.split("?").filter(function (p) { return p.trim().length >= 3; });
+    if (parts.length > 1) full = parts[0];
+    var t = " " + full.trim() + " ", tokens = toks(t);
+    var greet = GREET.test(t);
+    var reste = tokens.filter(function (w) { return GREET_WORDS.indexOf(w) < 0 && w.length > 2; });
+    if (greet && reste.length <= 1) return pick(D.salutations);
+    var prefix = greet ? "Bonjour ! " : "";
+    if (/(^| )(merci|mercii|super|genial|parfait|nickel|top|cool|bravo|ok merci)( |$)/.test(t) && reste.length <= 2) return pick(D.remerciements);
     if (/(^| )(au revoir|aurevoir|bye|a bientot|ciao|a plus)( |$)/.test(t)) return pick(D.adieux);
+    if (/^ (ok|d accord|oui|non|ca marche|entendu|compris|bien|daccord) $/.test(t)) return pick(D.acks || D.remerciements);
     // Règle prioritaire : toute question sur l'impact, le CO₂, les chiffres ou les résultats du lieu.
     // Deva ne produit aucun quantitatif : elle renvoie vers Vadance, Vadité et les preuves.
     var surDeva = /(deva|conversation|nos echanges|cet echange|tes reponses|discussion|ton empreinte|tu pollues|tu consommes|ton co2)/.test(t);
     var surImpact = /(impact|co2|carbone|chiffre|resultat|combien|economis|tonne|kilo| kg |mesur|gain|bilan|emission)/.test(t);
-    if (surImpact && !surDeva && D.impactLieu) return D.impactLieu;
-    // L'empreinte de Deva : seulement si la question parle d'elle ou de la conversation.
+    if (surImpact && !surDeva && D.impactLieu) return prefix + D.impactLieu;
     if (surDeva && /(carbone|empreinte|co2|pollu|consomm|sobri|ecolog)/.test(t)) {
       var emp = (D.faq || []).filter(function (e) { return e.id === "empreinte"; })[0];
-      if (emp) return emp.a;
+      if (emp) return prefix + emp.a;
     }
-    var best = null, score = 0;
-    (D.faq || []).forEach(function (e) {
-      var s = 0; e.k.forEach(function (kw) { if (t.indexOf(norm(kw)) >= 0) s++; });
-      if (s > score) { score = s; best = e; }
-    });
-    if (best && score > 0) return best.a;
-    return pick(D.incompris);
+    // réponses contextuelles fournies par la page (où j'en suis, prochaine étape, mon lieu)
+    if (ctx) { var c = null; try { c = ctx(t, tokens); } catch (e) { c = null; } if (c) return prefix + c; }
+    // réponses construites depuis les données : une solution, un ICI, les solutions d'une famille
+    var sol = findByName(ALL.solutions, t, tokens);
+    if (sol && /(quoi|que |qu est|comment|explique|parle|c est|dis|montre|ca marche|fonctionne|\?)/.test(t + "?")) {
+      return { text: prefix + sol.nom + " : " + sol.change + " C'est une solution de la famille " + famLabel(sol.famille) + ", déjà éprouvée sur d'autres lieux ; tu la trouves dans le Commun.",
+        actions: [askAction("Quelles solutions pour " + famLabel(sol.famille).toLowerCase() + " ?"), askAction("Comment créer mon projet ?")] };
+    }
+    var ici = findByName(ALL.ici, t, tokens);
+    if (ici) return prefix + ici.nom + " : " + ici.observe + " C'est un ICI, un indicateur de changement d'impact : il se nourrit de preuves de terrain, jamais d'un calcul.";
+    var f = famille(t);
+    if (f && /(solution|idee|quoi faire|propose|conseil|quelle|quelles|quoi|que faire|comment)/.test(t)) { var sp = solutionsPour(f); if (sp) { sp.text = prefix + sp.text; return sp; } }
+    // FAQ à mots-clés (expressions exactes prioritaires, fautes de frappe tolérées)
+    var best = faqBest(t, tokens);
+    if (best) return prefix + best.a;
+    // repli : on le dit, et on propose trois questions proches
+    return { text: pick(D.incompris), actions: suggestions(tokens) };
+  }
+  // Répond dans le panneau : une chaîne, ou { text, actions }.
+  function respond(txt) {
+    var r = answer(txt);
+    if (typeof r === "string") say(r); else say(r.text, { actions: r.actions });
   }
 
   function setOpen(open, silent) {
@@ -201,5 +296,5 @@
     if (t) say(t, { nudge: true });
   }
 
-  window.Deva = { init: init, say: say, react: react, prompt: prompt, close: close, answer: answer };
+  window.Deva = { init: init, say: say, react: react, prompt: prompt, close: close, answer: answer, setContext: function (fn) { ctx = fn; } };
 })();
