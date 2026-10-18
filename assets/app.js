@@ -603,11 +603,27 @@
 
     /* Onboarding : Deva demande le prénom, présente la vision, puis propose trois portes d'entrée. */
     var VISION = "EVAD, c'est un monde régénératif désirable, déjà en train de pousser : chaque lieu sur la carte a été rêvé, modélisé, puis prouvé sur le terrain. Du rêve à la preuve, et la preuve rouvre le rêve.";
+    // « je m'appelle Romain », « moi c'est Léa » : on prend le mot qui suit.
+    function extraitPrenom(txt) {
+      if (/[?]/.test(txt || "")) return null;
+      var m = /(?:m['’]?appelle|je suis|moi c['’]?est)\s+([\p{L}\-']{2,24})/iu.exec(txt || "");
+      if (!m) return null;
+      if (/^(quoi|moi|qui|que|ou|pour|le|la|un|une|ca|bien|vrai|toi|pas|un|une|ici|la)$/i.test(m[1])) return null;
+      return m[1];
+    }
+    // Une question ou une phrase n'est pas un prénom : Deva y répond, puis redemande.
+    function pasUnPrenom(txt) {
+      if (/[?]/.test(txt || "")) return true;
+      if (extraitPrenom(txt)) return false;
+      var w = (txt || "").trim().split(/\s+/).filter(Boolean);
+      return /[?]/.test(txt || "") || w.length >= 3;
+    }
     function cleanPrenom(txt) {
-      var w = (txt || "").trim().split(/\s+/)[0] || "";
+      var w = extraitPrenom(txt) || (txt || "").trim().split(/\s+/)[0] || "";
       w = w.replace(/[^\p{L}\-']/gu, "").slice(0, 24);
       return w ? w.charAt(0).toUpperCase() + w.slice(1) : "";
     }
+    function reponseTexte(txt) { var r = (window.Deva && Deva.answer) ? Deva.answer(txt) : null; return r && r.text ? r.text : (r || ""); }
     function visitMap() {
       if (host) host.scrollIntoView({ behavior: "smooth", block: "center" });
       if (window.Deva && Deva.say) Deva.say("Clique un lieu sur la carte pour découvrir son histoire.", { instant: true });
@@ -628,11 +644,16 @@
       } else if (state.prenom) {
         Deva.say("Ravi de te revoir, " + state.prenom + ". " + VISION + " Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
       } else {
-        Deva.prompt("Bonjour, je suis Deva, ton assistant sur EVAD. Avant de commencer, comment t'appelles-tu ?", function (txt) {
+        var demande = function (txt) {
+          if (pasUnPrenom(txt)) {
+            setTimeout(function () { Deva.prompt("Et toi, comment t'appelles-tu ?", demande); }, 900);
+            return reponseTexte(txt) || "On y reviendra.";
+          }
           var p = cleanPrenom(txt);
           if (p) { state.prenom = p; save(); refreshChrome(); }
           return { text: (p ? "Enchanté, " + p + " ! " : "Enchanté ! ") + VISION + " Par quoi veux-tu commencer ?", actions: choices() };
-        });
+        };
+        Deva.prompt("Bonjour, je suis Deva, ton assistant sur EVAD. Avant de commencer, comment t'appelles-tu ?", demande);
       }
       // Personnalisation : si une famille d'intérêt a été captée, Deva le signale.
       if (state.interestFam && FAM[state.interestFam]) {
@@ -696,7 +717,14 @@
         input.focus({ preventScroll: true });
         form.addEventListener("submit", function (e) {
           e.preventDefault();
-          var p = cleanPrenom(input.value);
+          var v = input.value;
+          if (pasUnPrenom(v)) {
+            var uq = document.createElement("div"); uq.className = "deva-msg from-user"; uq.textContent = v.trim();
+            log.appendChild(uq); log.scrollTop = log.scrollHeight; input.value = "";
+            line((reponseTexte(v) ? reponseTexte(v) + " " : "") + "Et toi, comment t'appelles-tu ?");
+            return;
+          }
+          var p = cleanPrenom(v);
           if (p) { state.prenom = p; save(); refreshChrome(); }
           foot.innerHTML = "";
           var u = document.createElement("div"); u.className = "deva-msg from-user"; u.textContent = p || "Plus tard";
