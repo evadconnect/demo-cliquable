@@ -962,3 +962,10 @@ body.tour-chat #deva { z-index: 2200; }
   body[data-page="index"] .deva-log { flex: 1 1 auto; max-height: none; }
 }
 @media (max-width: 900px) { .intro-card { height: auto; max-height: calc(100vh - 32px); } }
+
+/* Intro : le pied (champ, portes, « Passer l'intro ») ne s'écrase jamais, seul le fil se réduit et défile */
+:root { --chat-h: clamp(440px, calc(100vh - var(--top-h) - 32px), 640px); }
+.intro-card { max-height: calc(100vh - 32px); overflow: hidden; }
+.intro-hero, .intro-foot, .intro-skip { flex-shrink: 0; }
+.intro-foot { min-height: 0; }
+.intro-log { flex: 1 1 0; min-height: 56px; }
