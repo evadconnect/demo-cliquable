@@ -1506,7 +1506,7 @@
         setTimeout(function () { startTour(TOURS[page]); }, 500);
       }
     }
-    // L'interface ne doit jamais attendre le réseau : passé 4 secondes, on démarre avec l'état
+    // L'interface ne doit jamais attendre le réseau : passé 3 secondes, on démarre avec l'état
     // local (Supabase lent, en pause ou injoignable) ; la carte publique se rafraîchira si elle arrive.
     var limite = setTimeout(function () {
       if (started) return;
@@ -1514,7 +1514,7 @@
       var local = loadCache(); if (local) state = local;
       console.warn("[EVAD] démarrage sans attendre Supabase (lent ou indisponible)");
       start();
-    }, 4000);
+    }, 3000);
     boot(page).then(function () {
       clearTimeout(limite);
       if (!started) { start(); return; }
