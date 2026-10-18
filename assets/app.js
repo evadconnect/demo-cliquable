@@ -173,71 +173,70 @@
   /* ================= Barre du haut et pied de page ================= */
   var BRAND = '<a class="brand" href="index.html?intro=1" aria-label="EVAD, revenir à l\'accueil de Deva"><img class="brand-logo" src="assets/logo-evad.svg" alt="EVAD" width="92" height="30"></a>';
 
-  function renderTopbar(page) {
-    var top = $("#topbar"); if (!top) return;
-    // Pages avec sidebar : barre du haut réduite au logo (+ accès sur les pages publiques).
-    if (document.getElementById("deva")) {
-      top.className = "topbar topbar-slim";
-      var isWorkspace = page === "monlieu" || D.steps.some(function (s) { return s.id === page; });
-      // Menu global : jongler entre la carte, le Commun et la création de projet.
-      var link = function (href, label, cur) {
-        return '<a class="toplink' + (cur ? " is-current" : "") + '" href="' + href + '"' + (cur ? ' aria-current="page"' : "") + ">" + label + "</a>";
-      };
-      var nav = '<nav class="topnav" aria-label="Aller à">' +
-        link("index.html", "Carte", page === "index") +
-        link("commun.html", "Commun", page === "commun") +
-        '<a class="btn btn-primary btn-sm' + (isWorkspace ? " is-current" : "") + '" href="rever.html"' + (isWorkspace ? ' aria-current="page"' : "") + ">Créer un projet</a>" +
-        "</nav>";
-      var tagline = '<span class="brand-tagline">écosystème vivant autonome et décentralisé</span>';
-      top.innerHTML = BRAND + tagline + '<div class="top-right">' + nav + "</div>";
-      return;
-    }
-    var steps = D.steps.map(function (s, n) {
-      var active = s.id === page, done = stepDone(s.id);
-      var cls = active ? "is-active" : done ? "is-done" : "is-todo";
-      var state = active ? "étape en cours" : done ? "faite" : "à venir";
-      return '<li><a class="step ' + cls + '" href="' + s.href + '"' + (active ? ' aria-current="step"' : "") + ' aria-label="Étape ' + (n + 1) + ", " + s.label + ", " + state + '">' +
-        '<span class="step-dot" aria-hidden="true">' + (done && !active ? ICON.check : n + 1) + '</span><span class="step-lbl">' + s.label + "</span></a></li>";
-    }).join("");
-    var st = fricheStatut();
-    top.className = "topbar";
-    top.innerHTML = BRAND +
-      '<nav class="stepper" aria-label="Parcours REGEN"><span class="stepper-kicker" aria-hidden="true">REGEN</span><ol>' + steps + "</ol></nav>" +
-      '<div class="top-right">' +
-      '<a class="toplink' + (page === "commun" ? " is-current" : "") + '" href="commun.html"' + (page === "commun" ? ' aria-current="page"' : "") + ">Le Commun</a>" +
-      '<a class="project-pill" href="rever.html" title="Mon projet"><span class="pill-dot st-' + st + '" aria-hidden="true"></span><span class="pill-name">' + esc(projectName()) + '</span><span class="sr-only">, ' + D.statuts[st].label + "</span></a>" +
-      "</div>";
-  }
+  // Icônes du menu (traits, couleur courante) : lisibles seules quand la place manque.
+  var NAV_ICON = {
+    carte: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 5.5l4.5-2 5 2 4.5-2v11l-4.5 2-5-2-4.5 2zM7.5 3.5v11M12.5 5.5v11" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/></svg>',
+    commun: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 6c-1.4-1.6-3.6-2-6.5-2v11c2.9 0 5.1.4 6.5 2 1.4-1.6 3.6-2 6.5-2V4c-2.9 0-5.1.4-6.5 2zM10 6v11" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/></svg>',
+    projet: '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 16C4 8.5 8.5 4 16 4c0 7.5-4.5 12-12 12z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/><path d="M5.5 14.5C8 11.5 10.5 9 13.5 6.5" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>'
+  };
+  var devaUnread = false; // Deva a parlé pendant que son panneau était replié
 
-  // (La vision EVAD 2030 est désormais portée par l'onboarding ; plus de bloc statique dans la sidebar.)
-
-  // Sidebar « espace de travail » : accès à mon lieu (le parcours REGEN est en bandeau en haut du contenu).
-  function renderSidebarNav(page) {
-    if (!D.steps.some(function (s) { return s.id === page; })) return;
-    var inner = document.querySelector("#deva .deva-inner"); if (!inner) return;
-    var st = fricheStatut();
-    var html = '<div class="deva-nav">' +
-      '<a class="snav-place" href="mon-lieu.html" title="Ouvrir mon lieu">' +
-      '<span class="pill-dot st-' + st + '" aria-hidden="true"></span>' +
-      '<span class="snav-place-txt"><span class="snav-kicker">Mon lieu</span><strong>' + esc(projectName()) + '</strong></span></a>' +
-      "</div>";
-    var existing = inner.querySelector(".deva-nav");
-    if (existing) existing.outerHTML = html; else inner.insertAdjacentHTML("afterbegin", html);
-  }
-  // Bandeau horizontal du parcours REGEN, en haut du contenu (au-dessus de « Étape X sur 5 »).
-  function renderTopStepper(page) {
-    if (!D.steps.some(function (s) { return s.id === page; })) return;
-    var main = document.getElementById("main"); if (!main) return;
-    if (main.querySelector(".page-stepper")) return;
-    var steps = D.steps.map(function (s, n) {
+  // Parcours REGEN en version compacte pour la pilule : cinq points reliés + l'étape courante nommée.
+  function miniStepper(page) {
+    var cur = D.steps.find(function (s) { return s.id === page; });
+    var dots = D.steps.map(function (s, n) {
       var active = s.id === page, done = stepDone(s.id);
       var cls = active ? "is-active" : done ? "is-done" : "is-todo";
       var etat = active ? "étape en cours" : done ? "faite" : "à venir";
-      return '<li><a class="step ' + cls + '" href="' + s.href + '"' + (active ? ' aria-current="step"' : "") + ' aria-label="Étape ' + (n + 1) + ", " + s.label + ", " + etat + '">' +
-        '<span class="step-dot" aria-hidden="true">' + (done && !active ? ICON.check : n + 1) + '</span><span class="step-lbl">' + s.label + "</span></a></li>";
+      return '<a class="mstep ' + cls + '" href="' + s.href + '"' + (active ? ' aria-current="step"' : "") + ' title="' + s.label + '" aria-label="Étape ' + (n + 1) + ", " + s.label + ", " + etat + '"></a>';
     }).join("");
-    main.insertAdjacentHTML("afterbegin", '<nav class="page-stepper" aria-label="Parcours REGEN"><span class="stepper-kicker" aria-hidden="true">REGEN</span><ol>' + steps + "</ol></nav>");
+    var label = cur ? (D.steps.indexOf(cur) + 1) + ' · ' + cur.label : "Parcours";
+    return '<nav class="top-stepper" aria-label="Parcours REGEN"><span class="mstep-track">' + dots + '</span>' +
+      '<a class="mstep-label" href="' + (cur ? cur.href : "rever.html") + '">' + label + "</a></nav>";
   }
+
+  function renderTopbar(page) {
+    var top = $("#topbar"); if (!top) return;
+    var isStep = D.steps.some(function (s) { return s.id === page; });
+    var isWorkspace = isStep || page === "monlieu";
+    var link = function (href, key, label, cur, extra) {
+      return '<a class="toplink' + (cur ? " is-current" : "") + (extra ? " " + extra : "") + '" href="' + href + '"' + (cur ? ' aria-current="page"' : "") + ' aria-label="' + label + '">' +
+        NAV_ICON[key] + '<span class="toplink-lbl">' + label + "</span></a>";
+    };
+    // Menu centré : Carte, Commun, puis le projet (bouton pour commencer, stepper compact une fois dedans).
+    var projet = isWorkspace ? miniStepper(page) :
+      '<a class="btn btn-primary btn-sm toplink-cta" href="rever.html" aria-label="Créer un projet">' + NAV_ICON.projet + '<span class="lbl-long">Créer un projet</span><span class="lbl-short">Projet</span></a>';
+    var nav = '<nav class="topnav" aria-label="Aller à">' +
+      link("index.html", "carte", "Carte", page === "index") +
+      link("commun.html", "commun", "Commun", page === "commun") +
+      projet + "</nav>";
+    // À droite : mon lieu (dès qu'il a un nom) et le raccourci vers Deva.
+    var st = fricheStatut(), hasLieu = !!state.project.name.trim();
+    var lieu = hasLieu ? '<a class="project-pill' + (page === "monlieu" ? " is-current" : "") + '" href="mon-lieu.html" title="Ouvrir mon lieu"' + (page === "monlieu" ? ' aria-current="page"' : "") + '>' +
+      '<span class="pill-dot st-' + st + '" aria-hidden="true"></span><span class="pill-name">' + esc(projectName()) + '</span><span class="sr-only">, ' + D.statuts[st].label + "</span></a>" : "";
+    var open = !!(window.Deva && Deva.isOpen && Deva.isOpen());
+    var deva = document.getElementById("deva") ?
+      '<button type="button" class="top-deva' + (devaUnread && !open ? " has-new" : "") + '" aria-pressed="' + open + '" aria-label="' + (open ? "Replier le panneau de Deva" : "Ouvrir le panneau de Deva") + '">' +
+      '<img class="deva-face" src="assets/deva-avatar.png" alt="" aria-hidden="true"><span class="top-deva-badge" aria-hidden="true"></span></button>' : "";
+    top.className = "topbar topbar-slim";
+    top.innerHTML = BRAND + nav + '<div class="top-right">' + lieu + deva + "</div>";
+    var tb = top.querySelector(".top-deva");
+    if (tb) tb.addEventListener("click", function () { if (window.Deva && Deva.toggle) Deva.toggle(); });
+  }
+  // Le bouton Deva de la pilule suit l'état du panneau (ouvert, replié, message en attente).
+  document.addEventListener("deva:state", function (e) {
+    var open = !!(e.detail && e.detail.open);
+    if (open) devaUnread = false;
+    var b = document.querySelector(".top-deva"); if (!b) return;
+    b.setAttribute("aria-pressed", String(open));
+    b.setAttribute("aria-label", open ? "Replier le panneau de Deva" : "Ouvrir le panneau de Deva");
+    b.classList.toggle("has-new", devaUnread && !open);
+  });
+  document.addEventListener("deva:unread", function () {
+    devaUnread = true;
+    var b = document.querySelector(".top-deva"); if (b) b.classList.add("has-new");
+  });
+
   function renderFooter() {
     var page = document.body.dataset.page;
     var hasTour = page === "index" || page === "commun" || page === "rever";
@@ -260,7 +259,7 @@
     var rt = target.querySelector("#replay-tour");
     if (rt) rt.addEventListener("click", function () { var t = pageTour || TOURS[page]; if (t) startTour(t); });
   }
-  function refreshChrome() { renderTopbar(document.body.dataset.page); renderSidebarNav(document.body.dataset.page); }
+  function refreshChrome() { renderTopbar(document.body.dataset.page); }
 
   /* ================= Projets et maquettes ================= */
   // Terrain vierge : le lieu de chaque testeur part d'une parcelle vide à aménager.
@@ -465,7 +464,7 @@
       { sel: "#open-propose", text: "Tu as éprouvé quelque chose ? Propose-le : la communauté le reliera à ses preuves." }
     ],
     rever: [
-      { sel: ".page-stepper", text: "Créer un lieu, c'est le parcours REGEN en 5 étapes, ici en haut : Rêver, Explorer, Générer, Entreprendre, Nourrir. On démarre par Rêver." },
+      { sel: ".top-stepper", text: "Créer un lieu, c'est le parcours REGEN en 5 étapes, ici dans la barre du haut : Rêver, Explorer, Générer, Entreprendre, Nourrir. On démarre par Rêver." },
       { sel: ".map-card", text: "Inspire-toi des projets qui poussent déjà autour de toi : clique un marqueur. Clique la carte pour situer ton futur lieu." },
       { sel: "#v-nom", text: "Donne un nom à ton lieu." },
       { sel: "#v-geo", text: "Situe-le : tape une commune ou une adresse, puis choisis dans la liste." },
@@ -733,7 +732,7 @@
       { sel: "#fiche", text: "Voici la fiche d'un lieu : sa promesse, le collectif qui le porte, les solutions posées et son impact vérifié. « Explorer ce projet » déplie le détail.",
         onEnter: function () { if (SAMPLE_ID) openFiche(SAMPLE_ID); },
         onLeave: function () { closeFiche(); } },
-      { sel: ".top-right a[href='rever.html']", text: "Et quand tu veux passer à l'action, tu rêves ton propre lieu ici. Bonne exploration !" }
+      { sel: ".toplink-cta", text: "Et quand tu veux passer à l'action, tu rêves ton propre lieu ici. Bonne exploration !" }
     ];
     pageTour = carteTour; // « Revoir la visite » (footer) rejoue la visite de la carte
 
@@ -1760,10 +1759,11 @@
         if (page === "index") { Deva.init("accueil", { silent: true }); }
         else if (page === "commun") { Deva.init("commun"); }
         else if (page === "monlieu") { Deva.init("monlieu"); }
-        else if (step) { Deva.init(step.deva); renderSidebarNav(page); renderTopStepper(page); }
+        else if (step) { Deva.init(step.deva); }
       }
       if (window.Deva && Deva.setContext) Deva.setContext(devaContext);
       renderFooter(); // après Deva.init : le bandeau se loge sous le panneau de Deva
+      renderTopbar(page); // et le bouton Deva de la pilule connaît l'état du panneau
       // Arrivée depuis l'onboarding : la fenêtre finit de se construire ici.
       var arrive = null;
       try { arrive = sessionStorage.getItem("evad-arrive"); sessionStorage.removeItem("evad-arrive"); } catch (e) { /* ignore */ }
