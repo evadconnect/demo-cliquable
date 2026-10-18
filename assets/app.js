@@ -397,7 +397,10 @@
       if (opts.locate && p.isMine) m.on("dragend", function (e) { var ll = e.target.getLatLng(); if (host._locateMove) host._locateMove(ll.lat, ll.lng); });
       m.addTo(layer);
     });
-    if (!host._lfit && bounds.length) { map.fitBounds(bounds, { padding: [48, 48], maxZoom: 9 }); host._lfit = true; }
+    if (!host._lfit && bounds.length) {
+      var padL = (document.body.dataset.page === "index" && window.matchMedia("(min-width: 901px)").matches) ? 440 : 48;
+      map.fitBounds(bounds, { paddingTopLeft: [padL, 60], paddingBottomRight: [48, 48], maxZoom: 9 }); host._lfit = true;
+    }
     if (selLatLng && host._lastSel !== opts.selected) { map.panTo(selLatLng, { animate: true }); }
     host._lastSel = opts.selected;
     setTimeout(function () { map.invalidateSize(); }, 60);
@@ -717,7 +720,7 @@
         ov.classList.add("is-docking");
         if (card && target && !narrow && !reduce) {
           var a = card.getBoundingClientRect(), b = target.getBoundingClientRect();
-          card.style.transform = "translate(" + (b.left - a.left) + "px," + (b.top - a.top) + "px) scale(" + (b.width / a.width) + "," + (b.height / a.height) + ")";
+          card.style.transform = "translate(" + (b.left - a.left) + "px," + (b.top - a.top) + "px)"; // même taille, simple glissement
         } else if (card) { card.style.opacity = "0"; }
         var zone = document.querySelector(".map-stage") || document.getElementById("main");
         buildFrame(zone, titreDe(kind));

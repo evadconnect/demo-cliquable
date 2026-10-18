@@ -22,7 +22,7 @@
   --r: 14px;
   --r-lg: 18px;
   --top-h: 64px;
-  --deva-w: 340px;
+  --deva-w: 380px;
   --f-titre: "Fraunces", Georgia, "Times New Roman", serif;
   --f-texte: "Epilogue", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --fam-eau: #5C8E95;
@@ -657,7 +657,7 @@ body[data-page="index"] .stage { padding: 0; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 1320px) {
-  :root { --deva-w: 300px; }
+  :root { --deva-w: 340px; }
   .step-lbl { font-size: .84rem; }
   .stepper-kicker { display: none; }
 }
@@ -751,7 +751,7 @@ body.has-intro { overflow: hidden; }
 }
 .intro.is-leaving { animation: introOut .45s ease-in forwards; }
 .intro-card {
-  width: min(560px, 100%);
+  width: min(var(--deva-w), 100%);
   background: var(--blanc); border: 1px solid var(--bord);
   border-radius: var(--r-lg); box-shadow: var(--ombre-haute);
   padding: 26px 26px 20px; display: flex; flex-direction: column; gap: 16px;
@@ -923,4 +923,25 @@ body.is-arriving #deva { animation: glisser .6s ease-out both; }
 @media (prefers-reduced-motion: reduce) {
   .intro-card { transition: none; } .intro-hero strong::after, .build-frame rect, .build-chip i, .is-building > *, body.is-arriving #main > *, body.is-arriving #deva { animation: none; }
   .build-frame rect { stroke-dashoffset: 0; } .build-frame.is-done { opacity: 0; }
+}
+
+
+/* ===== Interface épurée : Deva en carte flottante sur la carte, même taille que l'intro ===== */
+.brand-tagline { display: none; }
+.deva-foot { border-top: 0; padding: 4px 16px 10px; }
+.deva-foot .deva-avatar { display: none; }
+.deva-rule { font-size: .72rem; }
+.deva-carbone { background: transparent; font-size: .72rem; }
+.deva-footer p { display: none; }
+.deva-footer { padding: 8px 16px 12px; border-top: 1px solid var(--bord); }
+.intro-hero span { font-size: .8rem; }
+@media (min-width: 901px) {
+  body[data-page="index"] .shell { grid-template-columns: minmax(0, 1fr); position: relative; }
+  body[data-page="index"] .deva { position: absolute; left: 16px; top: 16px; width: var(--deva-w); height: auto; max-height: calc(100vh - var(--top-h) - 32px);
+    border: 1px solid var(--bord); border-radius: var(--r-lg); box-shadow: var(--ombre-haute); overflow: hidden; }
+  body[data-page="index"] .deva-inner { height: auto; max-height: calc(100vh - var(--top-h) - 32px); }
+  body[data-page="index"] .deva-log { flex: 0 1 auto; max-height: 36vh; }
+  body[data-page="index"] .map-stage { height: calc(100vh - var(--top-h)); }
+  body[data-page="index"] .map-filters { left: calc(var(--deva-w) + 36px); }
+  body[data-page="index"] .legend { left: calc(var(--deva-w) + 36px); }
 }
