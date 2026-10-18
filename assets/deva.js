@@ -24,6 +24,7 @@
     root.innerHTML =
       '<div class="deva-inner">' +
       '<div class="deva-head">' +
+      '<span class="deva-avatar">' + LEAF + '</span>' +
       '<div class="deva-id"><strong>Deva</strong><span class="deva-mode">' + mode.label + '</span></div>' +
       '<button type="button" class="icon-btn deva-toggle" aria-controls="deva-body" aria-label="Replier le panneau de Deva"></button>' +
       '</div>' +

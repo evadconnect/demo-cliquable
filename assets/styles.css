@@ -1095,3 +1095,7 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   .top-deva { width: 38px; height: 38px; }
   .top-deva .deva-face { height: 26px; }
 }
+
+/* ===== L'avatar de Deva dans l'en-tête du chat ===== */
+.deva-head .deva-avatar .deva-face { height: 42px; width: auto; border-radius: 12px; }
+.deva-head { padding-left: 14px; }
