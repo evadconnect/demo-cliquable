@@ -2,7 +2,7 @@
    Une seule ligne à changer pour passer de la base de test à la base réelle : ENV. */
 (function () {
   "use strict";
-  var ENV = "staging"; // "staging" = evad-dev (tests) ; "prod" = base réelle d'app.evad.org
+  var ENV = "prod"; // "prod" = base réelle d'app.evad.org ; "staging" = ancien projet evad-dev, supprimé (domaine introuvable)
   var CONFIG = {
     prod: { url: "https://lmhhrccmgebztioesmik.supabase.co", key: "sb_publishable_M_1-SinRmo1T8exi8_gkvw_RTiHznag" },
     staging: { url: "https://mpoyfsisbaggvpdpajfo.supabase.co", key: "sb_publishable_dFNImcmV00s3o43crCNfvw_5TdFtzfT" }

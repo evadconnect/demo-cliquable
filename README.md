@@ -25,7 +25,7 @@ Si la vue est absente (erreur 404 « Could not find the table public.regen_carte
 | `updated_at` | timestamptz | dernière modification |
 
 Filtre de la vue : `public = true and lat is not null and lng is not null and nom <> ''`. Droits : `grant select on public.regen_carte to anon, authenticated` (la table `regen_projets` reste, elle, protégée par RLS : chaque compte ne lit et n'écrit que ses propres lignes, aucun accès `anon`). Aucune donnée de compte ni de preuve détaillée ne transite par la vue.
-- Base utilisée : constante `ENV` en haut de `assets/backend.js` (`"staging"` = evad-dev, `"prod"` = base réelle).
+- Base utilisée : constante `ENV` en haut de `assets/backend.js`. Depuis octobre 2026 : `"prod"` (base réelle) ; l'ancien projet staging evad-dev a été supprimé (son domaine ne résout plus).
 
 ### Mise en service
 1. Dans Supabase (staging d'abord) > SQL Editor : exécuter `supabase/regen-beta.sql`.
