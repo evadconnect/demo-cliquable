@@ -560,10 +560,12 @@
   function pageIndex() {
     var selected = null, fStat = { reve: true, encours: true, prouve: true }, fFam = state.interestFam || "", nearMe = false;
     var host = $("#map");
+    var meLoc = null, meMarker = null; // position du visiteur (mémoire de la page seulement, jamais enregistrée)
+    function refPoint() { return meLoc || state.project.loc; }
     function filter(p) {
       if (!fStat[p.statut]) return false;
       if (fFam && !p.isMine && !(p.solutions || []).some(function (s) { return SOL[s[0]].famille === fFam; })) return false;
-      if (nearMe && !p.isMine) { var me = state.project.loc, at = projectLoc(p); if (me && at && distKm(me, at) > 80) return false; }
+      if (nearMe && !p.isMine) { var me = refPoint(), at = projectLoc(p); if (me && at && distKm(me, at) > 80) return false; }
       return true;
     }
     function draw() { renderMap(host, { onSelect: openFiche, selected: selected, filter: filter }); }
@@ -578,9 +580,39 @@
     famSel.addEventListener("change", function () { fFam = famSel.value; draw(); });
     // Pré-filtrage de la carte par famille d'intérêt (choisie dans l'onboarding).
     function applyFamily(fam) { fFam = fam || ""; if (famSel) famSel.value = fFam; draw(); }
-    $("#f-near").addEventListener("click", function () {
-      if (!state.project.loc) { toast("Situe d'abord ton lieu à l'étape Rêver."); return; }
-      nearMe = !nearMe; this.setAttribute("aria-pressed", String(nearMe)); draw(); });
+    // « Autour de moi » : géolocalisation du navigateur (avec accord), sinon la position du lieu rêvé.
+    var nearBtn = $("#f-near");
+    function showMe() {
+      if (!window.L || !host._lmap || !meLoc) return;
+      if (meMarker) meMarker.remove();
+      meMarker = L.circleMarker([meLoc.lat, meLoc.lng], { radius: 7, color: "#0B6049", weight: 2, fillColor: "#9BC7AC", fillOpacity: .95 })
+        .addTo(host._lmap).bindTooltip("Toi", { direction: "top", offset: [0, -8] });
+      host._lmap.setView([meLoc.lat, meLoc.lng], 9);
+    }
+    function setNear(on) {
+      nearMe = on; nearBtn.setAttribute("aria-pressed", String(on)); nearBtn.textContent = on ? "Autour de moi (80 km)" : "Autour de moi";
+      if (!on && meMarker) { meMarker.remove(); meMarker = null; }
+      draw();
+    }
+    nearBtn.addEventListener("click", function () {
+      if (nearMe) { setNear(false); return; }
+      if (meLoc) { setNear(true); showMe(); return; }
+      if (!navigator.geolocation) {
+        if (state.project.loc) { setNear(true); return; }
+        toast("Ton navigateur ne permet pas la géolocalisation. Situe ton lieu à l'étape Rêver pour utiliser ce filtre."); return;
+      }
+      nearBtn.setAttribute("aria-busy", "true"); nearBtn.textContent = "Localisation…";
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        meLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        nearBtn.removeAttribute("aria-busy");
+        setNear(true); showMe();
+        if (window.Deva && Deva.say) Deva.say("Je te situe : voici les lieux à moins de 80 km. Ta position reste dans cette page, rien n'est enregistré.", { instant: true });
+      }, function () {
+        nearBtn.removeAttribute("aria-busy"); nearBtn.textContent = "Autour de moi";
+        if (state.project.loc) { setNear(true); toast("Géolocalisation indisponible : je prends la position de ton lieu."); return; }
+        toast("Géolocalisation refusée ou indisponible. Situe ton lieu à l'étape Rêver pour utiliser ce filtre.");
+      }, { timeout: 8000, maximumAge: 300000 });
+    });
 
     var filters = $(".map-filters"), ftoggle = $("#filters-toggle");
     ftoggle.addEventListener("click", function () {
