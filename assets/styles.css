@@ -990,7 +990,7 @@ body[data-page="commun"] .grid { gap: 18px; }
 
 /* ===== Briques flottantes : barre du haut en pilule, et les blocs du Commun détachés du fond ===== */
 @media (min-width: 901px) {
-  #topbar.topbar { position: sticky; top: 12px; margin: 12px 16px 0; width: auto; height: var(--top-h); padding: 0 10px 0 18px;
+  #topbar.topbar { position: sticky; top: 12px; margin: 12px 16px 0; width: auto; height: var(--top-h); padding: 0 18px 0 10px;
     border: 1px solid var(--bord); border-radius: 999px; background: rgba(255, 253, 247, .92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
     box-shadow: var(--ombre-haute); z-index: 50; }
   /* le panneau de Deva et la carte tiennent compte de la pilule (12 px de marge en plus) */
@@ -1035,7 +1035,8 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 
 /* ===== Pilule du haut : logo à gauche, menu centré, mon lieu et Deva à droite ===== */
 .topbar-slim { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
-.topbar-slim .brand { justify-self: start; }
+.topbar-slim .top-left { justify-self: start; display: flex; align-items: center; }
+.topbar-slim .top-right .brand { margin-left: 2px; }
 .topnav { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; }
 .topbar-slim .topnav { justify-self: center; }
 .topbar-slim .top-right { justify-self: end; margin-left: 0; gap: 10px; min-width: 0; }
@@ -1089,7 +1090,7 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 @media (max-width: 900px) {
   .topbar-slim { display: flex; flex-wrap: wrap; justify-content: space-between; }
   .topbar-slim .topnav { order: 3; flex-basis: 100%; justify-content: flex-start; overflow-x: auto; }
-  .topbar-slim .top-right { margin-left: auto; }
+  .topbar-slim .top-right { margin-left: auto; gap: 8px; }
   .toplink-cta .lbl-long { display: none; }
   .toplink-cta .lbl-short { display: inline; }
   .top-deva { width: 38px; height: 38px; }
