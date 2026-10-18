@@ -620,11 +620,6 @@
       ftoggle.setAttribute("aria-expanded", String(!collapsed));
       ftoggle.setAttribute("aria-label", collapsed ? "Afficher les filtres" : "Réduire les filtres");
     });
-    // La légende se cale au-dessus de la barre de filtres, quelle que soit sa hauteur (retour à la ligne compris).
-    var stage = $(".map-stage");
-    function calerLegende() { if (stage && filters) stage.style.setProperty("--filters-h", filters.offsetHeight + "px"); }
-    if (window.ResizeObserver) new ResizeObserver(calerLegende).observe(filters); else window.addEventListener("resize", calerLegende);
-    calerLegende();
 
     var fiche = $("#fiche");
     function closeFiche() { $(".map-stage").classList.remove("has-fiche"); fiche.classList.remove("open"); fiche.setAttribute("aria-hidden", "true"); selected = null; draw(); }
@@ -734,11 +729,10 @@
     var carteTour = [
       { text: "Bienvenue sur la carte vivante ! Je te montre l'essentiel en quelques secondes." },
       { sel: ".leaflet-marker-icon", text: "Chaque marqueur est un lieu réel. Clique-le pour ouvrir sa fiche." },
-      { sel: ".map-filters", text: "Filtre par avancement (Rêvé, En cours, Prouvé) et par famille (Eau, Sol, Énergie…), ou n'affiche que ce qui pousse autour de toi." },
+      { sel: ".map-filters", text: "Filtre par avancement (Rêvé en gris, En cours en ambre, Prouvé en vert) et par famille (Eau, Sol, Énergie…), ou n'affiche que ce qui pousse autour de toi." },
       { sel: "#fiche", text: "Voici la fiche d'un lieu : sa promesse, le collectif qui le porte, les solutions posées et son impact vérifié. « Explorer ce projet » déplie le détail.",
         onEnter: function () { if (SAMPLE_ID) openFiche(SAMPLE_ID); },
         onLeave: function () { closeFiche(); } },
-      { sel: ".legend", text: "La couleur dit l'avancement : du rêve ambré à la preuve verte." },
       { sel: ".top-right a[href='rever.html']", text: "Et quand tu veux passer à l'action, tu rêves ton propre lieu ici. Bonne exploration !" }
     ];
     pageTour = carteTour; // « Revoir la visite » (footer) rejoue la visite de la carte

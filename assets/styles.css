@@ -349,8 +349,6 @@ body[data-page="index"] .stage { padding: 0; }
 .map-filters .row { display: flex; flex-wrap: wrap; gap: 6px; }
 .map-filters .chip { min-height: 32px; font-size: .8rem; padding: 4px 10px; }
 .map-filters select { min-height: 36px; border-radius: 999px; border: 1px solid var(--bord); background: var(--blanc); padding: 4px 10px; font-size: .84rem; }
-.legend { position: absolute; bottom: 18px; left: 20px; z-index: 6; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; background: rgba(255, 253, 247, .94); border: 1px solid var(--bord); border-radius: 999px; padding: 8px 16px; font-size: .84rem; box-shadow: var(--ombre); }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
 .fiche {
   position: absolute; top: 0; right: 0; bottom: 0; width: min(430px, 100%); z-index: 10;
   background: var(--blanc); border-left: 1px solid var(--bord); box-shadow: var(--ombre-haute);
@@ -690,7 +688,6 @@ body[data-page="index"] .stage { padding: 0; }
   .map-stage #map { position: relative; inset: auto; aspect-ratio: 10 / 7; order: 2; }
   .hero, .map-stage.has-fiche .hero { position: relative; top: auto; left: auto; transform: none; width: auto; margin: 16px; order: 1; }
   .map-filters { position: relative; top: auto; left: auto; max-width: none; margin: 0 16px 12px; order: 3; }
-  .legend { position: relative; bottom: auto; left: auto; margin: 0 16px 16px; order: 4; align-self: flex-start; }
   .fiche { position: fixed; top: auto; height: 86vh; width: 100%; border-radius: 20px 20px 0 0; transform: translateY(105%); }
   .fiche.open { transform: none; }
   .nourrir-grid { grid-template-columns: 1fr; }
@@ -943,7 +940,6 @@ body.is-arriving #deva { animation: glisser .6s ease-out both; }
   body[data-page="index"] .deva-log { flex: 0 1 auto; max-height: 36vh; }
   body[data-page="index"] .map-stage { height: calc(100vh - var(--top-h)); }
   body[data-page="index"] .map-filters { left: calc(var(--deva-w) + 36px); }
-  body[data-page="index"] .legend { left: calc(var(--deva-w) + 36px); }
 }
 
 
@@ -1041,7 +1037,7 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   body[data-page="index"] .fiche { top: calc(var(--top-h) + 28px); right: 16px; bottom: 16px; border: 1px solid var(--bord); border-radius: var(--r-lg); }
 }
 
-/* ===== Carte : les filtres en barre horizontale en bas, la légende juste au-dessus ===== */
+/* ===== Carte : les filtres en barre horizontale en bas ===== */
 @media (min-width: 901px) {
   body[data-page="index"] .map-filters { top: auto; bottom: 18px; left: calc(var(--deva-w) + 36px); max-width: none; border-radius: 999px; padding: 8px 12px; }
   body[data-page="index"] .map-filters-head { display: none; }
@@ -1049,8 +1045,4 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   body[data-page="index"] .map-filters .f-title { display: none; }
   body[data-page="index"] .map-filters .row { display: flex; gap: 6px; }
   body[data-page="index"] .map-filters select { min-height: 36px; border-radius: 999px; padding: 6px 32px 6px 12px; }
-  body[data-page="index"] .legend { bottom: 76px; left: calc(var(--deva-w) + 36px); }
 }
-
-/* la légende suit la hauteur réelle de la barre de filtres */
-@media (min-width: 901px) { body[data-page="index"] .legend { bottom: calc(18px + var(--filters-h, 54px) + 8px); } }
