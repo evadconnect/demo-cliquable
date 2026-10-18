@@ -880,3 +880,47 @@ body.has-intro { overflow: hidden; }
 /* Démarrage : un mot pendant que l'on attend (au plus 3 s) la base en ligne */
 body.is-booting .shell { position: relative; }
 body.is-booting .shell::after { content: "Chargement du lieu…"; position: fixed; left: 50%; top: calc(var(--top-h) + 18px); transform: translateX(-50%); z-index: 40; padding: 6px 14px; border-radius: 999px; background: rgba(255, 253, 247, .95); border: 1px solid var(--bord); box-shadow: var(--ombre); font-size: .84rem; color: var(--texte-2); }
+
+
+/* ===== Passage de l'onboarding vers la suite : Deva se range à gauche, la fenêtre se construit ===== */
+/* trame de plan derrière l'intro (solarpunk discret) */
+.intro::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .9;
+  background-image: linear-gradient(rgba(78, 140, 108, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(78, 140, 108, .08) 1px, transparent 1px);
+  background-size: 28px 28px; -webkit-mask-image: radial-gradient(60% 60% at 50% 42%, #000 35%, transparent 100%); mask-image: radial-gradient(60% 60% at 50% 42%, #000 35%, transparent 100%); transition: opacity .5s; }
+.intro-card { position: relative; z-index: 1; border: 1px solid transparent; transform-origin: top left; will-change: transform;
+  background: linear-gradient(var(--blanc), var(--blanc)) padding-box, linear-gradient(135deg, rgba(155, 199, 172, .95), rgba(213, 145, 84, .55)) border-box;
+  transition: transform .75s cubic-bezier(.2, .8, .2, 1), border-radius .75s ease, opacity .4s ease, box-shadow .75s ease; }
+.intro-hero strong { position: relative; padding-right: 14px; }
+.intro-hero strong::after { content: ""; position: absolute; right: 0; top: 50%; width: 7px; height: 7px; margin-top: -3px; border-radius: 50%; background: var(--mousse); box-shadow: 0 0 8px var(--fougere); animation: seve 2.4s ease-in-out infinite; }
+@keyframes seve { 0%, 100% { opacity: .55; transform: scale(.9); } 50% { opacity: 1; transform: scale(1.15); } }
+.intro.is-docking { background: transparent; pointer-events: none; }
+.intro.is-docking::before { opacity: 0; }
+.intro.is-docking .intro-card { border-radius: 0; box-shadow: none; }
+.intro.is-docking .intro-foot, .intro.is-docking .intro-skip, .intro.is-docking .intro-log { opacity: 0; transition: opacity .3s; }
+.intro.is-gone { opacity: 0; transition: opacity .3s; }
+
+/* le cadre qui se trace et son étiquette */
+.build-frame { position: absolute; inset: 8px; z-index: 60; pointer-events: none; border-radius: var(--r-lg); }
+.build-frame svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.build-frame rect { fill: none; stroke: url(#bf-grad); stroke-width: 2; stroke-dasharray: 1000; stroke-dashoffset: 1000; stroke-linecap: round; filter: drop-shadow(0 0 6px rgba(155, 199, 172, .9)); animation: tracer 1.1s ease-out forwards; }
+@keyframes tracer { to { stroke-dashoffset: 0; } }
+.build-chip { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px;
+  background: var(--encre); color: var(--blanc); font-size: .78rem; letter-spacing: .03em; box-shadow: 0 0 0 3px var(--creme), 0 0 18px rgba(213, 145, 84, .45); animation: pop .3s ease-out; white-space: nowrap; }
+.build-chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--ambre); box-shadow: 0 0 8px var(--ambre); animation: blink 1s infinite; }
+.build-frame.is-done { animation: disparaitre .7s ease forwards; animation-delay: 1.7s; }
+@keyframes disparaitre { to { opacity: 0; } }
+
+/* montage des blocs, un à un */
+.is-building > *:not(.build-frame), body.is-arriving #main > *:not(.build-frame) { animation: construire .6s cubic-bezier(.2, .8, .2, 1) both; }
+.is-building > *:nth-child(2), body.is-arriving #main > *:nth-child(2) { animation-delay: .12s; }
+.is-building > *:nth-child(3), body.is-arriving #main > *:nth-child(3) { animation-delay: .24s; }
+.is-building > *:nth-child(4), body.is-arriving #main > *:nth-child(4) { animation-delay: .36s; }
+.is-building > *:nth-child(5), body.is-arriving #main > *:nth-child(5) { animation-delay: .48s; }
+.is-building > *:nth-child(n+6), body.is-arriving #main > *:nth-child(n+6) { animation-delay: .6s; }
+@keyframes construire { from { opacity: 0; transform: translateY(14px) scale(.985); } 60% { box-shadow: 0 0 0 2px rgba(155, 199, 172, .35); } to { opacity: 1; transform: none; box-shadow: none; } }
+body.is-arriving #deva { animation: glisser .6s ease-out both; }
+@keyframes glisser { from { transform: translateX(-12px); opacity: .5; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .intro-card { transition: none; } .intro-hero strong::after, .build-frame rect, .build-chip i, .is-building > *, body.is-arriving #main > *, body.is-arriving #deva { animation: none; }
+  .build-frame rect { stroke-dashoffset: 0; } .build-frame.is-done { opacity: 0; }
+}
