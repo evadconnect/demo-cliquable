@@ -73,6 +73,12 @@
         el("circle", { cx: b[0] + f[0] * s, cy: b[1] + f[1] * s, r: 1.8, fill: c.fruit }, can);
       });
     }
+    if (c.face) { // petit visage, comme sur la maquette de référence
+      var fy = b[1] - 23 * s;
+      el("circle", { cx: b[0] - 4 * s, cy: fy, r: 1.3, fill: "#1C2E26" }, can);
+      el("circle", { cx: b[0] + 4 * s, cy: fy, r: 1.3, fill: "#1C2E26" }, can);
+      el("path", { d: "M" + (b[0] - 3.5 * s) + " " + (fy + 4 * s) + " Q" + b[0] + " " + (fy + 7.5 * s) + " " + (b[0] + 3.5 * s) + " " + (fy + 4 * s), stroke: "#1C2E26", "stroke-width": 1, fill: "none", "stroke-linecap": "round" }, can);
+    }
   }
   function person(g, x, y, color) {
     var b = P(x, y, 0);
@@ -166,6 +172,10 @@
       });
     },
     arbre: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 1.25, { trunk: BASE.trunk, leaf: "#4E8C6C", light: "#79A98C" }); },
+    arbreface: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 1.2, { trunk: BASE.trunk, leaf: "#4E8C6C", light: "#79A98C", face: true }); },
+    fruitierface: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 1.0, { trunk: BASE.trunk, leaf: "#5E9B79", light: "#9BC7AC", fruit: "#C06848", face: true }); },
+    haieI: function (g, s) { for (var k = 0; k < 3; k++) { var b = P(s.i + 0.2 + k * 0.3, s.j + 0.5, 0); el("circle", { cx: b[0], cy: b[1] - 7, r: 7.5, fill: k % 2 ? "#5E9B79" : "#4E8C6C" }, g); el("circle", { cx: b[0] - 2, cy: b[1] - 10, r: 3, fill: "#9BC7AC" }, g); } },
+    haieJ: function (g, s) { for (var k = 0; k < 3; k++) { var b = P(s.i + 0.5, s.j + 0.2 + k * 0.3, 0); el("circle", { cx: b[0], cy: b[1] - 7, r: 7.5, fill: k % 2 ? "#5E9B79" : "#4E8C6C" }, g); el("circle", { cx: b[0] - 2, cy: b[1] - 10, r: 3, fill: "#9BC7AC" }, g); } },
     fruitier: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 0.95, { trunk: BASE.trunk, leaf: "#5E9B79", light: "#9BC7AC", fruit: "#C06848" }); }
   };
 
@@ -271,17 +281,29 @@
   }
 
   /* ---------- espaces du lieu : zones nommées sur la grille ---------- */
-  var ZONE_PAL = ["#BFDCC6", "#E6D4B2", "#C9D6E8", "#E8CFC6", "#DEDCB4", "#D6CCE6", "#C3DBDF", "#E4D6CC"];
-  // Répartit les espaces en colonnes et lignes sur la grille (jusqu'à 8 espaces).
+  var ZONE_PAL = ["#CFE1CC", "#CBD5E3", "#EBD4D4", "#D9D3E9", "#E9E3D2", "#D3E4EC", "#E6D9C4", "#D7E2D9"];
+  // Répartit les espaces en sols colorés séparés par des allées d'une case, avec une pelouse
+  // autour quand la place le permet (jusqu'à 9 espaces). Le résultat porte aussi
+  // zones.walk (cases d'allée) et zones.margin (largeur de la pelouse).
   function layoutZones(spaces, N) {
     var n = (spaces || []).length; if (!n) return [];
-    var cols = n <= 1 ? 1 : n <= 4 ? 2 : n <= 6 ? 3 : 4, rows = Math.ceil(n / cols);
-    return spaces.map(function (s, k) {
+    var cols = n <= 1 ? 1 : n <= 4 ? 2 : 3, rows = Math.ceil(n / cols);
+    var m = (cols <= 2 && rows <= 2) ? 1 : 0, inner = N - 2 * m;
+    function split(c) {
+      var total = inner - (c - 1), base = Math.floor(total / c), rest = total - base * c, out = [], pos = m;
+      for (var k = 0; k < c; k++) { var w = base + (k < rest ? 1 : 0); out.push({ a: pos, w: w }); pos += w + 1; }
+      return out;
+    }
+    var cw = split(cols), rh = split(rows);
+    var zones = spaces.map(function (s, k) {
       var c = k % cols, r = Math.floor(k / cols);
-      var i0 = Math.floor(c * N / cols), i1 = Math.floor((c + 1) * N / cols);
-      var j0 = Math.floor(r * N / rows), j1 = Math.floor((r + 1) * N / rows);
-      return { id: s.id, nom: s.nom, i0: i0, j0: j0, w: i1 - i0, d: j1 - j0, color: ZONE_PAL[k % ZONE_PAL.length] };
+      return { id: s.id, nom: s.nom, i0: cw[c].a, j0: rh[r].a, w: cw[c].w, d: rh[r].w, color: ZONE_PAL[k % ZONE_PAL.length] };
     });
+    var walk = {};
+    for (var a = 1; a < cols; a++) { var x = cw[a].a - 1; for (var j = m; j < N - m; j++) walk[x + "," + j] = true; }
+    for (var b = 1; b < rows; b++) { var y = rh[b].a - 1; for (var i = m; i < N - m; i++) walk[i + "," + y] = true; }
+    zones.walk = walk; zones.margin = m;
+    return zones;
   }
   function zoneAt(zones, i, j) {
     for (var k = 0; k < zones.length; k++) { var z = zones[k]; if (i >= z.i0 && i < z.i0 + z.w && j >= z.j0 && j < z.j0 + z.d) return z; }
@@ -297,7 +319,7 @@
     var structures = opt.structures || [];
     var placed = opt.placed || [];
     var solutions = opt.solutions || {};
-    var zones = opt.zones || [];
+    var zones = opt.zones || [], walk = zones.walk || {};
 
     container.innerHTML = "";
     var minX = -N * TW - 12, width = N * TW * 2 + 24;
@@ -310,7 +332,7 @@
       for (var a = 0; a < (s.w || 1); a++) for (var b = 0; b < (s.d || 1); b++) occ[(s.i + a) + "," + (s.j + b)] = "structure";
     });
     placed.forEach(function (p) { occ[p.i + "," + p.j] = p.uid; });
-    function isPath(i, j) { return pathLine !== null && pathLine !== false && (i === pathLine || j === pathLine); }
+    function isPath(i, j) { return !!walk[i + "," + j] || (pathLine !== null && pathLine !== false && (i === pathLine || j === pathLine)); }
 
     // socle de terre
     var ground = el("g", {}, svg);
@@ -330,9 +352,9 @@
     var tiles = el("g", { class: "iso-tiles" }, svg);
     for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) {
       var tp = [P(i, j, 0), P(i + 1, j, 0), P(i + 1, j + 1, 0), P(i, j + 1, 0)];
-      var fill = isPath(i, j) ? (hash(i, j) > 0.5 ? "#EADFC2" : "#E4D7B6") : (hash(i, j) > 0.5 ? grassA : grassB);
       var zt = zones.length ? zoneAt(zones, i, j) : null;
-      if (zt && !isPath(i, j)) fill = mix(fill, zt.color, 0.55);
+      var fill = isPath(i, j) ? (hash(i, j) > 0.5 ? "#EFE9DA" : "#E9E2D0") : (hash(i, j) > 0.5 ? grassA : grassB);
+      if (zt && !isPath(i, j)) fill = mix(zt.color, "#FFFFFF", hash(i, j) > 0.5 ? 0.1 : 0);
       poly(tiles, tp, fill, { stroke: "rgba(255,253,247,.18)", "stroke-width": 0.6 });
       if (!isPath(i, j) && !occ[i + "," + j] && hash(j, i) > 0.72) {
         var t = P(i + 0.3 + hash(i, j) * 0.4, j + 0.5, 0);
@@ -352,7 +374,7 @@
       var q = [P(z.i0 + 0.04, z.j0 + 0.04, 0), P(z.i0 + z.w - 0.04, z.j0 + 0.04, 0), P(z.i0 + z.w - 0.04, z.j0 + z.d - 0.04, 0), P(z.i0 + 0.04, z.j0 + z.d - 0.04, 0)];
       var active = opt.activeZone === z.id;
       var g = el("g", { class: "iso-zone" + (active ? " is-active" : ""), "data-zone": z.id }, zoneG);
-      poly(g, q, "rgba(255,253,247,0)", { stroke: mix(z.color, "#1C2E26", active ? 0.55 : 0.35), "stroke-width": active ? 2.2 : 1.2, "stroke-dasharray": active ? null : "6 4" });
+      poly(g, q, "rgba(255,253,247,0)", { stroke: active ? mix(z.color, "#1C2E26", 0.5) : "rgba(255,253,247,.85)", "stroke-width": active ? 2.4 : 1.6, "stroke-linejoin": "round" });
       if (opt.onZone) {
         g.setAttribute("role", "button"); g.setAttribute("tabindex", "0");
         g.setAttribute("aria-label", "Espace " + z.nom + (active ? ", sélectionné" : ""));
@@ -360,6 +382,17 @@
         g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); opt.onZone(z.id); } });
       }
     });
+
+    // pelouse autour des sols : haies sur les deux bords avant, quelques arbres à l'arrière
+    var decor = [];
+    if (zones.length && zones.margin === 1) {
+      for (var e = 1; e < N - 1; e++) {
+        if (!walk[(N - 2) + "," + e]) decor.push({ type: "haieJ", i: N - 1, j: e });
+        if (!walk[e + "," + (N - 2)]) decor.push({ type: "haieI", i: e, j: N - 1 });
+      }
+      [[0, 0], [0, N - 3], [N - 3, 0]].forEach(function (c) { decor.push({ type: "arbreface", i: c[0], j: c[1] }); });
+      decor.forEach(function (d) { occ[d.i + "," + d.j] = "decor"; });
+    }
 
     var hover = poly(svg, [P(0, 0, 0), P(1, 0, 0), P(1, 1, 0), P(0, 1, 0)], "rgba(217,160,63,.35)", { stroke: "#D9A03F", "stroke-width": 2, class: "iso-hover", visibility: "hidden" });
 
@@ -375,7 +408,7 @@
           if (used >= 3) return;
           var key = c[0] + "," + c[1];
           if (occ[key] || isPath(c[0], c[1])) return;
-          if (used === 0) life.structures.push({ type: k % 2 ? "fruitier" : "arbre", i: c[0], j: c[1] });
+          if (used === 0) life.structures.push({ type: k % 2 ? "fruitierface" : "arbreface", i: c[0], j: c[1] });
           else life.personnages.push({ i: c[0], j: c[1], c: PCOL[(k + n) % PCOL.length] });
           occ[key] = "vie"; used++;
         });
@@ -384,7 +417,7 @@
 
     // objets triés par profondeur
     var items = [];
-    structures.concat(life.structures).forEach(function (s) { items.push({ k: s.i + (s.w || 1) + s.j + (s.d || 1), kind: "s", s: s }); });
+    structures.concat(decor, life.structures).forEach(function (s) { items.push({ k: s.i + (s.w || 1) + s.j + (s.d || 1), kind: "s", s: s }); });
     placed.forEach(function (p) { items.push({ k: p.i + p.j + 2, kind: "p", p: p }); });
     (opt.personnages || []).concat(life.personnages).forEach(function (h) { items.push({ k: h.i + h.j + 1.2, kind: "h", h: h }); });
     items.sort(function (a, b) { return a.k - b.k; });
@@ -418,14 +451,21 @@
       }
     });
 
-    // étiquettes des espaces, posées au coin arrière de chaque zone
+    // étiquettes des espaces : centrées, avec un surtitre (familles des solutions posées) et un repère au sol
+    var FAMLBL = { eau: "Eau", sol: "Sol", energie: "Énergie", reemploi: "Réemploi", alimentation: "Alimentation", gouvernance: "Gouvernance" };
     var labels = el("g", { class: "iso-zone-labels" }, svg);
     zones.forEach(function (z) {
-      var tp0 = P(z.i0, z.j0, 0), nom = z.nom.length > 22 ? z.nom.slice(0, 21) + "…" : z.nom;
-      var w = Math.min(150, nom.length * 6.6 + 18), h = 18;
+      var c = P(z.i0 + z.w / 2, z.j0 + z.d / 2, 0), fams = [];
+      placed.forEach(function (p) { if (p.spaceId !== z.id) return; var so = solutions[p.solId], f = so && FAMLBL[so.famille]; if (f && fams.indexOf(f) < 0) fams.push(f); });
+      var kicker = fams.length ? fams.slice(0, 2).join(" · ") : "À aménager";
+      var nom = z.nom.length > 22 ? z.nom.slice(0, 21) + "…" : z.nom;
+      var w = Math.max(nom.length * 6.6, kicker.length * 5.8) + 22, h = 32, top = c[1] - 26 - h;
       var g = el("g", { class: "iso-zone-label", "data-zone": z.id }, labels);
-      el("rect", { x: tp0[0] - w / 2, y: tp0[1] - h - 6, width: w, height: h, rx: 9, fill: "rgba(255,253,247,.92)", stroke: mix(z.color, "#1C2E26", 0.35), "stroke-width": 1 }, g);
-      el("text", { x: tp0[0], y: tp0[1] - 10.5, "text-anchor": "middle", class: "iso-zone-text" }, g).textContent = nom;
+      el("line", { x1: c[0], y1: c[1], x2: c[0], y2: top + h, stroke: "rgba(28,46,38,.35)", "stroke-width": 1 }, g);
+      el("circle", { cx: c[0], cy: c[1], r: 2.6, fill: "#FFFDF7", stroke: mix(z.color, "#1C2E26", 0.5), "stroke-width": 1.2 }, g);
+      el("rect", { x: c[0] - w / 2, y: top, width: w, height: h, rx: 11, fill: "rgba(255,253,247,.96)", stroke: mix(z.color, "#1C2E26", 0.3), "stroke-width": 1 }, g);
+      el("text", { x: c[0], y: top + 12, "text-anchor": "middle", class: "iso-zone-kicker" }, g).textContent = kicker;
+      el("text", { x: c[0], y: top + 25, "text-anchor": "middle", class: "iso-zone-text" }, g).textContent = nom;
     });
 
     function cellFromPoint(clientX, clientY) {

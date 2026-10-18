@@ -23,8 +23,8 @@
       interestFam: "",
       project: { name: "", promesse: "", reve: "", collectif: "", lieu: "", loc: null, public: true },
       pinned: [],
-      spaces: D.espaces.map(function (e) { return { id: e.id, nom: e.nom }; }),
-      selectedSpace: D.espaces[0].id,
+      spaces: [],          // le porteur crée ses espaces à l'étape Explorer ; Deva en propose, il décide
+      selectedSpace: null,
       chosen: [],
       icis: [],
       placed: [],
@@ -107,7 +107,7 @@
     return "reve";
   }
   var fricheStatut = projectStatut;
-  function spaceName(id) { var s = state.spaces.find(function (x) { return x.id === id; }); return s ? s.nom : "Lieu"; }
+  function spaceName(id) { if (!id) return "aucun espace"; var s = state.spaces.find(function (x) { return x.id === id; }); return s ? s.nom : "Lieu"; }
   function stepDone(id) {
     if (id === "rever") return !!state.project.name.trim();
     if (id === "explorer") return state.chosen.length > 0;
@@ -923,7 +923,7 @@
       if (pb) pb.addEventListener("click", function () {
         var k = state.pinned.indexOf(id);
         if (k >= 0) { state.pinned.splice(k, 1); Deva.react("unpin"); } else { state.pinned.push(id); Deva.react("pin"); }
-        save(); select(id); drawPins();
+        save(); select(id); drawPins(); drawVisits();
       });
       $("#mini-title").focus({ preventScroll: true });
     }
@@ -966,7 +966,7 @@
       state.project.loc = { lat: +lat, lng: +lng };
       if (label) { state.project.lieu = label; geo.value = label; }
       geoStatus.textContent = "Lieu situé" + (label ? " : " + label : "") + ".";
-      save(); sync(); draw();
+      save(); sync(); draw(); drawVisits();
       if (recenter && host._lmap) host._lmap.setView([+lat, +lng], 13);
     }
     function search() {
@@ -998,6 +998,35 @@
     if (state.project.loc && host._lmap) host._lmap.setView([state.project.loc.lat, state.project.loc.lng], 11);
     sync();
 
+    // Des lieux à visiter : trois lieux qui ont fait leurs preuves (ou en chemin),
+    // les plus proches quand le lieu est situé. Deva propose, le porteur choisit.
+    function visitsPick() {
+      var me = state.project.loc, rank = { prouve: 0, encours: 1, reve: 2 };
+      return allProjects().filter(function (p) { return !p.isMine; }).map(function (p) {
+        var at = projectLoc(p), d = (me && at) ? distKm(me, at) : 400;
+        return { p: p, s: rank[p.statut] * 1000 + d };
+      }).sort(function (a, b) { return a.s - b.s; }).slice(0, 3).map(function (x) { return x.p; });
+    }
+    function showVisit(p) { select(p.id); var at = projectLoc(p); if (host._lmap && at) host._lmap.setView([at.lat, at.lng], 10); }
+    function drawVisits() {
+      var ul = $("#visit-list"); if (!ul) return;
+      var me = state.project.loc, list = visitsPick();
+      $("#visits-sub").textContent = me ? "Les plus proches de ton lieu, les prouvés d'abord." : "Situe ton lieu pour voir les plus proches. En attendant, des lieux qui ont fait leurs preuves.";
+      ul.innerHTML = list.map(function (p) {
+        var at = projectLoc(p), km = (me && at) ? Math.round(distKm(me, at)) : null, pinned = state.pinned.indexOf(p.id) >= 0;
+        return '<li class="visit-item"><span class="dot st-' + p.statut + '" aria-hidden="true"></span>' +
+          '<div class="visit-txt"><strong>' + esc(p.nom) + "</strong><span class=\"muted\">" + esc(p.lieu) + (km != null ? ", à " + km + " km" : "") + (p.isExample ? ", exemple" : "") + "</span></div>" +
+          '<button type="button" class="btn btn-ghost btn-sm" data-visit="' + p.id + '">Visiter</button>' +
+          '<button type="button" class="icon-btn icon-sm' + (pinned ? " is-on" : "") + '" data-visit-pin="' + p.id + '" aria-pressed="' + pinned + '" aria-label="' + (pinned ? "Retirer " + esc(p.nom) + " de mes inspirations" : "Épingler " + esc(p.nom)) + '">' + ICON.pin + "</button></li>";
+      }).join("");
+      $all("[data-visit]", ul).forEach(function (b) { b.addEventListener("click", function () { var p = projectById(b.dataset.visit); if (p) showVisit(p); }); });
+      $all("[data-visit-pin]", ul).forEach(function (b) { b.addEventListener("click", function () {
+        var id = b.dataset.visitPin, k = state.pinned.indexOf(id);
+        if (k >= 0) { state.pinned.splice(k, 1); Deva.react("unpin"); } else { state.pinned.push(id); Deva.react("pin"); }
+        save(); drawPins(); drawVisits(); if (sel) select(sel);
+      }); });
+    }
+
     function drawPins() {
       var ul = $("#pins");
       if (!state.pinned.length) { ul.innerHTML = '<li class="empty">Aucun projet épinglé. Clique un projet sur la carte pour t\'en inspirer.</li>'; return; }
@@ -1005,10 +1034,16 @@
         var p = projectById(id); if (!p) return "";
         return '<li class="pin-item"><span class="dot st-' + p.statut + '" aria-hidden="true"></span><button type="button" class="link-btn" data-show="' + id + '">' + esc(p.nom) + '</button><button type="button" class="icon-btn icon-sm" data-unpin="' + id + '" aria-label="Retirer ' + esc(p.nom) + ' de mes inspirations">' + ICON.close + "</button></li>";
       }).join("");
-      $all("[data-unpin]", ul).forEach(function (b) { b.addEventListener("click", function () { state.pinned.splice(state.pinned.indexOf(b.dataset.unpin), 1); save(); drawPins(); if (sel) select(sel); }); });
+      $all("[data-unpin]", ul).forEach(function (b) { b.addEventListener("click", function () { state.pinned.splice(state.pinned.indexOf(b.dataset.unpin), 1); save(); drawPins(); drawVisits(); if (sel) select(sel); }); });
       $all("[data-show]", ul).forEach(function (b) { b.addEventListener("click", function () { select(b.dataset.show); }); });
     }
     drawPins();
+    drawVisits();
+    var visites = visitsPick();
+    if (visites.length && window.Deva) {
+      Deva.say("Trois lieux à visiter pour t'inspirer" + (state.project.loc ? ", les plus proches de chez toi" : "") + ". Clique pour les voir sur la carte.",
+        { instant: true, actions: visites.map(function (p) { return { label: p.nom, once: false, onClick: function () { showVisit(p); } }; }) });
+    }
 
     /* Deva t'accueille : raconte ton lieu idéal, il propose des projets voisins dont t'inspirer. */
     var STOP = " le la les un une des de du d et a au aux en dans pour par sur avec sans vers chez que qui quoi ou mon ma mes ton ta tes son sa ses notre nos leur leurs ce cet cette ces on nous vous ils elles il elle je tu se est sont etre avoir plus moins tres bien plutot aussi comme lieu projet envie reve rever ".split(" ");
@@ -1061,9 +1096,33 @@
   }
   function pageExplorer() {
     var fam = "", pulse = null;
+    if (!state.spaces.some(function (s) { return s.id === state.selectedSpace; })) state.selectedSpace = state.spaces[0] ? state.spaces[0].id : null;
+
+    // Ajout d'un espace (saisi, ou proposé par Deva parmi les quatre classiques).
+    function addSpace(id, nom) {
+      if (state.spaces.length >= 8) { toast("Huit espaces, c'est déjà un beau lieu. Regroupe avant d'en ajouter."); return; }
+      var s = { id: id || uid("s"), nom: nom }; state.spaces.push(s); state.selectedSpace = s.id; save();
+      pulse = s.id; drawAll(); Deva.react("espace");
+    }
+    function drawSpaceSugg() {
+      var box = $("#space-sugg"); if (!box) return;
+      var rest = D.espaces.filter(function (e) { return !state.spaces.some(function (s) { return s.id === e.id; }); });
+      if (!rest.length || state.spaces.length >= 8) { box.innerHTML = ""; return; }
+      box.innerHTML = '<span class="sugg-lbl">' + leafSvg("") + "Deva propose, tu décides :</span>" +
+        rest.map(function (e) { return '<button type="button" class="deva-chip" data-space-add="' + e.id + '">+ ' + esc(e.nom) + "</button>"; }).join("");
+      $all("[data-space-add]", box).forEach(function (b) { b.addEventListener("click", function () {
+        var e = D.espaces.find(function (x) { return x.id === b.dataset.spaceAdd; }); if (e) addSpace(e.id, e.nom);
+      }); });
+    }
     function chosenIn(spaceId) { return state.chosen.filter(function (c) { return c.spaceId === spaceId; }); }
 
     function drawMind() {
+      drawSpaceSugg();
+      if (!state.spaces.length) {
+        $("#mind").innerHTML = '<div class="mind-empty"><p>Ton lieu n\'a pas encore d\'espace. Commence par en créer un : un jardin, un atelier, un café, un coin pour décider ensemble. Deva en propose ci-dessous, tu décides.</p></div>';
+        $("#sel-space").textContent = "aucun pour l'instant";
+        return;
+      }
       var W = 620, H = 450, cx = 310, cy = 222, n = state.spaces.length;
       var svg = '<svg viewBox="0 0 ' + W + " " + H + '" class="mind-svg" role="group" aria-label="Carte mentale des espaces du projet">';
       var nodes = state.spaces.map(function (s, k) {
@@ -1110,6 +1169,7 @@
         return iciCard(x, on ? '<span class="added">' + ICON.check + ' Suivi dans mon projet</span><button type="button" class="link-btn" data-ici-off="' + x.id + '">Retirer</button>' : '<button type="button" class="btn btn-amber btn-sm" data-ici="' + x.id + '">Ajouter à mon projet</button>');
       }).join("");
       $all("[data-add]").forEach(function (b) { b.addEventListener("click", function () {
+        if (!state.selectedSpace) { toast("Crée d'abord un espace, ou prends-en un proposé par Deva, puis accroche-lui cette solution."); $("#space-name").focus(); return; }
         state.chosen.push({ id: uid("c"), solId: b.dataset.add, spaceId: state.selectedSpace }); save();
         pulse = state.selectedSpace; drawAll(); Deva.react("add:" + b.dataset.add, "add");
         var again = $('[data-remove="' + b.dataset.add + '"]'); if (again) again.focus();
@@ -1126,7 +1186,7 @@
 
     function drawChosen() {
       var ul = $("#chosen");
-      if (!state.chosen.length) { ul.innerHTML = '<li class="empty">Aucune solution choisie. Sélectionne un espace, puis ajoute des solutions du Commun à droite.</li>'; return; }
+      if (!state.chosen.length) { ul.innerHTML = '<li class="empty">Aucune solution choisie. Crée ou sélectionne un espace, puis ajoute des solutions du Commun à droite.</li>'; return; }
       ul.innerHTML = state.chosen.map(function (c) {
         return '<li class="chosen-item fam-' + SOL[c.solId].famille + '"><span class="fam-dot" aria-hidden="true"></span><span><strong>' + esc(SOL[c.solId].nom) + '</strong> <span class="muted">dans ' + esc(spaceName(c.spaceId)) + '</span></span><button type="button" class="icon-btn icon-sm" data-unchoose="' + c.id + '" aria-label="Retirer ' + esc(SOL[c.solId].nom) + '">' + ICON.close + "</button></li>";
       }).join("");
@@ -1141,9 +1201,7 @@
     $("#add-space").addEventListener("submit", function (e) {
       e.preventDefault();
       var input = $("#space-name"), nom = input.value.trim() || "Nouvel espace";
-      if (state.spaces.length >= 8) { toast("Huit espaces, c'est déjà un beau lieu. Regroupe avant d'en ajouter."); return; }
-      var s = { id: uid("s"), nom: nom }; state.spaces.push(s); state.selectedSpace = s.id; save();
-      input.value = ""; pulse = s.id; drawAll(); Deva.react("espace");
+      input.value = ""; addSpace(null, nom);
     });
     drawAll();
   }
@@ -1169,8 +1227,13 @@
       if (!state.chosen.length) {
         bar.innerHTML = '<p class="empty">Tu n\'as pas encore choisi de solutions. <a href="explorer.html">Retourner à Explorer</a> ou <button type="button" class="link-btn" id="take-sugg">reprendre les suggestions de Deva</button>.</p>';
         $("#take-sugg").addEventListener("click", function () {
+          // les suggestions s'accrochent à trois espaces classiques : on les crée s'ils manquent
+          ["jardin", "atelier", "cafe"].forEach(function (sid) {
+            if (!state.spaces.some(function (s) { return s.id === sid; })) { var e = D.espaces.find(function (x) { return x.id === sid; }); if (e) state.spaces.push({ id: e.id, nom: e.nom }); }
+          });
+          if (!state.selectedSpace) state.selectedSpace = state.spaces[0].id;
           ["haie", "recup-eau", "solaire", "four"].forEach(function (id, k) { if (!state.chosen.some(function (c) { return c.solId === id; })) state.chosen.push({ id: uid("c"), solId: id, spaceId: ["jardin", "jardin", "atelier", "cafe"][k] }); });
-          save(); drawBar(); refreshChrome(); Deva.say("Voici quatre solutions éprouvées du Commun. Tu restes libre de les poser ou non.");
+          save(); drawScene(); drawBar(); refreshChrome(); Deva.say("Voici quatre solutions éprouvées du Commun. Tu restes libre de les poser ou non.");
         });
         return;
       }

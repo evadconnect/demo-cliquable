@@ -255,7 +255,7 @@ window.EVAD_DATA = {
       },
       solutions: {
         label: "Solutions",
-        intro: "Découpons ton lieu en espaces. Clique un espace, puis ajoute des solutions du Commun : elles ont déjà été éprouvées ailleurs.",
+        intro: "Découpons ton lieu en espaces. Crée ton premier espace, ou prends-en un que je te propose, puis accroche-lui des solutions du Commun : elles ont déjà été éprouvées ailleurs.",
         suggestions: [
           { q: "Que proposes-tu pour le jardin ?", a: "Pour un jardin sur une ancienne dalle, le Commun propose les planches en lasagnes, une haie fruitière et la récupération d'eau de pluie. À toi de choisir." },
           { q: "Comment choisir entre deux solutions ?", a: "Regarde sur combien de projets elles ont été éprouvées, et quels ICI elles nourrissent. Vérifié bat généré." },
