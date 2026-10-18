@@ -9,7 +9,7 @@
 
   function P(x, y, z) { return [(x - y) * TW, (x + y) * TH - (z || 0)]; }
   function pts(list) { return list.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" "); }
-  function el(tag, attrs, parent) {
+  function el(tag, attrs, parent) { // les attributs null ou undefined sont ignorés
     var n = document.createElementNS(NS, tag);
     for (var k in attrs) if (attrs[k] !== undefined && attrs[k] !== null) n.setAttribute(k, attrs[k]);
     if (parent) parent.appendChild(n);
@@ -282,6 +282,17 @@
 
   /* ---------- espaces du lieu : zones nommées sur la grille ---------- */
   var ZONE_PAL = ["#CFE1CC", "#CBD5E3", "#EBD4D4", "#D9D3E9", "#E9E3D2", "#D3E4EC", "#E6D9C4", "#D7E2D9"];
+  var KIND_COL = { jardin: "#CFE1CC", atelier: "#CBD5E3", cafe: "#E9DCC8", gouvernance: "#D9D3E9" };
+  var LIFT = 4; // chaque espace est un plateau légèrement surélevé
+  // Nature d'un espace, devinée d'après son identifiant ou son nom : elle choisit la texture du sol.
+  function zoneKind(z) {
+    var t = ((z.id || "") + " " + (z.nom || "")).toLowerCase();
+    if (/jardin|potager|verger|culture|maraich|serre|prairie/.test(t)) return "jardin";
+    if (/atelier|garage|hangar|fablab|repar|ressourcerie/.test(t)) return "atelier";
+    if (/caf|cuisine|cantine|resto|accueil|salle|epicerie|épicerie|tiers/.test(t)) return "cafe";
+    if (/gouvern|conseil|agora|assembl|commun|place/.test(t)) return "gouvernance";
+    return "";
+  }
   // Répartit les espaces en sols colorés séparés par des allées d'une case, avec une pelouse
   // autour quand la place le permet (jusqu'à 9 espaces). Le résultat porte aussi
   // zones.walk (cases d'allée) et zones.margin (largeur de la pelouse).
@@ -297,7 +308,8 @@
     var cw = split(cols), rh = split(rows);
     var zones = spaces.map(function (s, k) {
       var c = k % cols, r = Math.floor(k / cols);
-      return { id: s.id, nom: s.nom, i0: cw[c].a, j0: rh[r].a, w: cw[c].w, d: rh[r].w, color: ZONE_PAL[k % ZONE_PAL.length] };
+      var kind = zoneKind(s);
+      return { id: s.id, nom: s.nom, kind: kind, i0: cw[c].a, j0: rh[r].a, w: cw[c].w, d: rh[r].w, col: c, row: r, lastRow: r === rows - 1, color: KIND_COL[kind] || ZONE_PAL[k % ZONE_PAL.length] };
     });
     var walk = {};
     for (var a = 1; a < cols; a++) { var x = cw[a].a - 1; for (var j = m; j < N - m; j++) walk[x + "," + j] = true; }
@@ -323,7 +335,7 @@
 
     container.innerHTML = "";
     var minX = -N * TW - 12, width = N * TW * 2 + 24;
-    var minY = -96, height = N * TH * 2 + SLAB + 110;
+    var minY = -84, height = N * TH * 2 + SLAB + 84 + 30;
     var svg = el("svg", { viewBox: minX + " " + minY + " " + width + " " + height, class: "iso-svg", role: "img", "aria-label": opt.label || "Maquette 2.5D du lieu" }, container);
 
     // occupation des cases
@@ -350,31 +362,61 @@
     // cases
     var grassA = mix("#C4CBA0", "#90BE94", vitality), grassB = mix("#BBC395", "#85B588", vitality);
     var tiles = el("g", { class: "iso-tiles" }, svg);
+    function liftAt(i, j) { return (zones.length && !isPath(i, j) && zoneAt(zones, i, j)) ? LIFT : 0; }
     for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) {
-      var tp = [P(i, j, 0), P(i + 1, j, 0), P(i + 1, j + 1, 0), P(i, j + 1, 0)];
-      var zt = zones.length ? zoneAt(zones, i, j) : null;
-      var fill = isPath(i, j) ? (hash(i, j) > 0.5 ? "#EFE9DA" : "#E9E2D0") : (hash(i, j) > 0.5 ? grassA : grassB);
-      if (zt && !isPath(i, j)) fill = mix(zt.color, "#FFFFFF", hash(i, j) > 0.5 ? 0.1 : 0);
+      var zt = zones.length ? zoneAt(zones, i, j) : null, onPath = isPath(i, j);
+      var zl = (zt && !onPath) ? LIFT : 0;
+      var tp = [P(i, j, zl), P(i + 1, j, zl), P(i + 1, j + 1, zl), P(i, j + 1, zl)];
+      var fill = onPath ? (hash(i, j) > 0.5 ? "#EFE9DA" : "#E9E2D0") : (hash(i, j) > 0.5 ? grassA : grassB);
+      var kind = (zt && !onPath) ? zt.kind : "";
+      if (zt && !onPath) fill = mix(zt.color, "#FFFFFF", kind === "atelier" ? ((i + j) % 2 ? 0.16 : 0) : (hash(i, j) > 0.5 ? 0.1 : 0));
       poly(tiles, tp, fill, { stroke: "rgba(255,253,247,.18)", "stroke-width": 0.6 });
-      if (!isPath(i, j) && !occ[i + "," + j] && hash(j, i) > 0.72) {
-        var t = P(i + 0.3 + hash(i, j) * 0.4, j + 0.5, 0);
+      if (onPath) {
+        // allée : quelques graviers clairs
+        if (hash(i * 3, j) > 0.55) { var gp = P(i + 0.25 + hash(i, j) * 0.5, j + 0.25 + hash(j, i) * 0.5, 0); el("ellipse", { cx: gp[0], cy: gp[1], rx: 1.6, ry: 0.9, fill: "rgba(255,253,247,.7)" }, tiles); }
+        continue;
+      }
+      var dark = zt ? mix(zt.color, "#1C2E26", 0.18) : null;
+      if (kind === "jardin" && !occ[i + "," + j]) {
+        // sillons de culture, dans le sens de la pente
+        [0.33, 0.66].forEach(function (v) { var a = P(i + 0.12, j + v, zl), b = P(i + 0.88, j + v, zl); el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: dark, "stroke-width": 0.8, opacity: 0.55 }, tiles); });
+      } else if (kind === "cafe") {
+        // terrasse en planches
+        [0.25, 0.5, 0.75].forEach(function (u) { var a = P(i + u, j + 0.04, zl), b = P(i + u, j + 0.96, zl); el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: dark, "stroke-width": 0.6, opacity: 0.45 }, tiles); });
+      } else if (kind === "atelier") {
+        // dalles : un joint plus marqué
+        poly(tiles, tp, "none", { stroke: "rgba(28,46,38,.14)", "stroke-width": 0.8 });
+      } else if (!occ[i + "," + j] && hash(j, i) > 0.72) {
+        var t = P(i + 0.3 + hash(i, j) * 0.4, j + 0.5, zl);
         el("path", { d: "M" + t[0] + " " + t[1] + " l-2 -4 M" + t[0] + " " + t[1] + " l2 -5 M" + t[0] + " " + t[1] + " l0 -5", stroke: mix("#8CA786", "#447A52", vitality), "stroke-width": 1, fill: "none" }, tiles);
       }
     }
+    // faces avant des plateaux : chaque espace sort légèrement du sol
+    zones.forEach(function (z) {
+      var a = z.i0, b = z.j0, w = z.w, d = z.d;
+      poly(tiles, [P(a, b + d, LIFT), P(a + w, b + d, LIFT), P(a + w, b + d, 0), P(a, b + d, 0)], mix(z.color, "#1C2E26", 0.22));
+      poly(tiles, [P(a + w, b, LIFT), P(a + w, b + d, LIFT), P(a + w, b + d, 0), P(a + w, b, 0)], mix(z.color, "#1C2E26", 0.34));
+      if (z.kind === "gouvernance") {
+        // cercle de parole dessiné au sol
+        var c = P(a + w / 2, b + d / 2, LIFT), r = Math.min(w, d) * TW * 0.36;
+        el("ellipse", { cx: c[0], cy: c[1], rx: r, ry: r / 2, fill: "none", stroke: "rgba(255,253,247,.8)", "stroke-width": 1.6, "stroke-dasharray": "5 4" }, tiles);
+      }
+    });
 
     // marquage d'état sous les solutions posées
     placed.forEach(function (p) {
       var c = STATUS[p.status] || STATUS.prevu;
-      poly(tiles, [P(p.i + 0.04, p.j + 0.04, 0), P(p.i + 0.96, p.j + 0.04, 0), P(p.i + 0.96, p.j + 0.96, 0), P(p.i + 0.04, p.j + 0.96, 0)], c.tile, { stroke: c.stroke, "stroke-width": 1.4, "stroke-dasharray": p.status === "prevu" ? "5 4" : null, class: "iso-mark" });
+      var ml = liftAt(p.i, p.j);
+      poly(tiles, [P(p.i + 0.04, p.j + 0.04, ml), P(p.i + 0.96, p.j + 0.04, ml), P(p.i + 0.96, p.j + 0.96, ml), P(p.i + 0.04, p.j + 0.96, ml)], c.tile, { stroke: c.stroke, "stroke-width": 1.4, "stroke-dasharray": p.status === "prevu" ? "5 4" : null, class: "iso-mark" });
     });
 
     // contours des espaces, au sol ; cliquables si la page fournit onZone
     var zoneG = el("g", { class: "iso-zones" }, svg);
     zones.forEach(function (z) {
-      var q = [P(z.i0 + 0.04, z.j0 + 0.04, 0), P(z.i0 + z.w - 0.04, z.j0 + 0.04, 0), P(z.i0 + z.w - 0.04, z.j0 + z.d - 0.04, 0), P(z.i0 + 0.04, z.j0 + z.d - 0.04, 0)];
+      var q = [P(z.i0 + 0.04, z.j0 + 0.04, LIFT), P(z.i0 + z.w - 0.04, z.j0 + 0.04, LIFT), P(z.i0 + z.w - 0.04, z.j0 + z.d - 0.04, LIFT), P(z.i0 + 0.04, z.j0 + z.d - 0.04, LIFT)];
       var active = opt.activeZone === z.id;
       var g = el("g", { class: "iso-zone" + (active ? " is-active" : ""), "data-zone": z.id }, zoneG);
-      poly(g, q, "rgba(255,253,247,0)", { stroke: active ? mix(z.color, "#1C2E26", 0.5) : "rgba(255,253,247,.85)", "stroke-width": active ? 2.4 : 1.6, "stroke-linejoin": "round" });
+      poly(g, q, active ? "rgba(217,160,63,.16)" : "rgba(255,253,247,0)", { stroke: active ? "#D9A03F" : "rgba(255,253,247,.85)", "stroke-width": active ? 2.4 : 1.6, "stroke-linejoin": "round", class: active ? "iso-zone-active" : null });
       if (opt.onZone) {
         g.setAttribute("role", "button"); g.setAttribute("tabindex", "0");
         g.setAttribute("aria-label", "Espace " + z.nom + (active ? ", sélectionné" : ""));
@@ -426,13 +468,14 @@
     items.forEach(function (it) {
       if (it.kind === "s") {
         var s = { i: it.s.i, j: it.s.j, w: it.s.w || 1, d: it.s.d || 1 };
-        var g = el("g", { class: "iso-structure" }, objects);
+        var g = el("g", { class: "iso-structure", transform: liftAt(s.i, s.j) ? "translate(0,-" + LIFT + ")" : null }, objects);
         if (DRAW[it.s.type]) DRAW[it.s.type](g, s);
       } else if (it.kind === "h") {
-        person(el("g", {}, objects), it.h.i + 0.5, it.h.j + 0.5, it.h.c);
+        person(el("g", { transform: liftAt(it.h.i, it.h.j) ? "translate(0,-" + LIFT + ")" : null }, objects), it.h.i + 0.5, it.h.j + 0.5, it.h.c);
       } else {
         var p = it.p, sol = solutions[p.solId] || {};
-        var g2 = el("g", { class: "iso-item is-" + p.status + (opt.justVerified === p.uid ? " just-verified" : ""), "data-uid": p.uid }, objects);
+        var g2 = el("g", { class: "iso-item is-" + p.status + (opt.justVerified === p.uid ? " just-verified" : ""), "data-uid": p.uid, transform: liftAt(p.i, p.j) ? "translate(0,-" + LIFT + ")" : null }, objects);
+        if (sol.scene !== "mare") { var sc = P(p.i + 0.5, p.j + 0.5, 0); shadow(g2, sc[0] + 2, sc[1] + 1, 13); }
         if (opt.interactive) {
           g2.setAttribute("role", "button");
           g2.setAttribute("tabindex", "0");
@@ -455,17 +498,20 @@
     var FAMLBL = { eau: "Eau", sol: "Sol", energie: "Énergie", reemploi: "Réemploi", alimentation: "Alimentation", gouvernance: "Gouvernance" };
     var labels = el("g", { class: "iso-zone-labels" }, svg);
     zones.forEach(function (z) {
-      var c = P(z.i0 + z.w / 2, z.j0 + z.d / 2, 0), fams = [];
+      // Les espaces du fond portent leur étiquette au-dessus de leur coin arrière ; ceux du premier rang
+      // (qui ont un voisin derrière eux à gauche et à droite) la portent devant, sur le socle, pour ne rien couvrir.
+      var devant = z.lastRow && z.col > 0 && z.row > 0;
+      var c = devant ? P(z.i0 + z.w - 0.5, z.j0 + z.d - 0.5, LIFT) : P(z.i0 + 0.5, z.j0 + 0.5, LIFT), fams = [];
       placed.forEach(function (p) { if (p.spaceId !== z.id) return; var so = solutions[p.solId], f = so && FAMLBL[so.famille]; if (f && fams.indexOf(f) < 0) fams.push(f); });
       var kicker = fams.length ? fams.slice(0, 2).join(" · ") : "À aménager";
       var nom = z.nom.length > 22 ? z.nom.slice(0, 21) + "…" : z.nom;
-      var w = Math.max(nom.length * 6.6, kicker.length * 5.8) + 22, h = 32, top = c[1] - 26 - h;
+      var w = Math.max(nom.length * 6.2, kicker.length * 5.4) + 20, h = 29, top = devant ? c[1] + 22 : c[1] - 20 - h;
       var g = el("g", { class: "iso-zone-label", "data-zone": z.id }, labels);
-      el("line", { x1: c[0], y1: c[1], x2: c[0], y2: top + h, stroke: "rgba(28,46,38,.35)", "stroke-width": 1 }, g);
+      el("line", { x1: c[0], y1: c[1], x2: c[0], y2: devant ? top : top + h, stroke: "rgba(28,46,38,.35)", "stroke-width": 1 }, g);
       el("circle", { cx: c[0], cy: c[1], r: 2.6, fill: "#FFFDF7", stroke: mix(z.color, "#1C2E26", 0.5), "stroke-width": 1.2 }, g);
-      el("rect", { x: c[0] - w / 2, y: top, width: w, height: h, rx: 11, fill: "rgba(255,253,247,.96)", stroke: mix(z.color, "#1C2E26", 0.3), "stroke-width": 1 }, g);
-      el("text", { x: c[0], y: top + 12, "text-anchor": "middle", class: "iso-zone-kicker" }, g).textContent = kicker;
-      el("text", { x: c[0], y: top + 25, "text-anchor": "middle", class: "iso-zone-text" }, g).textContent = nom;
+      el("rect", { x: c[0] - w / 2, y: top, width: w, height: h, rx: 10, fill: "rgba(255,253,247,.94)", stroke: mix(z.color, "#1C2E26", 0.3), "stroke-width": 1 }, g);
+      el("text", { x: c[0], y: top + 11, "text-anchor": "middle", class: "iso-zone-kicker" }, g).textContent = kicker;
+      el("text", { x: c[0], y: top + 23, "text-anchor": "middle", class: "iso-zone-text" }, g).textContent = nom;
     });
 
     function cellFromPoint(clientX, clientY) {
@@ -479,7 +525,8 @@
     }
     function showHover(cell) {
       if (!cell) { hover.setAttribute("visibility", "hidden"); return; }
-      hover.setAttribute("points", pts([P(cell.i, cell.j, 0), P(cell.i + 1, cell.j, 0), P(cell.i + 1, cell.j + 1, 0), P(cell.i, cell.j + 1, 0)]));
+      var hl = liftAt(cell.i, cell.j);
+      hover.setAttribute("points", pts([P(cell.i, cell.j, hl), P(cell.i + 1, cell.j, hl), P(cell.i + 1, cell.j + 1, hl), P(cell.i, cell.j + 1, hl)]));
       hover.setAttribute("fill", cell.free ? "rgba(217,160,63,.35)" : "rgba(192,104,72,.25)");
       hover.setAttribute("stroke", cell.free ? "#D9A03F" : "#C06848");
       hover.setAttribute("visibility", "visible");

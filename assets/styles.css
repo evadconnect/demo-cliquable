@@ -373,7 +373,7 @@ body[data-page="index"] .stage { padding: 0; }
 .jauge-word { color: var(--texte-2); font-size: .82rem; }
 
 .iso-svg { display: block; width: 100%; height: auto; }
-#scene .iso-svg, #nr-scene .iso-svg { max-height: max(300px, calc(100vh - var(--top-h) - 250px)); margin: 0 auto; }
+#scene .iso-svg, #nr-scene .iso-svg { max-height: max(380px, calc(100vh - var(--top-h) - 190px)); margin: 0 auto; }
 
 /* ---------- Commun ---------- */
 .commun-tools { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
@@ -1111,3 +1111,8 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   .drawer-head h2 { margin: 0; font-size: 1.3rem; }
 }
 @media (prefers-reduced-motion: reduce) { .drawer, .drawer.open { transition: none; } }
+
+/* ===== Maquette : l'espace cible respire quand une solution est armée ===== */
+.iso-zone-active { animation: zonePulse 1.6s ease-in-out infinite; }
+@keyframes zonePulse { 0%, 100% { fill-opacity: 1; } 50% { fill-opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .iso-zone-active { animation: none; } }
