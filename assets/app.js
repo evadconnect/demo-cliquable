@@ -777,6 +777,7 @@
           '<input id="intro-name" class="intro-input" type="text" autocomplete="given-name" placeholder="Ton prénom…" maxlength="24">' +
           '<button type="submit" class="btn btn-primary">C\'est parti</button></form>';
         var form = foot.querySelector(".intro-form"), input = foot.querySelector("#intro-name");
+        requestAnimationFrame(function () { log.scrollTop = log.scrollHeight; });
         input.focus({ preventScroll: true });
         form.addEventListener("submit", function (e) {
           e.preventDefault();
@@ -843,6 +844,7 @@
           '<button type="button" class="deva-door" data-go="commun">Découvrir des solutions</button>' +
           '</div>';
         var form = foot.querySelector(".intro-form"), input = foot.querySelector("#intro-quete");
+        requestAnimationFrame(function () { log.scrollTop = log.scrollHeight; });
         input.focus({ preventScroll: true });
         foot.querySelectorAll("[data-go]").forEach(function (b) {
           b.addEventListener("click", function () { routeTo(b.getAttribute("data-go")); });
