@@ -1030,3 +1030,13 @@ body[data-page="commun"] .grid { gap: 20px; }
 #ici-grid .card { border-radius: var(--r-lg); box-shadow: var(--ombre); transition: transform .15s ease, box-shadow .15s ease; }
 #ici-grid .card:hover { transform: translateY(-3px); box-shadow: var(--ombre-haute); }
 body[data-page="commun"] .section-title { margin: 36px 0 14px; }
+
+/* ===== Carte vivante sous la pilule : le fond cartographique occupe tout l'écran ===== */
+@media (min-width: 901px) {
+  body[data-page="index"] #topbar.topbar { position: fixed; top: 12px; left: 16px; right: 16px; margin: 0; }
+  body[data-page="index"] .map-stage { height: 100vh; margin-top: 0; }
+  body[data-page="index"] .map-filters { top: calc(var(--top-h) + 28px); }
+  body[data-page="index"] .leaflet-top { top: calc(var(--top-h) + 20px); }
+  body[data-page="index"] .map-stage .map-notice { top: calc(var(--top-h) + 32px); }
+  body[data-page="index"] .fiche { top: calc(var(--top-h) + 28px); right: 16px; bottom: 16px; border: 1px solid var(--bord); border-radius: var(--r-lg); }
+}
