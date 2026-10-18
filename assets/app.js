@@ -210,7 +210,7 @@
       link("index.html", "carte", "Carte", page === "index") +
       link("commun.html", "commun", "Commun", page === "commun") +
       projet + "</nav>";
-    // À droite : mon lieu (dès qu'il a un nom) et le raccourci vers Deva.
+    // Mon lieu (dès qu'il a un nom) à droite, le raccourci vers Deva à gauche.
     var st = fricheStatut(), hasLieu = !!state.project.name.trim();
     var lieu = hasLieu ? '<a class="project-pill' + (page === "monlieu" ? " is-current" : "") + '" href="mon-lieu.html" title="Ouvrir mon lieu"' + (page === "monlieu" ? ' aria-current="page"' : "") + '>' +
       '<span class="pill-dot st-' + st + '" aria-hidden="true"></span><span class="pill-name">' + esc(projectName()) + '</span><span class="sr-only">, ' + D.statuts[st].label + "</span></a>" : "";
@@ -219,7 +219,8 @@
       '<button type="button" class="top-deva' + (devaUnread && !open ? " has-new" : "") + '" aria-pressed="' + open + '" aria-label="' + (open ? "Replier le panneau de Deva" : "Ouvrir le panneau de Deva") + '">' +
       '<img class="deva-face" src="assets/deva-avatar.png" alt="" aria-hidden="true"><span class="top-deva-badge" aria-hidden="true"></span></button>' : "";
     top.className = "topbar topbar-slim";
-    top.innerHTML = BRAND + nav + '<div class="top-right">' + lieu + deva + "</div>";
+    // Deva à gauche (il ouvre la conversation), le logo EVAD à droite (retour à l'accueil).
+    top.innerHTML = '<div class="top-left">' + deva + "</div>" + nav + '<div class="top-right">' + lieu + BRAND + "</div>";
     var tb = top.querySelector(".top-deva");
     if (tb) tb.addEventListener("click", function () { if (window.Deva && Deva.toggle) Deva.toggle(); });
   }
