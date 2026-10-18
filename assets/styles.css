@@ -1051,3 +1051,6 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   body[data-page="index"] .map-filters select { min-height: 36px; border-radius: 999px; padding: 6px 32px 6px 12px; }
   body[data-page="index"] .legend { bottom: 76px; left: calc(var(--deva-w) + 36px); }
 }
+
+/* la légende suit la hauteur réelle de la barre de filtres */
+@media (min-width: 901px) { body[data-page="index"] .legend { bottom: calc(18px + var(--filters-h, 54px) + 8px); } }
