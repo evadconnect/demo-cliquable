@@ -83,6 +83,22 @@
     el.textContent = { saving: "Enregistrement…", saved: "Enregistré en ligne", error: "Hors ligne : gardé sur cet appareil", idle: "" }[s] || "";
   }
 
+  // Repli explicite : si la vue regen_carte est absente (ou sans connexion), la carte n'affiche
+  // que les lieux d'exemple. On le dit, pour ne jamais laisser croire qu'un lieu est publié.
+  function carteEnModeExemple() {
+    return !(window.EvadDB && EvadDB.ready() && EvadDB.carteStatus && EvadDB.carteStatus() === "ok");
+  }
+  function renderMapNotice() {
+    var host = $(".map-stage") || $(".map-card"); if (!host) return;
+    var old = host.querySelector(".map-notice");
+    if (!carteEnModeExemple()) { if (old) old.remove(); return; }
+    if (old) return;
+    var n = document.createElement("p");
+    n.className = "map-notice"; n.setAttribute("role", "status");
+    n.textContent = "Carte en mode exemple : les lieux publics ne sont pas encore chargés.";
+    host.appendChild(n);
+  }
+
   function projectName() { return state.project.name.trim() || "Mon lieu"; }
   function verifiedCount() { return state.proofs.length; }
   function projectStatut() {
@@ -345,6 +361,9 @@
     var projects = allProjects();
     var map = host._lmap;
     if (!map) {
+      // Un conteneur sans hauteur au moment de l'init laisse Leaflet sans tuiles (marqueurs sur fond uni) :
+      // on garantit une hauteur, puis on recalcule la taille une fois le rendu posé et à chaque redimensionnement.
+      if (!host.clientHeight) host.style.minHeight = "280px";
       map = L.map(host, { zoomControl: false, attributionControl: true });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -354,6 +373,11 @@
       host._lmap = map;
       host._lmarkers = L.layerGroup().addTo(map);
       map.on("click", function (e) { if (host._locateMove) host._locateMove(e.latlng.lat, e.latlng.lng); });
+      var refit = function () { if (host._lmap) host._lmap.invalidateSize(); };
+      map.whenReady(function () { requestAnimationFrame(refit); setTimeout(refit, 350); });
+      window.addEventListener("load", refit);
+      if (window.ResizeObserver) new ResizeObserver(refit).observe(host);
+      else window.addEventListener("resize", refit);
     }
     host._locateMove = opts.locate ? opts.locate.onMove : null;
     var layer = host._lmarkers; layer.clearLayers();
@@ -408,10 +432,12 @@
   /* ================= Visite guidée (coachmarks Deva) =================
      Après chaque porte de l'accueil, Deva met en lumière les éléments clés
      de la destination : spotlight sur une cible + bulle + Suivant / Passer. */
+  var bootedEarly = false; // l'interface a démarré sans attendre Supabase
+  var redrawMap = null;    // redessine la carte de la page courante (arrivée tardive des lieux publics)
   var pageTour = null; // visite guidée de la page courante, rejouable via « Revoir la visite »
   var TOURS = {
     commun: [
-      { sel: ".doctrine", text: "Le Commun est une bibliothèque libre de solutions. La règle : vérifié bat généré — rien n'entre sans preuve de terrain." },
+      { sel: ".doctrine", text: "Le Commun est une bibliothèque libre de solutions. La règle : vérifié bat généré : rien n'entre sans preuve de terrain." },
       { sel: ".commun-tools .search", text: "Cherche une solution par mot-clé : haie, compost, réparer…" },
       { sel: "#commun-fams", text: "Ou filtre par famille pour cibler ce qui t'intéresse." },
       { sel: "#commun-grid .card", text: "Chaque fiche montre la difficulté, le coût, et sur combien de lieux la solution a déjà été éprouvée." },
@@ -420,7 +446,7 @@
     ],
     rever: [
       { sel: ".page-stepper", text: "Créer un lieu, c'est le parcours REGEN en 5 étapes, ici en haut : Rêver, Explorer, Générer, Entreprendre, Nourrir. On démarre par Rêver." },
-      { sel: ".map-card", text: "Inspire-toi des projets qui poussent déjà autour de toi — clique un point. Clique la carte pour situer ton futur lieu." },
+      { sel: ".map-card", text: "Inspire-toi des projets qui poussent déjà autour de toi : clique un marqueur. Clique la carte pour situer ton futur lieu." },
       { sel: "#v-nom", text: "Donne un nom à ton lieu." },
       { sel: "#v-geo", text: "Situe-le : tape une commune ou une adresse, puis choisis dans la liste." },
       { sel: "#v-promesse", text: "Écris ta promesse : en une phrase, ce que le lieu change pour les gens." },
@@ -510,7 +536,7 @@
       return true;
     }
     function draw() { renderMap(host, { onSelect: openFiche, selected: selected, filter: filter }); }
-    draw();
+    draw(); redrawMap = draw;
 
     $all("[data-fstat]").forEach(function (b) {
       b.addEventListener("click", function () { var k = b.dataset.fstat; fStat[k] = !fStat[k]; b.setAttribute("aria-pressed", String(fStat[k])); draw(); });
@@ -598,7 +624,7 @@
       if (!(window.Deva && Deva.prompt)) return;
       if (firstTime) {
         Deva.say((state.prenom ? "Et voilà la carte vivante, " + state.prenom + ". " : "Et voilà la carte vivante. ") +
-          "Chaque point est un lieu réel. Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
+          "Chaque marqueur est un lieu réel. Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
       } else if (state.prenom) {
         Deva.say("Ravi de te revoir, " + state.prenom + ". " + VISION + " Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
       } else {
@@ -709,8 +735,8 @@
       var SAMPLE_ID = (D.projets && D.projets[0] && D.projets[0].id) || null;
       var carteTour = [
         { text: "Bienvenue sur la carte vivante ! Je te montre l'essentiel en quelques secondes." },
-        { sel: ".leaflet-marker-icon", text: "Chaque point est un lieu réel. Clique-le pour ouvrir sa fiche." },
-        { sel: ".map-filters", text: "Filtre par avancement — Rêvé, En cours, Prouvé — et par famille (Eau, Sol, Énergie…), ou n'affiche que ce qui pousse autour de toi." },
+        { sel: ".leaflet-marker-icon", text: "Chaque marqueur est un lieu réel. Clique-le pour ouvrir sa fiche." },
+        { sel: ".map-filters", text: "Filtre par avancement (Rêvé, En cours, Prouvé) et par famille (Eau, Sol, Énergie…), ou n'affiche que ce qui pousse autour de toi." },
         { sel: "#fiche", text: "Voici la fiche d'un lieu : sa promesse, le collectif qui le porte, les solutions posées et son impact vérifié. « Explorer ce projet » déplie le détail.",
           onEnter: function () { if (SAMPLE_ID) openFiche(SAMPLE_ID); },
           onLeave: function () { closeFiche(); } },
@@ -722,19 +748,14 @@
         // REGEN et Commun : on part sur l'autre page, qui lance sa visite guidée (?tour=1).
         if (kind === "regen") { location.href = "rever.html?tour=1"; return; }
         if (kind === "commun") { location.href = "commun.html?tour=1"; return; }
-        // Carte : page courante — on révèle la carte puis Deva en fait le tour.
+        // Carte : page courante, on révèle la carte puis Deva en fait le tour.
         leave(); setTimeout(function () { startTour(carteTour); }, 680);
       }
-      // Questions suggérées (réutilise la FAQ d'accueil de Deva).
-      var SUG = ((((D.deva || {}).modes || {}).accueil || {}).suggestions || []).slice(0, 4);
       function askIntent() {
         foot.innerHTML =
           '<form class="intro-form"><label class="sr-only" for="intro-quete">Ce que tu cherches</label>' +
           '<input id="intro-quete" class="intro-input" type="text" autocomplete="off" placeholder="Dis-moi en quelques mots…">' +
           '<button type="submit" class="btn btn-primary intro-send" aria-label="Envoyer à Deva">' + ICON.arrow + '</button></form>' +
-          (SUG.length ? '<div class="intro-suggests" aria-label="Questions fréquentes">' +
-            SUG.map(function (s, k) { return '<button type="button" class="deva-chip" data-sug="' + k + '">' + esc(s.q) + "</button>"; }).join("") +
-            "</div>" : "") +
           '<div class="intro-doors" role="group" aria-label="Portes d\'entrée">' +
           '<button type="button" class="deva-door is-primary" data-go="regen">Créer un projet</button>' +
           '<button type="button" class="deva-door" data-go="carte">Visiter des lieux</button>' +
@@ -746,7 +767,7 @@
           b.addEventListener("click", function () { routeTo(b.getAttribute("data-go")); });
         });
         var ACK = {
-          regen: "Parfait — je t'emmène créer ton lieu, étape par étape.",
+          regen: "Parfait, je t'emmène créer ton lieu, étape par étape.",
           carte: "Allons explorer la carte vivante.",
           commun: "Je t'emmène découvrir les solutions du Commun."
         };
@@ -754,13 +775,9 @@
         // Deva répond à une question via son moteur scripté, et laisse les portes ouvertes.
         function answerInline(txt) {
           var rep = (window.Deva && Deva.answer) ? Deva.answer(txt) : null;
-          line(rep || "Choisis une porte pour commencer — tu pourras tout explorer ensuite.");
+          line(rep || "Choisis une porte pour commencer : tu pourras tout explorer ensuite.");
           input.focus({ preventScroll: true });
         }
-        // Chips de questions suggérées : Deva donne directement la réponse curée.
-        foot.querySelectorAll("[data-sug]").forEach(function (b) {
-          b.addEventListener("click", function () { var s = SUG[+b.getAttribute("data-sug")]; if (!s) return; userBubble(s.q); line(s.a); input.focus({ preventScroll: true }); });
-        });
         form.addEventListener("submit", function (e) {
           e.preventDefault();
           var txt = input.value.trim(); if (!txt) { input.focus(); return; }
@@ -781,7 +798,9 @@
       // Enchaînement : Deva seule présente la vision EVAD.
       line("Bonjour, je suis Deva, l'assistant d'EVAD.")
         .then(function () { return wait(240); })
-        .then(function () { return line("EVAD, c'est un monde régénératif désirable — déjà en train de pousser."); })
+        .then(function () { return line("Je suis une IA écologique : je réponds en local, par règles, sans grand modèle : une question me coûte ~0,05 g CO₂e, contre 2 à 5 g pour un gros modèle d'IA."); })
+        .then(function () { return wait(240); })
+        .then(function () { return line("EVAD, c'est un monde régénératif désirable, déjà en train de pousser."); })
         .then(function () { return wait(240); })
         .then(function () { return line("Chaque lieu de la carte a d'abord été rêvé, puis modélisé, puis prouvé sur le terrain."); })
         .then(function () { return wait(240); })
@@ -908,11 +927,18 @@
       });
       $("#mini-title").focus({ preventScroll: true });
     }
-    draw();
+    draw(); redrawMap = draw;
 
     var name = $("#v-nom"), prom = $("#v-promesse"), reve = $("#v-reve"), coll = $("#v-collectif"), pub = $("#v-public"), next = $("#to-explorer");
     name.value = state.project.name; prom.value = state.project.promesse; reve.value = state.project.reve;
     coll.value = state.project.collectif; pub.checked = state.project.public !== false;
+    // Tant que la carte publique n'est pas active, on ne laisse pas croire à une publication.
+    if (carteEnModeExemple() && pub.closest(".check-line")) {
+      var pubNote = document.createElement("p");
+      pubNote.className = "muted small"; pubNote.id = "v-public-note";
+      pubNote.textContent = "La carte publique n'est pas encore active : pour l'instant, ton lieu n'est visible que par toi, sur cet appareil.";
+      pub.closest(".check-line").insertAdjacentElement("afterend", pubNote);
+    }
     function sync() {
       state.project.name = name.value; state.project.promesse = prom.value; state.project.reve = reve.value;
       state.project.collectif = coll.value; state.project.public = pub.checked; save();
@@ -1437,6 +1463,7 @@
     if (!db) return places.then(function (pl) { publicPlaces = pl; });
     return db.getUser().then(function (u) {
       user = u;
+      if (bootedEarly) return; // l'interface est déjà rendue depuis le cache : on garde l'état local
       // Sans compte : le projet vit sur l'appareil (localStorage).
       if (!user) { var local = loadCache(); if (local) state = local; return; }
       var cache = loadCache();
@@ -1456,9 +1483,10 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    var page = document.body.dataset.page;
+    var page = document.body.dataset.page, started = false;
     document.body.classList.add("is-booting");
-    boot(page).then(function () {
+    function start() {
+      if (started) return; started = true;
       document.body.classList.remove("is-booting");
       renderTopbar(page);
       var step = D.steps.find(function (s) { return s.id === page; });
@@ -1470,12 +1498,32 @@
       }
       renderFooter(); // après Deva.init : le bandeau se loge sous le panneau de Deva
       if (PAGES[page]) PAGES[page]();
+      if (page === "index" || page === "rever") renderMapNotice();
       if (TOURS[page]) pageTour = TOURS[page];
       // Arrivée depuis une porte de l'accueil : Deva fait la visite guidée de la page.
       if (param("tour") === "1" && TOURS[page]) {
         try { history.replaceState({}, "", location.pathname); } catch (e) { /* ignore */ }
         setTimeout(function () { startTour(TOURS[page]); }, 500);
       }
+    }
+    // L'interface ne doit jamais attendre le réseau : passé 3 secondes, on démarre avec l'état
+    // local (Supabase lent, en pause ou injoignable) ; la carte publique se rafraîchira si elle arrive.
+    var limite = setTimeout(function () {
+      if (started) return;
+      bootedEarly = true;
+      var local = loadCache(); if (local) state = local;
+      console.warn("[EVAD] démarrage sans attendre Supabase (lent ou indisponible)");
+      start();
+    }, 3000);
+    boot(page).then(function () {
+      clearTimeout(limite);
+      if (!started) { start(); return; }
+      if (redrawMap) redrawMap();
+      if (page === "index" || page === "rever") renderMapNotice();
+    }).catch(function (e) {
+      console.warn("[EVAD] démarrage dégradé :", e && e.message);
+      clearTimeout(limite);
+      if (!started) { var local = loadCache(); if (local) state = local; start(); }
     });
     // Avant de quitter la page, on tente d'envoyer une sauvegarde en attente.
     window.addEventListener("pagehide", function () { if (syncTimer) { clearTimeout(syncTimer); syncNow(); } });

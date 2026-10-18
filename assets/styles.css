@@ -452,7 +452,7 @@ body[data-page="index"] .stage { padding: 0; }
 /* ---------- Rêver ---------- */
 .split { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); gap: 20px; align-items: start; }
 .map-card { position: relative; background: var(--creme); border: 1px solid var(--bord); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--ombre); }
-.map-card #map { aspect-ratio: 610 / 440; }
+.map-card #map { aspect-ratio: 610 / 440; min-height: 280px; }
 .split .map-card { position: sticky; top: calc(var(--top-h) + 16px); }
 .map-hint { position: absolute; top: 12px; left: 12px; background: rgba(255, 253, 247, .94); border-radius: 999px; padding: 6px 14px; font-size: .84rem; border: 1px solid var(--bord); }
 .mini-fiche { position: relative; margin: 0 12px 12px; display: grid; grid-template-columns: 170px 1fr; gap: 12px; background: var(--blanc); border-radius: var(--r); box-shadow: var(--ombre-haute); padding: 10px 14px 12px 8px; animation: pop .25s ease-out; }
@@ -822,3 +822,13 @@ body.has-intro { overflow: hidden; }
 .deva-footer { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 16px 16px; }
 .deva-footer p { font-size: .76rem; line-height: 1.4; }
 .deva-footer .footer-actions { gap: 14px; flex-wrap: wrap; }
+
+/* Bandeau discret : carte en mode exemple (lieux publics non chargés) */
+.map-notice { position: absolute; z-index: 5; margin: 0; padding: 6px 12px; border-radius: 999px; background: rgba(255, 253, 247, .94); border: 1px solid var(--bord); box-shadow: var(--ombre); font-size: .8rem; color: var(--texte-2); pointer-events: none; max-width: calc(100% - 32px); }
+.map-stage .map-notice { top: 92px; right: 14px; max-width: 360px; }
+.map-card .map-notice { left: 12px; bottom: 12px; }
+@media (max-width: 900px) { .map-stage .map-notice { top: auto; bottom: 56px; left: 12px; transform: none; } }
+
+/* Démarrage : un mot pendant que l'on attend (au plus 3 s) la base en ligne */
+body.is-booting .shell { position: relative; }
+body.is-booting .shell::after { content: "Chargement du lieu…"; position: fixed; left: 50%; top: calc(var(--top-h) + 18px); transform: translateX(-50%); z-index: 40; padding: 6px 14px; border-radius: 999px; background: rgba(255, 253, 247, .95); border: 1px solid var(--bord); box-shadow: var(--ombre); font-size: .84rem; color: var(--texte-2); }

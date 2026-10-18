@@ -10,12 +10,43 @@ HTML, CSS et JavaScript sans framework ni build ; comptes et données sur Supaba
 - Les comptes sont ceux de Supabase (email + mot de passe), les mêmes que le prototype EVAD.
 - Chaque testeur crée **son propre lieu** (nom, commune géolocalisée, promesse, collectif) sur un terrain vierge. Le projet est enregistré en ligne (table `regen_projets`, protégée par compte) et mis en cache sur l'appareil.
 - La carte publique montre les lieux des testeurs qui ont coché « Afficher mon lieu sur la carte » (vue `regen_carte`, colonnes limitées), plus des projets d'exemple marqués « Exemple ».
-- Base utilisée : constante `ENV` en haut de `assets/backend.js` (`"staging"` = evad-dev, `"prod"` = base réelle).
+
+### Vue `regen_carte` : ce que la carte attend
+
+Si la vue est absente (erreur 404 « Could not find the table public.regen_carte »), la carte **ne plante pas** : elle retombe sur les 8 lieux d'exemple et l'annonce par un bandeau « Carte en mode exemple : les lieux publics ne sont pas encore chargés ». À l'étape Rêver, une note sous la case « Afficher mon lieu » précise que la publication n'est pas encore active. Pour activer la carte publique, exécuter `supabase/regen-beta.sql`, qui crée la vue ainsi :
+
+| Colonne | Type | Origine |
+|---|---|---|
+| `id` | uuid | `regen_projets.id` |
+| `nom`, `promesse`, `lieu`, `collectif` | text | colonnes du projet |
+| `lat`, `lng` | double precision | position du lieu |
+| `statut` | text (`reve`, `encours`, `prouve`) | avancement |
+| `placed` | jsonb | `data -> 'placed'` (solutions posées, sans les preuves) |
+| `updated_at` | timestamptz | dernière modification |
+
+Filtre de la vue : `public = true and lat is not null and lng is not null and nom <> ''`. Droits : `grant select on public.regen_carte to anon, authenticated` (la table `regen_projets` reste, elle, protégée par RLS : chaque compte ne lit et n'écrit que ses propres lignes, aucun accès `anon`). Aucune donnée de compte ni de preuve détaillée ne transite par la vue.
+- Base utilisée : constante `ENV` en haut de `assets/backend.js`. Depuis octobre 2026 : `"prod"` (base réelle) ; l'ancien projet staging evad-dev a été supprimé (son domaine ne résout plus).
 
 ### Mise en service
 1. Dans Supabase (staging d'abord) > SQL Editor : exécuter `supabase/regen-beta.sql`.
 2. Authentication > URL Configuration : ajouter `https://evadconnect.github.io/demo-cliquable/` (et `http://localhost:8790/`) aux Redirect URLs, pour les liens de confirmation et de mot de passe oublié.
 3. Quand c'est validé : relancer le SQL sur la base prod et passer `ENV` à `"prod"`.
+
+## Vérifications rapides
+
+Typographie : aucun tiret cadratin (U+2014) ni demi-cadratin (U+2013) dans les textes ; on écrit avec des virgules, des deux-points et des points.
+
+```bash
+grep -rnE "$(printf '\xe2\x80\x94|\xe2\x80\x93')" --include=*.html --include=*.js --include=*.md . && echo "Tirets à corriger" || echo "OK : aucun tiret cadratin"
+```
+
+Vocabulaire : les mots exclus par la doctrine ne doivent pas apparaître dans l'interface (on dit « projet régénératif », « porteur de projet », « contributeur », « financeur »).
+
+```bash
+grep -rniE "avantage|récompense|\bgagner\b|contrepartie|monnaie locale|crédits?|\bgraines?\b|vadin|bâtisseur|\bpilote\b|semeur" --include=*.html --include=*.js . || echo "OK : vocabulaire conforme"
+```
+
+Le mot « point » se vérifie à la main : il reste acceptable pour la géographie (mais on préfère « marqueur » ou « lieu » dans les textes de Deva), jamais au sens de points à gagner.
 
 ## Lancer en local
 

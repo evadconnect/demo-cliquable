@@ -111,6 +111,16 @@
     if (/(^| )(bonjour|salut|coucou|bonsoir|hello|hey|yo|bonne journee)( |$)/.test(t)) return pick(D.salutations);
     if (/(^| )(merci|mercii|super|genial|parfait|nickel|top|cool|bravo|ok merci)( |$)/.test(t)) return pick(D.remerciements);
     if (/(^| )(au revoir|aurevoir|bye|a bientot|ciao|a plus)( |$)/.test(t)) return pick(D.adieux);
+    // Règle prioritaire : toute question sur l'impact, le CO₂, les chiffres ou les résultats du lieu.
+    // Deva ne produit aucun quantitatif : elle renvoie vers Vadance, Vadité et les preuves.
+    var surDeva = /(deva|conversation|nos echanges|cet echange|tes reponses|discussion|ton empreinte|tu pollues|tu consommes|ton co2)/.test(t);
+    var surImpact = /(impact|co2|carbone|chiffre|resultat|combien|economis|tonne|kilo| kg |mesur|gain|bilan|emission)/.test(t);
+    if (surImpact && !surDeva && D.impactLieu) return D.impactLieu;
+    // L'empreinte de Deva : seulement si la question parle d'elle ou de la conversation.
+    if (surDeva && /(carbone|empreinte|co2|pollu|consomm|sobri|ecolog)/.test(t)) {
+      var emp = (D.faq || []).filter(function (e) { return e.id === "empreinte"; })[0];
+      if (emp) return emp.a;
+    }
     var best = null, score = 0;
     (D.faq || []).forEach(function (e) {
       var s = 0; e.k.forEach(function (kw) { if (t.indexOf(norm(kw)) >= 0) s++; });
