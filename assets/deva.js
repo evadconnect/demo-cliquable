@@ -66,6 +66,8 @@
     if (!opts.silent) { renderDoors(); say(mode.intro, { instant: true }); }
   }
   function close() { if (root) setOpen(false); }
+  function isOpen() { return !!root && !root.classList.contains("is-closed"); }
+  function toggle() { if (root) setOpen(!isOpen()); }
 
   function renderDoors() {
     var box = root.querySelector(".deva-doors");
@@ -232,6 +234,7 @@
     document.body.classList.toggle("deva-closed", !open);
     root.querySelector(".deva-toggle").setAttribute("aria-expanded", String(open));
     root.querySelector(".deva-fab").setAttribute("aria-expanded", String(open));
+    document.dispatchEvent(new CustomEvent("deva:state", { detail: { open: open } }));
     root.querySelector(".deva-toggle").innerHTML = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
     if (!silent) {
       if (open) root.querySelector("#deva-input").focus({ preventScroll: true });
@@ -243,6 +246,7 @@
     var d = document.createElement("div");
     d.className = "deva-msg " + cls;
     d.textContent = text;
+    if (/from-deva/.test(cls) && !/is-typing/.test(cls) && root && root.classList.contains("is-closed")) document.dispatchEvent(new CustomEvent("deva:unread"));
     log.appendChild(d);
     log.scrollTop = log.scrollHeight;
     return d;
@@ -295,5 +299,5 @@
     if (t) say(t, { nudge: true });
   }
 
-  window.Deva = { init: init, say: say, react: react, prompt: prompt, close: close, answer: answer, setContext: function (fn) { ctx = fn; } };
+  window.Deva = { init: init, say: say, react: react, prompt: prompt, close: close, isOpen: isOpen, toggle: toggle, answer: answer, setContext: function (fn) { ctx = fn; } };
 })();

@@ -176,13 +176,6 @@ body.deva-closed .shell { grid-template-columns: 72px minmax(0, 1fr); }
 .footer .link-btn { color: var(--texte-2); font-size: .84rem; }
 
 /* ---------- navigation dans la sidebar ---------- */
-.deva-nav { display: flex; flex-direction: column; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--bord); }
-.snav-place { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--creme); border: 1px solid var(--bord); border-radius: var(--r); text-decoration: none; color: var(--encre); }
-.snav-place:hover { border-color: var(--mousse); }
-.snav-place .pill-dot { width: 13px; height: 13px; border-radius: 50%; flex: none; }
-.snav-place-txt { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
-.snav-kicker { font-size: .66rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--texte-2); }
-.snav-place strong { font-family: var(--f-titre); font-size: 1.02rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .snav-title { font-size: .66rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--mousse); margin: 0 0 6px; }
 .snav-regen ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .snav-step { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 10px; text-decoration: none; color: var(--texte-2); font-size: .9rem; font-weight: 500; }
@@ -349,8 +342,6 @@ body[data-page="index"] .stage { padding: 0; }
 .map-filters .row { display: flex; flex-wrap: wrap; gap: 6px; }
 .map-filters .chip { min-height: 32px; font-size: .8rem; padding: 4px 10px; }
 .map-filters select { min-height: 36px; border-radius: 999px; border: 1px solid var(--bord); background: var(--blanc); padding: 4px 10px; font-size: .84rem; }
-.legend { position: absolute; bottom: 18px; left: 20px; z-index: 6; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; background: rgba(255, 253, 247, .94); border: 1px solid var(--bord); border-radius: 999px; padding: 8px 16px; font-size: .84rem; box-shadow: var(--ombre); }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
 .fiche {
   position: absolute; top: 0; right: 0; bottom: 0; width: min(430px, 100%); z-index: 10;
   background: var(--blanc); border-left: 1px solid var(--bord); box-shadow: var(--ombre-haute);
@@ -690,7 +681,6 @@ body[data-page="index"] .stage { padding: 0; }
   .map-stage #map { position: relative; inset: auto; aspect-ratio: 10 / 7; order: 2; }
   .hero, .map-stage.has-fiche .hero { position: relative; top: auto; left: auto; transform: none; width: auto; margin: 16px; order: 1; }
   .map-filters { position: relative; top: auto; left: auto; max-width: none; margin: 0 16px 12px; order: 3; }
-  .legend { position: relative; bottom: auto; left: auto; margin: 0 16px 16px; order: 4; align-self: flex-start; }
   .fiche { position: fixed; top: auto; height: 86vh; width: 100%; border-radius: 20px 20px 0 0; transform: translateY(105%); }
   .fiche.open { transform: none; }
   .nourrir-grid { grid-template-columns: 1fr; }
@@ -806,17 +796,10 @@ body.has-intro { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .tour, .tour.is-leaving { animation: none; } .tour-hole { transition: none; } }
 .footer-actions { display: inline-flex; align-items: center; gap: 16px; }
 
-/* Menu global (barre du haut) + chips de questions dans l'onboarding */
-.topnav { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+/* Chips de questions dans l'onboarding */
 .intro-suggests { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .intro-suggests .deva-chip { font-size: .82rem; }
 
-/* Bandeau horizontal du parcours REGEN, en haut du contenu */
-.page-stepper { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 20px; padding-bottom: 16px; border-bottom: 1px solid var(--bord); }
-.page-stepper ol { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.page-stepper li { display: flex; align-items: center; }
-.page-stepper li + li::before { content: ""; width: 18px; height: 2px; background: var(--bord); margin-right: 4px; border-radius: 2px; }
-@media (max-width: 640px) { .page-stepper li + li::before { width: 8px; } }
 
 /* Bandeau EVAD logé sous le panneau de Deva (sidebar) */
 .deva-footer { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 16px 16px; }
@@ -943,7 +926,6 @@ body.is-arriving #deva { animation: glisser .6s ease-out both; }
   body[data-page="index"] .deva-log { flex: 0 1 auto; max-height: 36vh; }
   body[data-page="index"] .map-stage { height: calc(100vh - var(--top-h)); }
   body[data-page="index"] .map-filters { left: calc(var(--deva-w) + 36px); }
-  body[data-page="index"] .legend { left: calc(var(--deva-w) + 36px); }
 }
 
 
@@ -1041,7 +1023,7 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   body[data-page="index"] .fiche { top: calc(var(--top-h) + 28px); right: 16px; bottom: 16px; border: 1px solid var(--bord); border-radius: var(--r-lg); }
 }
 
-/* ===== Carte : les filtres en barre horizontale en bas, la légende juste au-dessus ===== */
+/* ===== Carte : les filtres en barre horizontale en bas ===== */
 @media (min-width: 901px) {
   body[data-page="index"] .map-filters { top: auto; bottom: 18px; left: calc(var(--deva-w) + 36px); max-width: none; border-radius: 999px; padding: 8px 12px; }
   body[data-page="index"] .map-filters-head { display: none; }
@@ -1049,8 +1031,67 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   body[data-page="index"] .map-filters .f-title { display: none; }
   body[data-page="index"] .map-filters .row { display: flex; gap: 6px; }
   body[data-page="index"] .map-filters select { min-height: 36px; border-radius: 999px; padding: 6px 32px 6px 12px; }
-  body[data-page="index"] .legend { bottom: 76px; left: calc(var(--deva-w) + 36px); }
 }
 
-/* la légende suit la hauteur réelle de la barre de filtres */
-@media (min-width: 901px) { body[data-page="index"] .legend { bottom: calc(18px + var(--filters-h, 54px) + 8px); } }
+/* ===== Pilule du haut : logo à gauche, menu centré, mon lieu et Deva à droite ===== */
+.topbar-slim { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+.topbar-slim .brand { justify-self: start; }
+.topnav { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; }
+.topbar-slim .topnav { justify-self: center; }
+.topbar-slim .top-right { justify-self: end; margin-left: 0; gap: 10px; min-width: 0; }
+.toplink { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.toplink svg { width: 18px; height: 18px; flex: none; }
+.toplink-cta { display: inline-flex; align-items: center; gap: 7px; margin-left: 4px; white-space: nowrap; }
+.toplink-cta svg { width: 17px; height: 17px; flex: none; }
+.toplink-cta .lbl-short { display: none; }
+/* parcours REGEN compact : cinq points reliés et l'étape courante nommée */
+.top-stepper { display: inline-flex; align-items: center; gap: 10px; margin-left: 4px; padding: 6px 12px 6px 12px; border-radius: 999px; background: var(--creme); box-shadow: inset 0 0 0 1.5px var(--fougere); }
+.mstep-track { display: inline-flex; align-items: center; padding: 4px 0; }
+.mstep { position: relative; display: block; width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--gris); background: var(--blanc); box-sizing: border-box; transition: transform .15s ease; }
+.mstep + .mstep { margin-left: 10px; }
+.mstep + .mstep::before { content: ""; position: absolute; right: 100%; top: 50%; width: 10px; height: 1.5px; margin-top: -.75px; background: var(--bord); }
+.mstep.is-done { background: var(--mousse); border-color: var(--mousse); }
+.mstep.is-done + .mstep::before { background: var(--mousse); }
+.mstep.is-active { background: var(--ambre); border-color: var(--ambre); box-shadow: 0 0 0 3px rgba(217, 160, 63, .28); }
+.mstep:hover { transform: scale(1.3); }
+.mstep:focus-visible { outline: 2px solid var(--foret); outline-offset: 2px; }
+.mstep-label { font-weight: 600; font-size: .88rem; color: var(--foret); text-decoration: none; white-space: nowrap; }
+.mstep-label:hover { text-decoration: underline; }
+/* mon lieu : la pastille d'avancement (gris, ambre, vert) et le nom */
+.project-pill { background: var(--blanc); }
+.project-pill.is-current { background: var(--creme); box-shadow: inset 0 0 0 1.5px var(--fougere); }
+/* raccourci Deva : ouvre ou replie le panneau ; un point ambre quand il a parlé pendant qu'il était replié */
+.top-deva { position: relative; display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border: 1px solid var(--bord); border-radius: 50%; background: var(--blanc); cursor: pointer; flex: none; transition: border-color .15s ease, background .15s ease; }
+.top-deva .deva-face { height: 30px; width: auto; border-radius: 10px; display: block; }
+.top-deva:hover { border-color: var(--mousse); }
+.top-deva[aria-pressed="true"] { background: var(--creme); box-shadow: inset 0 0 0 1.5px var(--fougere); }
+.top-deva-badge { display: none; position: absolute; top: 1px; right: 1px; width: 11px; height: 11px; border-radius: 50%; background: var(--ambre); border: 2px solid var(--blanc); }
+.top-deva.has-new .top-deva-badge { display: block; animation: devaPulse 1.6s ease-in-out infinite; }
+@keyframes devaPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.4); } }
+@media (prefers-reduced-motion: reduce) { .top-deva.has-new .top-deva-badge { animation: none; } .mstep:hover { transform: none; } }
+/* écrans moyens : libellés courts, puis icônes seules */
+@media (max-width: 1180px) and (min-width: 901px) {
+  .toplink-cta .lbl-long { display: none; }
+  .toplink-cta .lbl-short { display: inline; }
+  .project-pill { max-width: 170px; }
+}
+@media (max-width: 1060px) and (min-width: 901px) {
+  .toplink-lbl { display: none; }
+  .toplink { padding: 8px 10px; }
+  .toplink-cta .lbl-short { display: none; }
+  .toplink-cta { padding-left: 10px; padding-right: 10px; }
+  .mstep-label { display: none; }
+  .project-pill { max-width: 130px; }
+}
+/* bureau : le bouton de la pilule remplace la pastille flottante du bas */
+@media (min-width: 901px) { body[data-page] .deva.is-closed .deva-fab { display: none; } }
+/* écran étroit : la barre passe sur deux lignes, le menu en dessous */
+@media (max-width: 900px) {
+  .topbar-slim { display: flex; flex-wrap: wrap; justify-content: space-between; }
+  .topbar-slim .topnav { order: 3; flex-basis: 100%; justify-content: flex-start; overflow-x: auto; }
+  .topbar-slim .top-right { margin-left: auto; }
+  .toplink-cta .lbl-long { display: none; }
+  .toplink-cta .lbl-short { display: inline; }
+  .top-deva { width: 38px; height: 38px; }
+  .top-deva .deva-face { height: 26px; }
+}
