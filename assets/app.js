@@ -964,7 +964,7 @@
       // Enchaînement : Deva seule présente la vision EVAD.
       line("Bonjour, je suis Deva, l'assistant IA d'EVAD.")
         .then(function () { return wait(240); })
-        .then(function () { return line("Bienvenue dans l'univers d'EVAD, la plateforme numérique éco-responsable qui connecte les solutions à visée régénérative avec des projets pour construire un futur désirable."); })
+        .then(function () { return line("Bienvenue dans l'univers d'EVAD, la plateforme numérique qui connecte les solutions régénératives avec des projets pour construire un futur désirable."); })
         .then(function () { return wait(240); })
         .then(function () {
           if (state.prenom) return line("Ravi de te revoir, " + state.prenom + " ! Qu'est-ce qui t'amène aujourd'hui ?").then(askIntent);
