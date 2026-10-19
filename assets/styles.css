@@ -772,6 +772,7 @@ body.has-intro { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .intro, .intro.is-leaving { animation: none; } .intro-form, .intro-cta { animation: none; } }
 .intro-send { flex: none; width: 48px; padding: 10px; }
 .intro-doors { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; animation: pop .25s ease-out; }
+.intro-form-after { margin-top: 12px; }
 
 /* ===== Visite guidée (coachmarks Deva) ===== */
 .tour { position: fixed; inset: 0; z-index: 2100; animation: introIn .3s ease-out; }
