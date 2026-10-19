@@ -1303,3 +1303,7 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   .sol-card.flip.is-flipped .flip-back { display: flex; }
   .sol-card.flip.is-flipped .flip-front { display: none; }
 }
+
+/* ===== Générer : taille et orientation d'une solution armée ===== */
+.dim-ctl { display: inline-flex; align-items: center; gap: 6px; margin: 0 4px; padding: 2px 6px; background: var(--creme); border-radius: 999px; }
+.dim-ctl .icon-btn { width: 26px; height: 26px; min-height: 0; font-weight: 700; }

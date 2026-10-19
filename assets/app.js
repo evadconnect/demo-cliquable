@@ -1451,8 +1451,20 @@
   }
 
   /* ================= Écran 5 : Générer ================= */
+  // Emprise d'une solution sur la grille : fixe (emprise [w, d]) ou linéaire (haie, planches : longueur au choix).
+  // La taille ne change que le dessin, jamais l'impact.
+  function dimsDe(solId, pref) {
+    var s = SOL[solId] || {}; pref = pref || {};
+    if (s.lineaire) {
+      var n = Math.max(s.lineaire.min, Math.min(s.lineaire.max, pref.len || s.lineaire.defaut || s.lineaire.min));
+      return pref.vertical ? { w: 1, d: n } : { w: n, d: 1 };
+    }
+    var e = s.emprise || [1, 1];
+    return pref.vertical ? { w: e[1], d: e[0] } : { w: e[0], d: e[1] };
+  }
+  function dansEmprise(p, i, j) { return i >= p.i && i < p.i + (p.w || 1) && j >= p.j && j < p.j + (p.d || 1); }
   function pageGenerer() {
-    var armed = null, api = null;
+    var armed = null, api = null, armPref = {};
     var wrap = $("#scene-wrap"), stage = $("#scene"), menu = $("#item-menu");
     function toPlace() { return state.chosen.filter(function (c) { return !state.placed.some(function (p) { return p.chosenId === c.id; }); }); }
 
@@ -1477,9 +1489,9 @@
         return '<button type="button" class="sol-chip fam-' + s.famille + (armed === c.id ? " is-armed" : "") + '" draggable="true" data-chosen="' + c.id + '" aria-pressed="' + (armed === c.id) + '"><span class="fam-dot" aria-hidden="true"></span>' + esc(s.nom) + "</button>";
       }).join("");
       $all(".sol-chip", bar).forEach(function (b) {
-        b.addEventListener("dragstart", function (e) { armed = b.dataset.chosen; e.dataTransfer.setData("text/plain", b.dataset.chosen); e.dataTransfer.effectAllowed = "copy"; wrap.classList.add("is-dropping"); setTimeout(drawScene, 0); });
+        b.addEventListener("dragstart", function (e) { if (armed !== b.dataset.chosen) armPref = {}; armed = b.dataset.chosen; e.dataTransfer.setData("text/plain", b.dataset.chosen); e.dataTransfer.effectAllowed = "copy"; wrap.classList.add("is-dropping"); setTimeout(drawScene, 0); });
         b.addEventListener("dragend", function () { wrap.classList.remove("is-dropping"); if (api) api.showHover(null); });
-        b.addEventListener("click", function () { if (drawing) endDraw(); armedDecor = null; drawDecorChips(); drawDecorHint(); armed = armed === b.dataset.chosen ? null : b.dataset.chosen; drawBar(); drawHint(); drawScene(); var again = $('[data-chosen="' + b.dataset.chosen + '"]'); if (again) again.focus(); });
+        b.addEventListener("click", function () { if (drawing) endDraw(); armedDecor = null; drawDecorChips(); drawDecorHint(); armed = armed === b.dataset.chosen ? null : b.dataset.chosen; armPref = {}; drawBar(); drawHint(); drawScene(); var again = $('[data-chosen="' + b.dataset.chosen + '"]'); if (again) again.focus(); });
       });
     }
     function drawHint() {
@@ -1487,9 +1499,25 @@
       if (!armed) { h.hidden = true; wrap.classList.remove("is-armed"); return; }
       var c = state.chosen.find(function (x) { return x.id === armed; });
       h.hidden = false; wrap.classList.add("is-armed");
-      h.innerHTML = "Clique une case dans <strong>" + esc(spaceName(c.spaceId)) + "</strong> pour poser <strong>" + esc(SOL[c.solId].nom) + '</strong>. <button type="button" class="link-btn" id="auto-place">Poser dans son espace</button> <button type="button" class="link-btn" id="cancel-arm">Annuler</button>';
-      $("#auto-place").addEventListener("click", function () { var cell = api.firstFreeIn(c.spaceId, function (x) { return Math.abs(x.i - 4) + Math.abs(x.j - 4); }); if (cell) place(armed, cell.i, cell.j); });
+      var sd = SOL[c.solId], dm = dimsDe(c.solId, armPref), n = Math.max(dm.w, dm.d);
+      var taille = sd.lineaire
+        ? '<span class="dim-ctl"><button type="button" class="icon-btn icon-sm" id="len-less" aria-label="Raccourcir">\u2212</button><strong>' + n + (n > 1 ? " cases" : " case") + '</strong><button type="button" class="icon-btn icon-sm" id="len-more" aria-label="Allonger">+</button> <button type="button" class="link-btn" id="arm-rotate">Tourner</button></span>'
+        : (dm.w !== dm.d ? '<span class="dim-ctl"><strong>' + dm.w + " x " + dm.d + ' cases</strong> <button type="button" class="link-btn" id="arm-rotate">Tourner</button></span>' : (dm.w > 1 ? '<span class="dim-ctl"><strong>' + dm.w + " x " + dm.d + " cases</strong></span>" : ""));
+      h.innerHTML = "Clique une case dans <strong>" + esc(spaceName(c.spaceId)) + "</strong> pour poser <strong>" + esc(SOL[c.solId].nom) + "</strong>. " + taille +
+        ' <button type="button" class="link-btn" id="auto-place">Poser dans son espace</button> <button type="button" class="link-btn" id="cancel-arm">Annuler</button>';
+      $("#auto-place").addEventListener("click", function () { var spot = trouverPlace(c.spaceId, c.solId, dm, function (x) { return Math.abs(x.i - 4) + Math.abs(x.j - 4); }); if (spot) place(armed, spot.i, spot.j, spot.dm); else toast("Plus de place dans " + spaceName(c.spaceId) + ". Agrandis-le ou retire un élément."); });
       $("#cancel-arm").addEventListener("click", function () { armed = null; drawBar(); drawHint(); drawScene(); });
+      var rot = $("#arm-rotate"); if (rot) rot.addEventListener("click", function () { armPref.vertical = !armPref.vertical; drawHint(); });
+      var less = $("#len-less"), more = $("#len-more");
+      if (less) less.addEventListener("click", function () { armPref.len = Math.max(sd.lineaire.min, n - 1); drawHint(); });
+      if (more) more.addEventListener("click", function () { armPref.len = Math.min(sd.lineaire.max, n + 1); drawHint(); });
+    }
+    // Une place pour l'emprise demandée dans l'espace ; une solution linéaire se raccourcit si besoin.
+    function trouverPlace(zoneId, solId, dm, prefer, except) {
+      var sd = SOL[solId] || {}, cands = [dm];
+      if (sd.lineaire) for (var k = Math.max(dm.w, dm.d) - 1; k >= sd.lineaire.min; k--) cands.push(dm.w >= dm.d ? { w: k, d: 1 } : { w: 1, d: k });
+      for (var q = 0; q < cands.length; q++) { var cell = api.firstFreeRectIn(zoneId, cands[q].w, cands[q].d, prefer, except); if (cell) return { i: cell.i, j: cell.j, dm: cands[q] }; }
+      return null;
     }
     // Quand la grille change (taille d'un espace), chaque solution posée reste dans son espace,
     // sur sa case si elle est encore libre, sinon sur la case libre la plus proche.
@@ -1498,16 +1526,21 @@
       (state.decor || []).forEach(function (d) { occ[d.i + "," + d.j] = 1; });
       function zoneOf(id) { return zones.filter(function (z) { return z.id === id; })[0]; }
       var perdus = [];
+      function fits(z, i, j, w, d) { for (var a = 0; a < w; a++) for (var b = 0; b < d; b++) { var k = (i + a) + "," + (j + b); if (!z.map[k] || walk[k] || occ[k]) return false; } return true; }
+      function take(i, j, w, d) { for (var a = 0; a < w; a++) for (var b = 0; b < d; b++) occ[(i + a) + "," + (j + b)] = 1; }
       state.placed.forEach(function (p) {
         var z = zoneOf(p.spaceId); if (!z) return;
-        var key = p.i + "," + p.j;
-        if (z.map[key] && !walk[key] && !occ[key]) { occ[key] = 1; return; }
-        var best = null, bd = 1e9;
-        z.list.forEach(function (c) {
-          var k2 = c.i + "," + c.j; if (walk[k2] || occ[k2]) return;
-          var d = Math.abs(c.i - p.i) + Math.abs(c.j - p.j); if (d < bd) { bd = d; best = { i: c.i, j: c.j }; }
+        var pw = p.w || 1, pd = p.d || 1, sd = SOL[p.solId] || {};
+        if (fits(z, p.i, p.j, pw, pd)) { take(p.i, p.j, pw, pd); return; }
+        var cands = [{ w: pw, d: pd }];
+        if (sd.lineaire) for (var k = Math.max(pw, pd) - 1; k >= sd.lineaire.min; k--) cands.push(pw >= pd ? { w: k, d: 1 } : { w: 1, d: k });
+        var best = null;
+        cands.some(function (dm) {
+          var bd = 1e9;
+          z.list.forEach(function (c) { if (!fits(z, c.i, c.j, dm.w, dm.d)) return; var dist = Math.abs(c.i - p.i) + Math.abs(c.j - p.j); if (dist < bd) { bd = dist; best = { i: c.i, j: c.j, w: dm.w, d: dm.d }; } });
+          return !!best;
         });
-        if (best) { p.i = best.i; p.j = best.j; occ[best.i + "," + best.j] = 1; } else perdus.push(z.nom);
+        if (best) { p.i = best.i; p.j = best.j; p.w = best.w; p.d = best.d; take(best.i, best.j, best.w, best.d); } else perdus.push(z.nom);
       });
       if (perdus.length) toast("Plus assez de place dans " + perdus[0] + " : agrandis-le ou retire une solution.");
     }
@@ -1628,7 +1661,7 @@
     function paintCell(cell, mode) {
       if (!cell || !drawing) return false;
       var key = cell.i + "," + cell.j, sp = state.spaces.find(function (x) { return x.id === drawing; }); if (!sp) return false;
-      var occupe = state.placed.find(function (p) { return p.i === cell.i && p.j === cell.j; });
+      var occupe = state.placed.find(function (p) { return dansEmprise(p, cell.i, cell.j); });
       var mienne = cellsOf(sp).some(function (c) { return c[0] === cell.i && c[1] === cell.j; });
       if (mode === "add" && mienne) return false;
       if (mode === "remove" && !mienne) return false;
@@ -1682,28 +1715,29 @@
       if (focusUid) { var f = $('.iso-item[data-uid="' + focusUid + '"]', stage); if (f) f.focus({ preventScroll: true }); }
     }
     function drawVadance() { $("#vadance").innerHTML = vadanceHtml(); }
-    function place(chosenId, i, j) {
+    function place(chosenId, i, j, dims) {
       var c = state.chosen.find(function (x) { return x.id === chosenId; }); if (!c) return;
+      var dm = dims || dimsDe(c.solId, armPref);
       // Une solution se pose dans l'espace auquel elle est rattachée : lâchée ailleurs
-      // (ou sur une case prise), elle rejoint son espace, sur la case libre la plus proche.
+      // (ou sur des cases prises), elle rejoint son espace, à la place libre la plus proche.
       var zone = (api.zones || []).filter(function (z) { return z.id === c.spaceId; })[0];
       if (zone && !zone.list.length) { toast(zone.nom + " n'a pas encore de bloc sur la maquette : dessine-les d'abord."); startDraw(zone.id); return; }
-      if (zone) {
-        var dansZone = api.zoneAt(i, j) === zone.id;
-        if (!dansZone || !api.isFree(i, j)) {
-          var cell = api.firstFreeIn(zone.id, function (x) { return Math.abs(x.i - i) + Math.abs(x.j - j); });
-          if (!cell) { toast("Plus de place dans " + zone.nom + ". Retire un élément ou ajoute un espace."); return; }
-          if (!dansZone) Deva.say("Je l'ai posée dans " + zone.nom + ", son espace.", { instant: true });
-          i = cell.i; j = cell.j;
-        }
-      } else if (!api.isFree(i, j)) { toast("Cette case est occupée. Choisis une case d'herbe libre."); return; }
-      var p = { uid: uid("p"), chosenId: c.id, solId: c.solId, spaceId: c.spaceId, i: i, j: j, status: "prevu" };
+      var ok = (!zone || api.rectInZone(zone.id, i, j, dm.w, dm.d)) && api.isFreeRect(i, j, dm.w, dm.d);
+      if (!ok) {
+        var spot = trouverPlace(zone ? zone.id : null, c.solId, dm, function (x) { return Math.abs(x.i - i) + Math.abs(x.j - j); });
+        if (!spot) { toast(zone ? "Plus de place dans " + zone.nom + " pour cette taille. Retire un élément ou agrandis l'espace." : "Pas de place libre pour cette taille."); return; }
+        if (zone && api.zoneAt(i, j) !== zone.id) Deva.say("Je l'ai posée dans " + zone.nom + ", son espace.", { instant: true });
+        else if (Math.max(spot.dm.w, spot.dm.d) < Math.max(dm.w, dm.d)) Deva.say("Je l'ai raccourcie pour qu'elle tienne. Tu pourras l'allonger plus tard.", { instant: true });
+        i = spot.i; j = spot.j; dm = spot.dm;
+      }
+      var p = { uid: uid("p"), chosenId: c.id, solId: c.solId, spaceId: c.spaceId, i: i, j: j, w: dm.w, d: dm.d, status: "prevu" };
       state.placed.push(p); save(); armed = null;
       drawScene(p.uid); drawBar(); drawHint(); drawVadance(); refreshChrome();
       Deva.react("place:" + c.solId, "place");
     }
     // glisser-déposer
-    wrap.addEventListener("dragover", function (e) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; api.showHover(api.cellFromPoint(e.clientX, e.clientY)); });
+    function hoverDims() { if (armed) { var c = state.chosen.find(function (x) { return x.id === armed; }); return c ? dimsDe(c.solId, armPref) : { w: 1, d: 1 }; } return { w: 1, d: 1 }; }
+    wrap.addEventListener("dragover", function (e) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; var hd = hoverDims(); api.showHover(api.cellFromPoint(e.clientX, e.clientY), hd.w, hd.d); });
     wrap.addEventListener("dragleave", function (e) { if (!wrap.contains(e.relatedTarget)) api.showHover(null); });
     wrap.addEventListener("drop", function (e) {
       e.preventDefault(); wrap.classList.remove("is-dropping"); api.showHover(null);
@@ -1712,7 +1746,7 @@
       place(id, cell.i, cell.j);
     });
     // poser au clic (tactile et souris)
-    stage.addEventListener("mousemove", function (e) { if (armed || armedDecor) api.showHover(api.cellFromPoint(e.clientX, e.clientY)); });
+    stage.addEventListener("mousemove", function (e) { if (armed || armedDecor) { var hd = hoverDims(); api.showHover(api.cellFromPoint(e.clientX, e.clientY), hd.w, hd.d); } });
     stage.addEventListener("mouseleave", function () { if (armed || armedDecor) api.showHover(null); });
     stage.addEventListener("click", function (e) {
       if (!armed && !armedDecor) return;
@@ -1732,6 +1766,13 @@
         (p.status === "prevu" ? '<button type="button" role="menuitem" data-act="encours"><span class="dot st-encours"></span>Marquer en cours</button>' : "") +
         (p.status === "encours" ? '<button type="button" role="menuitem" data-act="prevu"><span class="dot st-reve"></span>Remettre en prévu</button>' : "") +
         (p.status === "verifie" ? '<a role="menuitem" href="nourrir.html"><span class="dot st-prouve"></span>Voir la preuve</a>' : '<a role="menuitem" href="nourrir.html?pour=' + u + '"><span class="dot st-prouve"></span>Apporter une preuve</a>') +
+        (function () {
+          var sd = SOL[p.solId] || {}, pw = p.w || 1, pd = p.d || 1, out = "";
+          if (sd.lineaire || pw !== pd || pw > 1) out += '<p class="menu-sub">Taille : ' + pw + " x " + pd + (sd.lineaire ? " (" + Math.max(pw, pd) + (Math.max(pw, pd) > 1 ? " cases)" : " case)") : "") + "</p>";
+          if (sd.lineaire) out += '<button type="button" role="menuitem" data-act="plus">' + ICON.arrow + "Allonger</button>" + '<button type="button" role="menuitem" data-act="moins">' + ICON.arrow + "Raccourcir</button>";
+          if (pw !== pd) out += '<button type="button" role="menuitem" data-act="tourner">' + ICON.arrow + "Tourner</button>";
+          return out;
+        })() +
         (state.spaces.length > 1 ? '<p class="menu-sub">Déplacer vers</p>' + state.spaces.filter(function (x) { return x.id !== p.spaceId; }).map(function (x) { return '<button type="button" role="menuitem" data-vers="' + x.id + '">' + ICON.arrow + esc(x.nom) + "</button>"; }).join("") : "") +
         '<button type="button" role="menuitem" data-act="retirer" class="danger">Retirer</button>';
       menu.hidden = false;
@@ -1740,15 +1781,34 @@
       menu.style.left = x + "px"; menu.style.top = y + "px";
       $all("[data-act]", menu).forEach(function (b) { b.addEventListener("click", function () {
         var act = b.dataset.act;
-        if (act === "retirer") { state.placed = state.placed.filter(function (x) { return x.uid !== u; }); Deva.react("retire"); closeMenu(); }
+        if (act === "tourner" || act === "plus" || act === "moins") {
+          var sd = SOL[p.solId] || {}, pw = p.w || 1, pd = p.d || 1, nw = pw, nd = pd;
+          if (act === "tourner") { nw = pd; nd = pw; }
+          else {
+            var n = Math.max(pw, pd) + (act === "plus" ? 1 : -1);
+            if (!sd.lineaire || n < sd.lineaire.min || n > sd.lineaire.max) { toast(act === "plus" ? "C'est déjà la longueur maximale." : "C'est déjà la longueur minimale."); return; }
+            if (pw >= pd) { nw = n; nd = 1; } else { nw = 1; nd = n; }
+          }
+          if (!(api.rectInZone(p.spaceId, p.i, p.j, nw, nd) && api.isFreeRect(p.i, p.j, nw, nd, p.uid))) {
+            // on essaie en reculant l'ancre, sinon on cherche ailleurs dans l'espace
+            var spot = null, alt = [];
+            for (var back = 1; back < Math.max(nw, nd); back++) alt.push(nw >= nd ? { i: p.i - back, j: p.j } : { i: p.i, j: p.j - back });
+            alt.some(function (a) { if (a.i >= 0 && a.j >= 0 && api.rectInZone(p.spaceId, a.i, a.j, nw, nd) && api.isFreeRect(a.i, a.j, nw, nd, p.uid)) { spot = a; return true; } return false; });
+            if (!spot) { var cell = api.firstFreeRectIn(p.spaceId, nw, nd, function (x) { return Math.abs(x.i - p.i) + Math.abs(x.j - p.j); }, p.uid); if (cell) spot = cell; }
+            if (!spot) { toast("Pas la place pour cette taille ici. Libère des cases ou agrandis l'espace."); return; }
+            p.i = spot.i; p.j = spot.j;
+          }
+          p.w = nw; p.d = nd;
+        }
+        else if (act === "retirer") { state.placed = state.placed.filter(function (x) { return x.uid !== u; }); Deva.react("retire"); closeMenu(); }
         else { p.status = act; if (act === "encours") Deva.react("encours"); }
         save(); menu.hidden = true; drawScene(act === "retirer" ? null : u); drawBar(); drawVadance(); refreshChrome();
       }); });
       $all("[data-vers]", menu).forEach(function (b) { b.addEventListener("click", function () {
         var z = state.spaces.find(function (x) { return x.id === b.dataset.vers; }); if (!z) return;
-        var cell = api.firstFreeIn(z.id, function (x) { return Math.abs(x.i - p.i) + Math.abs(x.j - p.j); });
-        if (!cell) { toast("Plus de place dans " + z.nom + ". Agrandis-le ou retire un élément."); return; }
-        p.spaceId = z.id; p.i = cell.i; p.j = cell.j;
+        var spot = trouverPlace(z.id, p.solId, { w: p.w || 1, d: p.d || 1 }, function (x) { return Math.abs(x.i - p.i) + Math.abs(x.j - p.j); }, p.uid);
+        if (!spot) { toast("Plus de place dans " + z.nom + ". Agrandis-le ou retire un élément."); return; }
+        p.spaceId = z.id; p.i = spot.i; p.j = spot.j; p.w = spot.dm.w; p.d = spot.dm.d;
         var c = state.chosen.find(function (x) { return x.id === p.chosenId; }); if (c) c.spaceId = z.id;
         save(); menu.hidden = true; drawScene(u); drawBar(); drawVadance(); refreshChrome();
         Deva.say(SOL[p.solId].nom + " rejoint " + z.nom + ".", { instant: true });
@@ -1764,6 +1824,7 @@
     });
     document.addEventListener("click", function (e) { if (!menu.contains(e.target) && !e.target.closest(".iso-item") && !e.target.closest(".iso-zone") && !e.target.closest(".iso-decor")) closeMenu(); });
     document.addEventListener("keydown", function (e) {
+      if ((e.key === "r" || e.key === "R") && armed && !drawing && !/input|textarea|select/i.test((e.target && e.target.tagName) || "")) { armPref.vertical = !armPref.vertical; drawHint(); return; }
       if (e.key !== "Escape") return;
       if (armed) { armed = null; drawBar(); drawHint(); drawScene(); }
       if (armedDecor) { armedDecor = null; drawDecorChips(); drawDecorHint(); if (api) api.showHover(null); }
