@@ -989,7 +989,7 @@
       '<div class="flip-inner">' +
       '<div class="flip-face flip-front">' +
       '<div class="card-top"><span class="fam-tag fam-' + s.famille + '">' + FAM[s.famille].label + "</span>" + (extra && extra.badge ? extra.badge : "") + "</div>" +
-      '<div class="sol-illu" data-scene="' + esc(s.scene || "compost") + '" data-label="' + esc(s.nom) + '"></div>' +
+      '<div class="sol-illu" data-scene="' + esc(s.scene || "compost") + '" data-famille="' + s.famille + '" data-label="' + esc(s.nom) + '"></div>' +
       "<h3>" + esc(s.nom) + "</h3>" +
       '<button type="button" class="flip-btn link-btn" aria-expanded="false">' + flipIcon + "Voir le détail</button>" +
       actions +
@@ -1009,7 +1009,7 @@
     if (!host) return;
     $all(".sol-illu[data-scene]", host).forEach(function (box) {
       if (box.dataset.done || !window.EvadScene || !EvadScene.renderSolutionIcon) return;
-      EvadScene.renderSolutionIcon(box, box.dataset.scene, { label: "Illustration : " + box.dataset.label });
+      EvadScene.renderSolutionIcon(box, box.dataset.scene, { label: "Illustration : " + box.dataset.label, famille: box.dataset.famille });
       box.dataset.done = "1";
     });
   }
