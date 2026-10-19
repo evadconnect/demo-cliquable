@@ -599,7 +599,8 @@
     function draw() {
       if (vue === "iso") {
         var list = allProjects().filter(filter).map(function (p) { var loc = projectLoc(p); return loc ? Object.assign({}, p, { loc: loc }) : null; }).filter(Boolean);
-        renderIsoMap(isoHost, { projects: list, selected: selected, onSelect: openFiche, me: meLoc });
+        var selP = selected ? projectById(selected) : null;
+        renderIsoMap(isoHost, { projects: list, selected: selected, lieu: selP ? lieuFor(selP) : null, onSelect: openFiche, me: meLoc });
         return;
       }
       renderMap(host, { onSelect: openFiche, selected: selected, filter: filter });
