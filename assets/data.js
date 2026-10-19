@@ -255,7 +255,7 @@ window.EVAD_DATA = {
       },
       solutions: {
         label: "Solutions",
-        intro: "Découpons ton lieu en espaces. Crée ton premier espace, ou prends-en un que je te propose, puis accroche-lui des solutions du Commun : elles ont déjà été éprouvées ailleurs.",
+        intro: "Découpons ton lieu en espaces, comme tu les vois : nomme-les librement, donne-leur une nature, renomme ou supprime quand tu veux. Puis accroche à chacun des solutions du Commun : elles ont déjà été éprouvées ailleurs.",
         suggestions: [
           { q: "Que proposes-tu pour le jardin ?", a: "Pour un jardin sur une ancienne dalle, le Commun propose les planches en lasagnes, une haie fruitière et la récupération d'eau de pluie. À toi de choisir." },
           { q: "Comment choisir entre deux solutions ?", a: "Regarde sur combien de projets elles ont été éprouvées, et quels ICI elles nourrissent. Vérifié bat généré." },
@@ -265,7 +265,7 @@ window.EVAD_DATA = {
       },
       modelisation: {
         label: "Modélisation",
-        intro: "Voici ton lieu en maquette. Glisse tes solutions sur une case libre : elles apparaissent en gris, c'est ce qui est prévu.",
+        intro: "Voici ton lieu en maquette. Glisse tes solutions sur une case libre : elles apparaissent en gris, c'est ce qui est prévu. Clique un espace pour choisir sa taille.",
         suggestions: [
           { q: "Où poser les panneaux solaires ?", a: "Une case bien dégagée côté sud, loin des grands arbres, évite l'ombre de l'après-midi. Le bas de la maquette est le plus ensoleillé." },
           { q: "Pourquoi tout est gris ?", a: "Gris veut dire prévu. Ça passera en ambre quand le chantier démarre, et en vert seulement quand une preuve de terrain le confirme." },

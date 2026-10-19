@@ -1218,14 +1218,14 @@
 
     // Ajout d'un espace (saisi, ou proposé par Deva parmi les quatre classiques).
     function addSpace(id, nom) {
-      if (state.spaces.length >= 8) { toast("Huit espaces, c'est déjà un beau lieu. Regroupe avant d'en ajouter."); return; }
+      if (state.spaces.length >= 9) { toast("Neuf espaces, c'est déjà un beau lieu. Regroupe avant d'en ajouter."); return; }
       var s = { id: id || uid("s"), nom: nom }; state.spaces.push(s); state.selectedSpace = s.id; save();
       pulse = s.id; drawAll(); Deva.react("espace");
     }
     function drawSpaceSugg() {
       var box = $("#space-sugg"); if (!box) return;
       var rest = D.espaces.filter(function (e) { return !state.spaces.some(function (s) { return s.id === e.id; }); });
-      if (!rest.length || state.spaces.length >= 8) { box.innerHTML = ""; return; }
+      if (!rest.length || state.spaces.length >= 9) { box.innerHTML = ""; return; }
       box.innerHTML = '<span class="sugg-lbl">' + leafSvg("") + "Deva propose, tu décides :</span>" +
         rest.map(function (e) { return '<button type="button" class="deva-chip" data-space-add="' + e.id + '">+ ' + esc(e.nom) + "</button>"; }).join("");
       $all("[data-space-add]", box).forEach(function (b) { b.addEventListener("click", function () {
@@ -1233,6 +1233,21 @@
       }); });
     }
     function chosenIn(spaceId) { return state.chosen.filter(function (c) { return c.spaceId === spaceId; }); }
+    function selSpace() { return state.spaces.find(function (s) { return s.id === state.selectedSpace; }) || null; }
+    // Outils de l'espace sélectionné : le renommer, lui donner une nature (texture du sol), le supprimer.
+    function drawTools() {
+      var f = $("#space-tools"), sp = selSpace(); if (!f) return;
+      f.hidden = !sp; if (!sp) return;
+      $("#space-rename").value = sp.nom; $("#space-kind").value = sp.kind || "";
+    }
+    function removeSpace(sp) {
+      var ids = chosenIn(sp.id).map(function (c) { return c.id; });
+      state.chosen = state.chosen.filter(function (c) { return c.spaceId !== sp.id; });
+      state.placed = state.placed.filter(function (p) { return ids.indexOf(p.chosenId) < 0 && p.spaceId !== sp.id; });
+      state.spaces = state.spaces.filter(function (x) { return x.id !== sp.id; });
+      state.selectedSpace = state.spaces[0] ? state.spaces[0].id : null;
+      save(); drawAll(); toast("Espace retiré : " + sp.nom + ".");
+    }
 
     function drawMind() {
       drawSpaceSugg();
@@ -1314,8 +1329,23 @@
         save(); drawAll();
       }); });
     }
-    function drawAll() { drawMind(); drawCommun(); drawChosen(); refreshChrome(); }
+    function drawAll() { drawMind(); drawTools(); drawCommun(); drawChosen(); refreshChrome(); }
 
+    $("#space-tools").addEventListener("submit", function (e) {
+      e.preventDefault(); var sp = selSpace(); if (!sp) return;
+      var nom = $("#space-rename").value.trim(); if (nom) sp.nom = nom;
+      sp.kind = $("#space-kind").value || undefined;
+      save(); drawAll(); toast("Espace mis à jour : " + sp.nom + ".");
+    });
+    $("#space-kind").addEventListener("change", function () { var sp = selSpace(); if (!sp) return; sp.kind = this.value || undefined; save(); });
+    $("#space-delete").addEventListener("click", function () {
+      var sp = selSpace(); if (!sp) return;
+      var n = chosenIn(sp.id).length;
+      if (!n) { removeSpace(sp); return; }
+      var dlg = openModal("Supprimer " + sp.nom + " ?", "<p>" + (n > 1 ? n + " solutions y sont accrochées : elles seront retirées" : "Une solution y est accrochée : elle sera retirée") + " de ton projet avec l'espace.</p>",
+        '<button type="button" class="btn btn-ghost" data-close>Garder</button><button type="button" class="btn btn-primary" id="confirm-del">Supprimer</button>');
+      $("#confirm-del", dlg).addEventListener("click", function () { dlg.close(); removeSpace(sp); });
+    });
     $("#add-space").addEventListener("submit", function (e) {
       e.preventDefault();
       var input = $("#space-name"), nom = input.value.trim() || "Nouvel espace";
@@ -1337,7 +1367,7 @@
   /* ================= Écran 5 : Générer ================= */
   function pageGenerer() {
     var armed = null, api = null;
-    var wrap = $("#scene-wrap"), stage = $("#scene");
+    var wrap = $("#scene-wrap"), stage = $("#scene"), menu = $("#item-menu");
     function toPlace() { return state.chosen.filter(function (c) { return !state.placed.some(function (p) { return p.chosenId === c.id; }); }); }
 
     function drawBar() {
@@ -1375,10 +1405,53 @@
       $("#auto-place").addEventListener("click", function () { var cell = api.firstFreeIn(c.spaceId, function (x) { return Math.abs(x.i - 4) + Math.abs(x.j - 4); }); if (cell) place(armed, cell.i, cell.j); });
       $("#cancel-arm").addEventListener("click", function () { armed = null; drawBar(); drawHint(); drawScene(); });
     }
+    // Quand la grille change (taille d'un espace), chaque solution posée reste dans son espace,
+    // sur sa case si elle est encore libre, sinon sur la case libre la plus proche.
+    function resnapPlaced() {
+      var zones = EvadScene.layoutZones(state.spaces, 9), walk = zones.walk || {}, occ = {};
+      function zoneOf(id) { return zones.filter(function (z) { return z.id === id; })[0]; }
+      function inZone(z, i, j) { return i >= z.i0 && i < z.i0 + z.w && j >= z.j0 && j < z.j0 + z.d; }
+      var perdus = [];
+      state.placed.forEach(function (p) {
+        var z = zoneOf(p.spaceId); if (!z) return;
+        var key = p.i + "," + p.j;
+        if (inZone(z, p.i, p.j) && !walk[key] && !occ[key]) { occ[key] = 1; return; }
+        var best = null, bd = 1e9;
+        for (var a = z.i0; a < z.i0 + z.w; a++) for (var b = z.j0; b < z.j0 + z.d; b++) {
+          var k2 = a + "," + b; if (walk[k2] || occ[k2]) continue;
+          var d = Math.abs(a - p.i) + Math.abs(b - p.j); if (d < bd) { bd = d; best = { i: a, j: b }; }
+        }
+        if (best) { p.i = best.i; p.j = best.j; occ[best.i + "," + best.j] = 1; } else perdus.push(z.nom);
+      });
+      if (perdus.length) toast("Plus assez de place dans " + perdus[0] + " : agrandis-le ou retire une solution.");
+    }
+    var TAILLES = [{ v: 1, l: "Petit" }, { v: 2, l: "Moyen" }, { v: 3, l: "Grand" }];
+    function openZoneMenu(zoneId) {
+      var sp = state.spaces.find(function (x) { return x.id === zoneId; }); if (!sp) return;
+      var g = $('.iso-zone[data-zone="' + zoneId + '"]', stage); if (!g) return;
+      var r = g.getBoundingClientRect(), wr = wrap.getBoundingClientRect(), cur = Number(sp.taille) || 2;
+      menu.dataset.uid = "zone:" + zoneId;
+      menu.innerHTML = '<p class="menu-title">' + esc(sp.nom) + ' <span class="muted small">Taille de l\'espace</span></p>' +
+        TAILLES.map(function (t) { return '<button type="button" role="menuitemradio" aria-checked="' + (t.v === cur) + '" data-taille="' + t.v + '"><span class="size-dot size-' + t.v + '" aria-hidden="true"></span>' + t.l + (t.v === cur ? ' <span class="muted small">(actuel)</span>' : "") + "</button>"; }).join("");
+      menu.hidden = false;
+      var x = Math.min(Math.max(8, r.left - wr.left + r.width / 2 - 110), wr.width - 228), y = r.top - wr.top + r.height / 2;
+      if (y + menu.offsetHeight > wr.height) y = Math.max(8, wr.height - menu.offsetHeight - 8);
+      menu.style.left = x + "px"; menu.style.top = y + "px";
+      $all("[data-taille]", menu).forEach(function (b) { b.addEventListener("click", function () {
+        function dims() { var z = EvadScene.layoutZones(state.spaces, 9).filter(function (x) { return x.id === sp.id; })[0]; return z ? z.w + "x" + z.d : ""; }
+        var avant = dims();
+        sp.taille = Number(b.dataset.taille); resnapPlaced(); save(); menu.hidden = true;
+        drawScene(); drawVadance(); refreshChrome();
+        if (dims() === avant) Deva.say(sp.nom + " garde la même emprise pour l'instant : il partage sa colonne et sa rangée avec des espaces plus grands. Réduis-les aussi, ou agrandis-le.", { instant: true });
+        else Deva.say(sp.nom + " passe en " + TAILLES[sp.taille - 1].l.toLowerCase() + ". Les solutions déjà posées restent dans leur espace.", { instant: true });
+      }); });
+      var first = $("[role=menuitemradio][aria-checked=true]", menu) || $("[role^=menuitem]", menu); if (first) first.focus();
+    }
     function drawScene(focusUid) {
       // l'espace de la solution armée s'allume : on voit où elle va se poser
       var arm = armed ? state.chosen.find(function (x) { return x.id === armed; }) : null;
-      api = renderScene(stage, myLieu(), { interactive: true, activeZone: arm ? arm.spaceId : null, label: "Maquette 2.5D de " + projectName() + ". Glisse une solution sur une case d'herbe libre." });
+      api = renderScene(stage, myLieu(), { interactive: true, activeZone: arm ? arm.spaceId : null, label: "Maquette 2.5D de " + projectName() + ". Glisse une solution sur une case d'herbe libre. Clique un espace pour choisir sa taille.",
+        onZone: function (id) { if (armed) return; openZoneMenu(id); } });
       $all(".iso-item", stage).forEach(function (g) {
         g.addEventListener("click", function (e) { e.stopPropagation(); openMenu(g.dataset.uid, g); });
         g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openMenu(g.dataset.uid, g); } });
@@ -1423,9 +1496,8 @@
       if (cell) place(armed, cell.i, cell.j);
     });
 
-    // mini-menu d'un élément posé
-    var menu = $("#item-menu");
-    function closeMenu(refocus) { if (menu.hidden) return; var u = menu.dataset.uid; menu.hidden = true; if (refocus) { var g = $('.iso-item[data-uid="' + u + '"]'); if (g) g.focus(); } }
+    // mini-menu d'un élément posé (ou d'un espace, pour sa taille)
+    function closeMenu(refocus) { if (menu.hidden) return; var u = menu.dataset.uid; menu.hidden = true; if (refocus) { var g = /^zone:/.test(u) ? $('.iso-zone[data-zone="' + u.slice(5) + '"]') : $('.iso-item[data-uid="' + u + '"]'); if (g) g.focus(); } }
     function openMenu(u, g) {
       var p = state.placed.find(function (x) { return x.uid === u; }); if (!p) return;
       var r = g.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
@@ -1450,11 +1522,11 @@
     menu.addEventListener("keydown", function (e) {
       if (e.key === "Escape") closeMenu(true);
       if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-        var items = $all("[role=menuitem]", menu), k = items.indexOf(document.activeElement);
+        var items = $all("[role^=menuitem]", menu), k = items.indexOf(document.activeElement);
         e.preventDefault(); items[(k + (e.key === "ArrowDown" ? 1 : items.length - 1)) % items.length].focus();
       }
     });
-    document.addEventListener("click", function (e) { if (!menu.contains(e.target) && !e.target.closest(".iso-item")) closeMenu(); });
+    document.addEventListener("click", function (e) { if (!menu.contains(e.target) && !e.target.closest(".iso-item") && !e.target.closest(".iso-zone")) closeMenu(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && armed) { armed = null; drawBar(); drawHint(); drawScene(); } });
 
     $("#luanti").addEventListener("click", function () {
