@@ -1275,3 +1275,29 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 .imap-lieu-svg { overflow: visible; }
 .imap-lieu-ground { filter: blur(4px); opacity: .95; }
 .imap-lieu-shadow { filter: blur(3px); }
+
+/* ===== Cartes des solutions recto / verso ===== */
+.sol-card.flip { padding: 0; perspective: 1200px; cursor: pointer; outline: none; background: transparent; border: 0; box-shadow: none; }
+.sol-card.flip:hover { transform: none; box-shadow: none; }
+.sol-card.flip:focus-visible .flip-inner { outline: 2px solid var(--foret); outline-offset: 3px; border-radius: var(--r-lg); }
+.flip-inner { display: grid; transition: transform .55s cubic-bezier(.2, .8, .2, 1); transform-style: preserve-3d; }
+.sol-card.flip.is-flipped .flip-inner { transform: rotateY(180deg); }
+.flip-face { grid-area: 1 / 1; display: flex; flex-direction: column; padding: 16px 18px; background: var(--blanc); border: 1px solid var(--bord); border-left: 4px solid var(--fam, var(--mousse)); border-radius: var(--r-lg); box-shadow: var(--ombre); -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.flip-back { transform: rotateY(180deg); }
+.sol-card.flip:hover .flip-face { box-shadow: var(--ombre-haute); }
+.sol-illu { display: grid; place-items: center; margin: 10px 0 4px; padding: 6px; border-radius: 14px; background: radial-gradient(ellipse at 50% 60%, #F7F3E6 0%, #EEE8D6 100%); }
+.sol-illu-svg { width: 150px; height: 150px; display: block; }
+.sol-illu .iso-canopy { animation: none; }
+.flip-front h3 { margin: 8px 0 6px; }
+.flip-btn.link-btn { display: inline-flex; align-items: center; gap: 6px; font-size: .84rem; color: var(--texte-2); margin-top: auto; padding-top: 6px; }
+.flip-btn svg { width: 16px; height: 16px; }
+.flip-back .flip-btn.icon-btn { flex: none; }
+.ici-lbl { margin: 8px 0 4px; font-size: .64rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--texte-2); }
+.flip-face .card-actions { margin-top: auto; }
+@media (prefers-reduced-motion: reduce) {
+  .flip-inner { transition: none; transform-style: flat; }
+  .sol-card.flip.is-flipped .flip-inner { transform: none; }
+  .flip-back { transform: none; display: none; }
+  .sol-card.flip.is-flipped .flip-back { display: flex; }
+  .sol-card.flip.is-flipped .flip-front { display: none; }
+}
