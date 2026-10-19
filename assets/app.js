@@ -1393,7 +1393,7 @@
       $all(".sol-chip", bar).forEach(function (b) {
         b.addEventListener("dragstart", function (e) { armed = b.dataset.chosen; e.dataTransfer.setData("text/plain", b.dataset.chosen); e.dataTransfer.effectAllowed = "copy"; wrap.classList.add("is-dropping"); setTimeout(drawScene, 0); });
         b.addEventListener("dragend", function () { wrap.classList.remove("is-dropping"); if (api) api.showHover(null); });
-        b.addEventListener("click", function () { armed = armed === b.dataset.chosen ? null : b.dataset.chosen; drawBar(); drawHint(); drawScene(); var again = $('[data-chosen="' + b.dataset.chosen + '"]'); if (again) again.focus(); });
+        b.addEventListener("click", function () { if (drawing) endDraw(); armed = armed === b.dataset.chosen ? null : b.dataset.chosen; drawBar(); drawHint(); drawScene(); var again = $('[data-chosen="' + b.dataset.chosen + '"]'); if (again) again.focus(); });
       });
     }
     function drawHint() {
@@ -1410,17 +1410,16 @@
     function resnapPlaced() {
       var zones = EvadScene.layoutZones(state.spaces, 9), walk = zones.walk || {}, occ = {};
       function zoneOf(id) { return zones.filter(function (z) { return z.id === id; })[0]; }
-      function inZone(z, i, j) { return i >= z.i0 && i < z.i0 + z.w && j >= z.j0 && j < z.j0 + z.d; }
       var perdus = [];
       state.placed.forEach(function (p) {
         var z = zoneOf(p.spaceId); if (!z) return;
         var key = p.i + "," + p.j;
-        if (inZone(z, p.i, p.j) && !walk[key] && !occ[key]) { occ[key] = 1; return; }
+        if (z.map[key] && !walk[key] && !occ[key]) { occ[key] = 1; return; }
         var best = null, bd = 1e9;
-        for (var a = z.i0; a < z.i0 + z.w; a++) for (var b = z.j0; b < z.j0 + z.d; b++) {
-          var k2 = a + "," + b; if (walk[k2] || occ[k2]) continue;
-          var d = Math.abs(a - p.i) + Math.abs(b - p.j); if (d < bd) { bd = d; best = { i: a, j: b }; }
-        }
+        z.list.forEach(function (c) {
+          var k2 = c.i + "," + c.j; if (walk[k2] || occ[k2]) return;
+          var d = Math.abs(c.i - p.i) + Math.abs(c.j - p.j); if (d < bd) { bd = d; best = { i: c.i, j: c.j }; }
+        });
         if (best) { p.i = best.i; p.j = best.j; occ[best.i + "," + best.j] = 1; } else perdus.push(z.nom);
       });
       if (perdus.length) toast("Plus assez de place dans " + perdus[0] + " : agrandis-le ou retire une solution.");
@@ -1431,10 +1430,12 @@
       var g = $('.iso-zone[data-zone="' + zoneId + '"]', stage); if (!g) return;
       var r = g.getBoundingClientRect(), wr = wrap.getBoundingClientRect(), cur = Number(sp.taille) || 2;
       menu.dataset.uid = "zone:" + zoneId;
-      var autres = state.spaces.filter(function (x) { return x.id !== sp.id; });
-      menu.innerHTML = '<p class="menu-title">' + esc(sp.nom) + ' <span class="muted small">Taille de l\'espace</span></p>' +
-        TAILLES.map(function (t) { return '<button type="button" role="menuitemradio" aria-checked="' + (t.v === cur) + '" data-taille="' + t.v + '"><span class="size-dot size-' + t.v + '" aria-hidden="true"></span>' + t.l + (t.v === cur ? ' <span class="muted small">(actuel)</span>' : "") + "</button>"; }).join("") +
-        (autres.length ? '<p class="menu-sub">Échanger le bloc avec</p>' + autres.map(function (x) { return '<button type="button" role="menuitem" data-swap="' + x.id + '">' + ICON.arrow + esc(x.nom) + "</button>"; }).join("") : "");
+      var autres = state.spaces.filter(function (x) { return x.id !== sp.id; }), custom = !!(api && api.zones && api.zones.custom);
+      menu.innerHTML = '<p class="menu-title">' + esc(sp.nom) + (custom ? "" : ' <span class="muted small">Taille de l\'espace</span>') + "</p>" +
+        (custom ? "" : TAILLES.map(function (t) { return '<button type="button" role="menuitemradio" aria-checked="' + (t.v === cur) + '" data-taille="' + t.v + '"><span class="size-dot size-' + t.v + '" aria-hidden="true"></span>' + t.l + (t.v === cur ? ' <span class="muted small">(actuel)</span>' : "") + "</button>"; }).join("")) +
+        '<button type="button" role="menuitem" data-draw="' + sp.id + '">' + ICON.arrow + "Choisir ses blocs sur la maquette</button>" +
+        (autres.length ? '<p class="menu-sub">Échanger les blocs avec</p>' + autres.map(function (x) { return '<button type="button" role="menuitem" data-swap="' + x.id + '">' + ICON.arrow + esc(x.nom) + "</button>"; }).join("") : "");
+      $all("[data-draw]", menu).forEach(function (b) { b.addEventListener("click", function () { menu.hidden = true; startDraw(b.dataset.draw); }); });
       menu.hidden = false;
       var x = Math.min(Math.max(8, r.left - wr.left + r.width / 2 - 110), wr.width - 228), y = r.top - wr.top + r.height / 2;
       if (y + menu.offsetHeight > wr.height) y = Math.max(8, wr.height - menu.offsetHeight - 8);
@@ -1451,19 +1452,93 @@
       $all("[data-swap]", menu).forEach(function (b) { b.addEventListener("click", function () {
         var a = state.spaces.indexOf(sp), k = state.spaces.findIndex(function (x) { return x.id === b.dataset.swap; });
         if (a < 0 || k < 0) return;
-        var tmp = state.spaces[a]; state.spaces[a] = state.spaces[k]; state.spaces[k] = tmp;
+        var autre = state.spaces[k];
+        if (state.spaces.some(function (x) { return Array.isArray(x.cells); })) { var cs = sp.cells || []; sp.cells = autre.cells || []; autre.cells = cs; }
+        else { state.spaces[a] = autre; state.spaces[k] = sp; }
         resnapPlaced(); save(); menu.hidden = true;
         drawScene(); drawVadance(); refreshChrome();
-        Deva.say(sp.nom + " et " + state.spaces[a].nom + " ont échangé leur bloc. Leurs solutions ont suivi.", { instant: true });
+        Deva.say(sp.nom + " et " + autre.nom + " ont échangé leurs blocs. Leurs solutions ont suivi.", { instant: true });
       }); });
       var first = $("[role=menuitemradio][aria-checked=true]", menu) || $("[role^=menuitem]", menu); if (first) first.focus();
     }
+    /* ---- Dessiner les blocs : le porteur clique un espace puis choisit ses cases sur la maquette ---- */
+    var drawing = null, painting = null, lastKey = null, prevenu = false;
+    function cellsOf(sp) { return sp.cells || (sp.cells = []); }
+    // Au premier dessin, la grille automatique devient le point de départ de chaque espace.
+    function figerBlocs() {
+      if (state.spaces.some(function (x) { return Array.isArray(x.cells); })) { state.spaces.forEach(function (x) { if (!Array.isArray(x.cells)) x.cells = []; }); return; }
+      var zones = EvadScene.layoutZones(state.spaces, 9);
+      state.spaces.forEach(function (x) { var z = zones.filter(function (q) { return q.id === x.id; })[0]; x.cells = z ? z.list.map(function (c) { return [c.i, c.j]; }) : []; });
+    }
+    function startDraw(id) {
+      armed = null; figerBlocs(); drawing = id || (state.spaces[0] && state.spaces[0].id); prevenu = false;
+      wrap.classList.add("is-drawing"); save(); drawBar(); drawHint(); drawDrawBar(); drawScene();
+      var sp = state.spaces.find(function (x) { return x.id === drawing; });
+      Deva.say("Dessine " + (sp ? sp.nom : "l'espace") + " : clique ou glisse sur les cases pour les lui donner, reclique pour les retirer. Les autres espaces se replient autour.", { instant: true });
+    }
+    function endDraw() {
+      drawing = null; painting = null; wrap.classList.remove("is-drawing");
+      resnapPlaced(); save(); drawDrawBar(); drawScene(); drawVadance(); refreshChrome();
+      var vides = state.spaces.filter(function (x) { return !(x.cells || []).length; }).map(function (x) { return x.nom; });
+      if (vides.length) Deva.say((vides.length > 1 ? vides.join(", ") + " n'ont pas encore de bloc" : vides[0] + " n'a pas encore de bloc") + " sur la maquette. Reviens dessiner quand tu veux.", { instant: true });
+      else Deva.say("Ta maquette suit ton dessin. Tu peux poser tes solutions.", { instant: true });
+    }
+    function drawDrawBar() {
+      var bar = $("#draw-bar"); if (!bar) return;
+      bar.hidden = !drawing; if (!drawing) return;
+      bar.innerHTML = '<span class="draw-lbl">Espace à dessiner :</span>' +
+        state.spaces.map(function (x) { return '<button type="button" class="sol-chip' + (x.id === drawing ? " is-armed" : "") + '" data-draw-space="' + x.id + '" aria-pressed="' + (x.id === drawing) + '"><span class="fam-dot" style="background:' + (EvadScene.layoutZones(state.spaces, 9).filter(function (q) { return q.id === x.id; })[0] || {}).color + '" aria-hidden="true"></span>' + esc(x.nom) + ' <span class="muted small">(' + (x.cells || []).length + ")</span></button>"; }).join("") +
+        '<button type="button" class="btn btn-primary btn-sm" id="draw-done">Terminer</button>';
+      $all("[data-draw-space]", bar).forEach(function (b) { b.addEventListener("click", function () { drawing = b.dataset.drawSpace; drawDrawBar(); drawScene(); }); });
+      $("#draw-done").addEventListener("click", endDraw);
+    }
+    // Donne (ou retire) une case à l'espace en cours. Une case qui porte une solution ne bouge pas.
+    function paintCell(cell, mode) {
+      if (!cell || !drawing) return false;
+      var key = cell.i + "," + cell.j, sp = state.spaces.find(function (x) { return x.id === drawing; }); if (!sp) return false;
+      var occupe = state.placed.find(function (p) { return p.i === cell.i && p.j === cell.j; });
+      var mienne = cellsOf(sp).some(function (c) { return c[0] === cell.i && c[1] === cell.j; });
+      if (mode === "add" && mienne) return false;
+      if (mode === "remove" && !mienne) return false;
+      if (occupe && occupe.spaceId !== (mode === "add" ? drawing : null)) {
+        if (!prevenu) { toast("Une solution est posée sur cette case : déplace-la d'abord."); prevenu = true; }
+        return false;
+      }
+      if (mode === "add") {
+        state.spaces.forEach(function (x) { if (x !== sp) x.cells = cellsOf(x).filter(function (c) { return !(c[0] === cell.i && c[1] === cell.j); }); });
+        cellsOf(sp).push([cell.i, cell.j]);
+      } else {
+        sp.cells = cellsOf(sp).filter(function (c) { return !(c[0] === cell.i && c[1] === cell.j); });
+      }
+      save(); drawScene(); drawDrawBar();
+      return true;
+    }
+    stage.addEventListener("pointerdown", function (e) {
+      if (!drawing || e.button !== 0) return;
+      var cell = api.cellFromPoint(e.clientX, e.clientY); if (!cell) return;
+      var sp = state.spaces.find(function (x) { return x.id === drawing; });
+      var mienne = sp && cellsOf(sp).some(function (c) { return c[0] === cell.i && c[1] === cell.j; });
+      painting = mienne ? "remove" : "add"; lastKey = cell.i + "," + cell.j; prevenu = false;
+      paintCell(cell, painting); e.preventDefault();
+    });
+    stage.addEventListener("pointermove", function (e) {
+      if (!drawing) return;
+      var cell = api.cellFromPoint(e.clientX, e.clientY);
+      api.showHover(cell);
+      if (!painting || !cell) return;
+      var key = cell.i + "," + cell.j; if (key === lastKey) return; lastKey = key;
+      paintCell(cell, painting);
+    });
+    document.addEventListener("pointerup", function () { painting = null; lastKey = null; });
+    stage.addEventListener("pointerleave", function () { if (drawing) api.showHover(null); });
+
     function drawScene(focusUid) {
-      // l'espace de la solution armée s'allume : on voit où elle va se poser
+      // l'espace de la solution armée s'allume : on voit où elle va se poser ; en mode dessin, l'espace dessiné
       var arm = armed ? state.chosen.find(function (x) { return x.id === armed; }) : null;
-      api = renderScene(stage, myLieu(), { interactive: true, activeZone: arm ? arm.spaceId : null, label: "Maquette 2.5D de " + projectName() + ". Glisse une solution sur une case d'herbe libre. Clique un espace pour choisir sa taille.",
-        onZone: function (id) { if (armed) return; openZoneMenu(id); } });
+      api = renderScene(stage, myLieu(), { interactive: !drawing, activeZone: drawing || (arm ? arm.spaceId : null), label: "Maquette 2.5D de " + projectName() + ". Glisse une solution sur une case d'herbe libre. Clique un espace pour choisir sa taille ou ses blocs.",
+        onZone: drawing ? null : function (id) { if (armed) return; openZoneMenu(id); } });
       $all(".iso-item", stage).forEach(function (g) {
+        if (drawing) return;
         g.addEventListener("click", function (e) { e.stopPropagation(); openMenu(g.dataset.uid, g); });
         g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openMenu(g.dataset.uid, g); } });
       });
@@ -1475,6 +1550,7 @@
       // Une solution se pose dans l'espace auquel elle est rattachée : lâchée ailleurs
       // (ou sur une case prise), elle rejoint son espace, sur la case libre la plus proche.
       var zone = (api.zones || []).filter(function (z) { return z.id === c.spaceId; })[0];
+      if (zone && !zone.list.length) { toast(zone.nom + " n'a pas encore de bloc sur la maquette : dessine-les d'abord."); startDraw(zone.id); return; }
       if (zone) {
         var dansZone = api.zoneAt(i, j) === zone.id;
         if (!dansZone || !api.isFree(i, j)) {
@@ -1550,6 +1626,8 @@
     document.addEventListener("click", function (e) { if (!menu.contains(e.target) && !e.target.closest(".iso-item") && !e.target.closest(".iso-zone")) closeMenu(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && armed) { armed = null; drawBar(); drawHint(); drawScene(); } });
 
+    var db = $("#draw-blocks"); if (db) db.addEventListener("click", function () { if (!state.spaces.length) { toast("Crée d'abord un espace à l'étape Explorer."); return; } if (drawing) endDraw(); else startDraw(null); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && drawing) endDraw(); });
     $("#luanti").addEventListener("click", function () {
       openModal("Visiter en 3D dans Luanti", "<p><strong>Bientôt disponible.</strong></p><p>Tu pourras te promener dans ta maquette en 3D, dans Luanti, un monde libre et ouvert, avant même le premier coup de pioche. Idéal pour la montrer aux voisins et aux partenaires.</p>", '<button type="button" class="btn btn-primary" data-close>J\'ai compris</button>');
     });

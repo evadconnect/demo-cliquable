@@ -32,6 +32,11 @@
         </section>
 
         <section class="scene-wrap" id="scene-wrap" aria-label="Maquette du lieu">
+          <div class="scene-head">
+            <span class="muted small">Clique un espace pour sa taille ou ses blocs.</span>
+            <button type="button" class="btn btn-ghost btn-sm" id="draw-blocks">Dessiner les blocs</button>
+          </div>
+          <div class="draw-bar" id="draw-bar" aria-live="polite" hidden></div>
           <div id="scene"></div>
           <div class="popmenu" id="item-menu" role="menu" aria-label="Actions sur l'élément" hidden></div>
           <div class="scene-legend" aria-label="Légende">

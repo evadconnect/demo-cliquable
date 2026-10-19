@@ -296,8 +296,33 @@
   // Répartit les espaces en sols colorés séparés par des allées d'une case, avec une pelouse
   // autour quand la place le permet (jusqu'à 9 espaces). Le résultat porte aussi
   // zones.walk (cases d'allée) et zones.margin (largeur de la pelouse).
+  // Donne à une zone sa liste de cases, sa table d'appartenance et sa boîte englobante.
+  function finirZone(z, cells) {
+    z.list = cells; z.map = {};
+    var i0 = 1e9, j0 = 1e9, i1 = -1, j1 = -1;
+    cells.forEach(function (c) { z.map[c.i + "," + c.j] = 1; i0 = Math.min(i0, c.i); j0 = Math.min(j0, c.j); i1 = Math.max(i1, c.i); j1 = Math.max(j1, c.j); });
+    if (!cells.length) { i0 = j0 = 0; i1 = j1 = -1; }
+    z.i0 = i0; z.j0 = j0; z.w = i1 - i0 + 1; z.d = j1 - j0 + 1;
+    return z;
+  }
   function layoutZones(spaces, N) {
     var n = (spaces || []).length; if (!n) return [];
+    // Blocs dessinés par le porteur : dès qu'un espace a ses cases, la maquette suit le dessin.
+    if (spaces.some(function (s) { return Array.isArray(s.cells); })) {
+      var pris = {}, bord = false;
+      var zonesD = spaces.map(function (s, k) {
+        var kind = s.kind || zoneKind(s), cells = [];
+        (s.cells || []).forEach(function (c) {
+          var i = c[0], j = c[1], key = i + "," + j;
+          if (i < 0 || j < 0 || i >= N || j >= N || pris[key]) return;
+          pris[key] = 1; cells.push({ i: i, j: j });
+          if (i === 0 || j === 0 || i === N - 1 || j === N - 1) bord = true;
+        });
+        return finirZone({ id: s.id, nom: s.nom, kind: kind, color: KIND_COL[kind] || ZONE_PAL[k % ZONE_PAL.length] }, cells);
+      });
+      zonesD.walk = {}; zonesD.margin = bord ? 0 : 1; zonesD.custom = true;
+      return zonesD;
+    }
     var cols = n <= 1 ? 1 : n <= 4 ? 2 : 3, rows = Math.ceil(n / cols);
     var m = (cols <= 2 && rows <= 2) ? 1 : 0, inner = N - 2 * m;
     // Taille voulue par le porteur (1 petit, 2 moyen, 3 grand) : chaque colonne prend la plus grande
@@ -323,17 +348,19 @@
     var cw = split(cols, poids(cols, true)), rh = split(rows, poids(rows, false));
     var zones = spaces.map(function (s, k) {
       var c = k % cols, r = Math.floor(k / cols);
-      var kind = s.kind || zoneKind(s);
-      return { id: s.id, nom: s.nom, kind: kind, i0: cw[c].a, j0: rh[r].a, w: cw[c].w, d: rh[r].w, col: c, row: r, lastRow: r === rows - 1, color: KIND_COL[kind] || ZONE_PAL[k % ZONE_PAL.length] };
+      var kind = s.kind || zoneKind(s), cells = [];
+      for (var a = 0; a < cw[c].w; a++) for (var b = 0; b < rh[r].w; b++) cells.push({ i: cw[c].a + a, j: rh[r].a + b });
+      return finirZone({ id: s.id, nom: s.nom, kind: kind, col: c, row: r, lastRow: r === rows - 1, color: KIND_COL[kind] || ZONE_PAL[k % ZONE_PAL.length] }, cells);
     });
     var walk = {};
     for (var a = 1; a < cols; a++) { var x = cw[a].a - 1; for (var j = m; j < N - m; j++) walk[x + "," + j] = true; }
     for (var b = 1; b < rows; b++) { var y = rh[b].a - 1; for (var i = m; i < N - m; i++) walk[i + "," + y] = true; }
-    zones.walk = walk; zones.margin = m;
+    zones.walk = walk; zones.margin = m; zones.custom = false;
     return zones;
   }
   function zoneAt(zones, i, j) {
-    for (var k = 0; k < zones.length; k++) { var z = zones[k]; if (i >= z.i0 && i < z.i0 + z.w && j >= z.j0 && j < z.j0 + z.d) return z; }
+    var key = i + "," + j;
+    for (var k = 0; k < zones.length; k++) { var z = zones[k]; if (z.map && z.map[key]) return z; }
     return null;
   }
 
@@ -408,12 +435,17 @@
     }
     // faces avant des plateaux : chaque espace sort légèrement du sol
     zones.forEach(function (z) {
-      var a = z.i0, b = z.j0, w = z.w, d = z.d;
-      poly(tiles, [P(a, b + d, LIFT), P(a + w, b + d, LIFT), P(a + w, b + d, 0), P(a, b + d, 0)], mix(z.color, "#1C2E26", 0.22));
-      poly(tiles, [P(a + w, b, LIFT), P(a + w, b + d, LIFT), P(a + w, b + d, 0), P(a + w, b, 0)], mix(z.color, "#1C2E26", 0.34));
-      if (z.kind === "gouvernance") {
-        // cercle de parole dessiné au sol
-        var c = P(a + w / 2, b + d / 2, LIFT), r = Math.min(w, d) * TW * 0.36;
+      var fs = mix(z.color, "#1C2E26", 0.22), fe = mix(z.color, "#1C2E26", 0.34);
+      z.list.forEach(function (c) {
+        var a = c.i, b = c.j;
+        if (!z.map[a + "," + (b + 1)]) poly(tiles, [P(a, b + 1, LIFT), P(a + 1, b + 1, LIFT), P(a + 1, b + 1, 0), P(a, b + 1, 0)], fs);
+        if (!z.map[(a + 1) + "," + b]) poly(tiles, [P(a + 1, b, LIFT), P(a + 1, b + 1, LIFT), P(a + 1, b + 1, 0), P(a + 1, b, 0)], fe);
+      });
+      if (z.kind === "gouvernance" && z.list.length) {
+        // cercle de parole dessiné au sol, au centre des cases
+        var cx = 0, cy = 0; z.list.forEach(function (c) { cx += c.i + 0.5; cy += c.j + 0.5; }); cx /= z.list.length; cy /= z.list.length;
+        if (!z.map[Math.floor(cx) + "," + Math.floor(cy)]) return; // cases dispersées : pas de cercle au milieu des autres
+        var c = P(cx, cy, LIFT), r = Math.min(z.w, z.d) * TW * 0.36;
         el("ellipse", { cx: c[0], cy: c[1], rx: r, ry: r / 2, fill: "none", stroke: "rgba(255,253,247,.8)", "stroke-width": 1.6, "stroke-dasharray": "5 4" }, tiles);
       }
     });
@@ -428,10 +460,21 @@
     // contours des espaces, au sol ; cliquables si la page fournit onZone
     var zoneG = el("g", { class: "iso-zones" }, svg);
     zones.forEach(function (z) {
-      var q = [P(z.i0 + 0.04, z.j0 + 0.04, LIFT), P(z.i0 + z.w - 0.04, z.j0 + 0.04, LIFT), P(z.i0 + z.w - 0.04, z.j0 + z.d - 0.04, LIFT), P(z.i0 + 0.04, z.j0 + z.d - 0.04, LIFT)];
       var active = opt.activeZone === z.id;
       var g = el("g", { class: "iso-zone" + (active ? " is-active" : ""), "data-zone": z.id }, zoneG);
-      poly(g, q, active ? "rgba(217,160,63,.16)" : "rgba(255,253,247,0)", { stroke: active ? "#D9A03F" : "rgba(255,253,247,.85)", "stroke-width": active ? 2.4 : 1.6, "stroke-linejoin": "round", class: active ? "iso-zone-active" : null });
+      var fillG = el("g", { class: active ? "iso-zone-active" : null }, g);
+      z.list.forEach(function (c) {
+        poly(fillG, [P(c.i, c.j, LIFT), P(c.i + 1, c.j, LIFT), P(c.i + 1, c.j + 1, LIFT), P(c.i, c.j + 1, LIFT)], active ? "rgba(217,160,63,.16)" : "rgba(255,253,247,0)", { stroke: "none" });
+      });
+      var sc = active ? "#D9A03F" : "rgba(255,253,247,.85)", sw = active ? 2.4 : 1.6;
+      z.list.forEach(function (c) {
+        var a = c.i, b = c.j, e = 0.04;
+        function seg(p1, p2) { el("line", { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1], stroke: sc, "stroke-width": sw, "stroke-linecap": "round" }, g); }
+        if (!z.map[a + "," + (b - 1)]) seg(P(a + e, b + e, LIFT), P(a + 1 - e, b + e, LIFT));
+        if (!z.map[a + "," + (b + 1)]) seg(P(a + e, b + 1 - e, LIFT), P(a + 1 - e, b + 1 - e, LIFT));
+        if (!z.map[(a - 1) + "," + b]) seg(P(a + e, b + e, LIFT), P(a + e, b + 1 - e, LIFT));
+        if (!z.map[(a + 1) + "," + b]) seg(P(a + 1 - e, b + e, LIFT), P(a + 1 - e, b + 1 - e, LIFT));
+      });
       if (opt.onZone) {
         g.setAttribute("role", "button"); g.setAttribute("tabindex", "0");
         g.setAttribute("aria-label", "Espace " + z.nom + (active ? ", sélectionné" : ""));
@@ -459,7 +502,7 @@
       var PCOL = ["#C06848", "#2C5234", "#D9A03F", "#5F7F52", "#7B6A9A"];
       zones.forEach(function (z, k) {
         if (!placed.some(function (p) { return p.spaceId === z.id; })) return;
-        var cands = [[z.i0 + z.w - 1, z.j0 + z.d - 1], [z.i0, z.j0 + z.d - 1], [z.i0 + z.w - 1, z.j0], [z.i0 + Math.floor(z.w / 2), z.j0 + z.d - 1], [z.i0 + z.w - 1, z.j0 + Math.floor(z.d / 2)], [z.i0, z.j0]];
+        var cands = z.list.slice().sort(function (p, q) { return (q.i + q.j) - (p.i + p.j) || Math.abs(p.i - p.j) - Math.abs(q.i - q.j); }).map(function (c) { return [c.i, c.j]; });
         var used = 0;
         cands.forEach(function (c, n) {
           if (used >= 3) return;
@@ -515,8 +558,11 @@
     zones.forEach(function (z) {
       // Les espaces du fond portent leur étiquette au-dessus de leur coin arrière ; ceux du premier rang
       // (qui ont un voisin derrière eux à gauche et à droite) la portent devant, sur le socle, pour ne rien couvrir.
-      var devant = z.lastRow && z.col > 0 && z.row > 0;
-      var c = devant ? P(z.i0 + z.w - 0.5, z.j0 + z.d - 0.5, LIFT) : P(z.i0 + 0.5, z.j0 + 0.5, LIFT), fams = [];
+      if (!z.list.length) return; // un espace sans bloc n'a pas d'étiquette sur la maquette
+      var fond = z.list.reduce(function (m, c) { return (c.i + c.j < m.i + m.j) ? c : m; }, z.list[0]);
+      var avant = z.list.reduce(function (m, c) { return (c.i + c.j > m.i + m.j) ? c : m; }, z.list[0]);
+      var devant = zones.custom ? (fond.i + fond.j > N - 2) : (z.lastRow && z.col > 0 && z.row > 0);
+      var c = devant ? P(avant.i + 0.5, avant.j + 0.5, LIFT) : P(fond.i + 0.5, fond.j + 0.5, LIFT), fams = [];
       placed.forEach(function (p) { if (p.spaceId !== z.id) return; var so = solutions[p.solId], f = so && FAMLBL[so.famille]; if (f && fams.indexOf(f) < 0) fams.push(f); });
       var kicker = fams.length ? fams.slice(0, 2).join(" · ") : "À aménager";
       var nom = z.nom.length > 22 ? z.nom.slice(0, 21) + "…" : z.nom;
@@ -557,8 +603,7 @@
     function firstFreeIn(zoneId, prefer) {
       var z = zoneAt(zones, -1, -1); zones.forEach(function (x) { if (x.id === zoneId) z = x; });
       if (!z) return firstFree(prefer);
-      var order = [];
-      for (var a = z.i0; a < z.i0 + z.w; a++) for (var b = z.j0; b < z.j0 + z.d; b++) order.push({ i: a, j: b });
+      var order = z.list.slice();
       if (prefer) order.sort(function (x, y) { return prefer(x) - prefer(y); });
       for (var k = 0; k < order.length; k++) { var c = order[k]; if (!occ[c.i + "," + c.j] && !isPath(c.i, c.j)) return c; }
       return null;
