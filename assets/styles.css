@@ -1270,3 +1270,6 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   .imap-zoom { right: 8px; bottom: 32px; flex-direction: row; }
   .map-stage.has-fiche .imap-zoom { right: 8px; }
 }
+
+/* ===== Carte illustrée : la maquette du lieu sélectionné apparaît en zoomant ===== */
+.imap-lieu { overflow: visible; transition: opacity .25s; }

@@ -223,8 +223,31 @@
     st.towns.forEach(function (t) { var s = Math.max(0.6, Math.min(2.6, k * (t.g0 >= 2 ? 2.4 : 1.7))); t.g.setAttribute("transform", "translate(" + t.x + " " + t.y + ") scale(" + s + ")"); t.g.parentNode.style.opacity = (st.zoom < 1.8 && t.g0 < 2) ? "0" : "1"; });
     st.marks.forEach(function (m) { var s = m.base * k; m.g.setAttribute("transform", "translate(" + (m.x - 24 * s) + " " + (m.y - 40 * s) + ") scale(" + s + ")"); });
     if (st.me) { var s2 = 1.6 * k; st.me.setAttribute("transform", "translate(" + st.mex + " " + st.mey + ") scale(" + s2 + ")"); }
+    // maquette 2,5D du lieu sélectionné : elle apparaît en s'approchant et prend toute sa taille au zoom maximal
+    if (st.lieu) {
+      var r = st.svg.getBoundingClientRect(), pxu = (r.width || 1) / st.vb.w; // pixels par unité de carte
+      var t = Math.max(0, Math.min(1, (st.zoom - 4) / 5)); // 0 à zoom 4, 1 à zoom 9
+      var wpx = 120 + 220 * t, w = wpx / pxu, h = w * st.lieu.ratio;
+      st.lieu.svg.setAttribute("width", w); st.lieu.svg.setAttribute("height", h);
+      st.lieu.svg.setAttribute("x", st.lieu.x - w / 2); st.lieu.svg.setAttribute("y", st.lieu.y - h * 0.78);
+      st.lieu.svg.style.opacity = t;
+      if (st.lieu.mark) st.lieu.mark.style.opacity = 1 - t;
+    }
     if (st.zc) { st.zc.querySelector("[data-z=in]").disabled = st.zoom >= 9.9; st.zc.querySelector("[data-z=out]").disabled = st.zoom <= 1.01; }
   }
+  // Glisse le cadre vers une cible (zoom et centre), en douceur ; toute action de l'utilisateur l'interrompt.
+  function animateTo(st, target, ms) {
+    if (st.anim) cancelAnimationFrame(st.anim);
+    var from = Object.assign({}, st.vb), t0 = performance.now();
+    function step(now) {
+      var t = Math.min(1, (now - t0) / ms), e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      st.vb = { x: from.x + (target.x - from.x) * e, y: from.y + (target.y - from.y) * e, w: from.w + (target.w - from.w) * e, h: from.h + (target.h - from.h) * e };
+      applyView(st);
+      st.anim = t < 1 ? requestAnimationFrame(step) : null;
+    }
+    st.anim = requestAnimationFrame(step);
+  }
+  function stopAnim(st) { if (st.anim) { cancelAnimationFrame(st.anim); st.anim = null; } }
   function zoomAt(st, factor, cx, cy) {
     var vb = st.vb, nw = vb.w / factor;
     if (cx === undefined) { cx = vb.x + vb.w / 2; cy = vb.y + vb.h / 2; }
@@ -239,11 +262,11 @@
   function setupNav(host, st, zc) {
     st.zc = zc;
     zc.addEventListener("click", function (e) {
-      var b = e.target.closest("[data-z]"); if (!b) return;
+      var b = e.target.closest("[data-z]"); if (!b) return; stopAnim(st);
       if (b.dataset.z === "in") zoomAt(st, 1.6); else if (b.dataset.z === "out") zoomAt(st, 1 / 1.6); else { st.vb = Object.assign({}, st.full); applyView(st); }
     });
     st.svg.addEventListener("wheel", function (e) {
-      e.preventDefault();
+      e.preventDefault(); stopAnim(st);
       var p = svgPoint(st, e.clientX, e.clientY); if (!p) return;
       zoomAt(st, Math.pow(1.0015, -e.deltaY), p.x, p.y);
     }, { passive: false });
@@ -252,6 +275,7 @@
     var ptrs = {}, drag = null, pinch = null;
     st.svg.addEventListener("pointerdown", function (e) {
       if (e.button !== undefined && e.button !== 0) return;
+      stopAnim(st);
       ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
       var ids = Object.keys(ptrs);
       if (ids.length === 1) { drag = { x: e.clientX, y: e.clientY, vx: st.vb.x, vy: st.vb.y, moved: false }; }
@@ -296,7 +320,8 @@
     opt = opt || {};
     var st = host._imap && host.contains(host._imap.svg) ? host._imap : buildTerrain(host);
     var first = !st.ready; st.ready = true;
-    st.gm.innerHTML = ""; st.gme.innerHTML = ""; st.marks = []; st.me = null;
+    st.gm.innerHTML = ""; st.gme.innerHTML = ""; st.marks = []; st.me = null; st.lieu = null;
+    var selMark = null;
     var projets = (opt.projects || []).map(function (p) { return { p: p, uv: toUV(p.loc.lat, p.loc.lng) }; })
       .filter(function (x) { return x.uv.u >= 0 && x.uv.u <= COLS && x.uv.v >= 0 && x.uv.v <= ROWS; })
       .sort(function (a, b) { return (a.uv.u + a.uv.v) - (b.uv.u + b.uv.v); });
@@ -324,7 +349,27 @@
         g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); opt.onSelect(p.id); } });
       }
       st.marks.push({ g: g, x: c[0], y: c[1], base: base });
+      if (sel) selMark = { g: g, x: c[0], y: c[1], p: p };
     });
+    // Un lieu sélectionné : on s'en approche jusqu'à voir sa maquette 2,5D posée sur la carte.
+    if (selMark && opt.lieu && window.renderScene) {
+      var tmp = document.createElement("div");
+      window.renderScene(tmp, opt.lieu, { life: false, label: "Maquette de " + selMark.p.nom });
+      var sc = tmp.querySelector("svg");
+      if (sc) {
+        var vbv = (sc.getAttribute("viewBox") || "0 0 600 420").split(/\s+/).map(Number);
+        sc.setAttribute("class", "imap-lieu"); sc.setAttribute("preserveAspectRatio", "xMidYMax meet"); sc.style.pointerEvents = "none";
+        st.gm.appendChild(sc);
+        st.lieu = { svg: sc, x: selMark.x, y: selMark.y, ratio: vbv[3] / vbv[2], mark: selMark.g };
+      }
+    }
+    if (selMark && opt.selected !== st.lastSel) {
+      var f = st.full, w = f.w / 10, h = w * f.h / f.w;
+      // le lieu se place un peu à gauche du centre : la fiche, qui s'ouvre à droite, ne le couvre pas
+      var wide = window.matchMedia("(min-width: 901px)").matches;
+      animateTo(st, { x: selMark.x - w * (wide ? 0.36 : 0.5), y: selMark.y - h * 0.55, w: w, h: h }, 1100);
+    }
+    st.lastSel = opt.selected || null;
     if (opt.me) {
       var mu = toUV(opt.me.lat, opt.me.lng);
       if (mu.u >= 0 && mu.u <= COLS && mu.v >= 0 && mu.v <= ROWS) {
