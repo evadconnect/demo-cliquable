@@ -995,7 +995,8 @@ body[data-page="commun"] .grid { gap: 18px; }
     box-shadow: var(--ombre-haute); z-index: 50; }
   /* le panneau de Deva et la carte tiennent compte de la pilule (12 px de marge en plus) */
   body[data-page] .deva { top: calc(var(--top-h) + 28px); }
-  :root { --chat-h: clamp(440px, calc(100vh - var(--top-h) - 44px), 640px); }
+  /* la boîte de dialogue prend toute la hauteur de l'écran, sous la pilule et jusqu'à 16 px du bas */
+  :root { --chat-h: max(440px, calc(100vh - var(--top-h) - 44px)); }
   body[data-page="index"] .map-stage { height: calc(100vh - var(--top-h) - 16px); margin-top: 4px; }
   .map-stage .map-notice { top: 104px; }
   body[data-page="commun"] .commun-tools { top: calc(var(--top-h) + 24px); }
