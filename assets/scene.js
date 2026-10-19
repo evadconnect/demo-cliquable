@@ -638,20 +638,51 @@
     return render(container, opt);
   }
 
-  /* ---------- vignette d'une solution : une case d'herbe et le dessin de la solution, sans état ----------
-     Sert d'« image » aux cartes du Commun : aucun fichier, le même trait que la maquette. */
+  /* ---------- vignette d'une solution, façon solarpunk ----------
+     Un petit monde : ciel teinté par la famille, soleil, un îlot de trois cases sur trois avec des arbres,
+     des fleurs et la solution au centre. Tout en SVG, aucun fichier image, le même trait que la maquette. */
   var ILLU = { a: "#5E9B79", b: "#2F6B52", c: "#9BC7AC", d: "#4E8C6C", stroke: "#2C5234", dash: null, tile: "rgba(78,140,108,.2)", fruit: "#C06848", verified: false };
+  var SKY = {
+    eau: ["#E3F2F4", "#BFDDE0"], sol: ["#EAF1DA", "#CFE0B8"], energie: ["#FBF0D3", "#F1DCA2"], reemploi: ["#F6E6D8", "#E8CDB9"],
+    alimentation: ["#F9E7E2", "#EFCBC3"], gouvernance: ["#EEE8F4", "#D9D1E8"], def: ["#EEF2E4", "#D8E3C8"]
+  };
+  var illuCount = 0;
   function renderSolutionIcon(container, sceneType, options) {
     options = options || {};
     container.innerHTML = "";
-    var svg = el("svg", { viewBox: "-40 -52 80 92", class: "sol-illu-svg", role: "img", "aria-label": options.label || "Illustration de la solution" }, container);
-    var g = el("g", {}, svg);
-    poly(g, [P(0, 0, 0), P(1, 0, 0), P(1, 1, 0), P(0, 1, 0)], "#C9DCB0", { stroke: "rgba(255,253,247,.5)", "stroke-width": 0.8 });
-    poly(g, [P(0, 1, 0), P(1, 1, 0), P(1, 1, -6), P(0, 1, -6)], "#9C6B4A");
-    poly(g, [P(1, 0, 0), P(1, 1, 0), P(1, 1, -6), P(1, 0, -6)], "#80573C");
+    var sky = SKY[options.famille] || SKY.def, gid = "evad-sky-" + (++illuCount);
+    var svg = el("svg", { viewBox: "-112 -74 224 192", class: "sol-illu-svg", role: "img", "aria-label": options.label || "Illustration de la solution" }, container);
+    var defs = el("defs", {}, svg), grad = el("linearGradient", { id: gid, x1: "0", y1: "0", x2: "0", y2: "1" }, defs);
+    el("stop", { offset: "0", "stop-color": sky[0] }, grad); el("stop", { offset: "1", "stop-color": sky[1] }, grad);
+    el("rect", { x: -112, y: -74, width: 224, height: 192, rx: 18, fill: "url(#" + gid + ")" }, svg);
+    // soleil et ses rayons, deux oiseaux
+    var sun = el("g", { class: "illu-sun" }, svg);
+    el("circle", { cx: 68, cy: -40, r: 30, fill: "rgba(255,241,196,.45)" }, sun);
+    for (var r = 0; r < 8; r++) { var a = r * Math.PI / 4, x1 = 68 + Math.cos(a) * 20, y1 = -40 + Math.sin(a) * 20, x2 = 68 + Math.cos(a) * 27, y2 = -40 + Math.sin(a) * 27; el("line", { x1: x1, y1: y1, x2: x2, y2: y2, stroke: "rgba(233,196,106,.7)", "stroke-width": 1.6, "stroke-linecap": "round" }, sun); }
+    el("circle", { cx: 68, cy: -40, r: 14, fill: "#F6DC8C" }, sun);
+    [[-60, -44], [-44, -52]].forEach(function (b) { el("path", { d: "M" + (b[0] - 5) + " " + b[1] + " q5 -4 10 0 q-5 -1 -10 0 M" + (b[0] + 5) + " " + b[1] + " q5 -4 10 0", stroke: "#5F7F52", "stroke-width": 1.1, fill: "none", "stroke-linecap": "round" }, svg); });
+    // feuilles qui flottent
+    [[-84, 10, -20], [92, 20, 25], [-20, -58, 10]].forEach(function (f) {
+      el("path", { d: "M0 0 C4 -5 11 -5 13 0 C11 5 4 5 0 0 Z", transform: "translate(" + f[0] + " " + f[1] + ") rotate(" + f[2] + ")", fill: "rgba(94,155,121,.45)" }, svg);
+    });
+    // îlot : trois cases sur trois, tranche de terre, herbe
+    var g = el("g", {}, svg), N = 3;
+    poly(g, [P(0, N, 0), P(N, N, 0), P(N, N, -10), P(0, N, -10)], "#9C6B4A");
+    poly(g, [P(N, 0, 0), P(N, N, 0), P(N, N, -10), P(N, 0, -10)], "#80573C");
+    poly(g, [P(0, N, 0), P(N, N, 0), P(N, N, -3), P(0, N, -3)], "#6C9A68");
+    poly(g, [P(N, 0, 0), P(N, N, 0), P(N, N, -3), P(N, 0, -3)], "#5A8A5C");
+    for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) {
+      poly(g, [P(i, j, 0), P(i + 1, j, 0), P(i + 1, j + 1, 0), P(i, j + 1, 0)], (i + j) % 2 ? "#A9CB92" : "#B4D39B", { stroke: "rgba(255,253,247,.35)", "stroke-width": 0.6 });
+      if ((i + j) % 2 === 0 && !(i === 1 && j === 1)) { var t = P(i + 0.3, j + 0.6, 0); el("path", { d: "M" + t[0] + " " + t[1] + " l-2 -4 M" + t[0] + " " + t[1] + " l2 -5 M" + t[0] + " " + t[1] + " l0 -5", stroke: "#6E9A5B", "stroke-width": 1, fill: "none" }, g); }
+    }
+    // végétation derrière, la solution au centre, fleurs devant
+    tree(g, 0.5, 0.45, 0.95, { trunk: BASE.trunk, leaf: "#4E8C6C", light: "#79A98C" });
+    tree(g, 2.55, 0.4, 0.8, { trunk: BASE.trunk, leaf: "#5E9B79", light: "#9BC7AC", fruit: "#C06848" });
     var draw = SOL[sceneType] || SOL.compost;
     var c = {}; for (var k in ILLU) c[k] = ILLU[k];
-    draw(el("g", { class: "iso-item is-illu" }, g), 0, 0, c);
+    draw(el("g", { class: "iso-item is-illu" }, g), 1, 1, c);
+    DRAW.fleurs(g, { i: 0, j: 2, w: 1, d: 1 });
+    DRAW.fleurs(g, { i: 2, j: 1.4, w: 1, d: 1 });
     return svg;
   }
 
