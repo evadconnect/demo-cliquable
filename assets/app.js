@@ -585,7 +585,28 @@
       if (nearMe && !p.isMine) { var me = refPoint(), at = projectLoc(p); if (me && at && distKm(me, at) > 80) return false; }
       return true;
     }
-    function draw() { renderMap(host, { onSelect: openFiche, selected: selected, filter: filter }); }
+    // Deux vues : la carte illustrée isométrique (par défaut, sans tuile à télécharger) et la carte OpenStreetMap.
+    var stageEl = $(".map-stage"), isoHost = $("#isomap"), vue = "iso";
+    try { vue = localStorage.getItem("evad-vue-carte") || "iso"; } catch (e) { /* ignore */ }
+    if (!window.renderIsoMap || !isoHost) vue = "osm";
+    function setVue(v) {
+      vue = v; try { localStorage.setItem("evad-vue-carte", v); } catch (e) { /* ignore */ }
+      stageEl.classList.toggle("view-iso", v === "iso");
+      $all(".map-view [data-view]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.view === v)); });
+      draw();
+      if (v === "osm" && host._lmap) setTimeout(function () { host._lmap.invalidateSize(); }, 60);
+    }
+    function draw() {
+      if (vue === "iso") {
+        var list = allProjects().filter(filter).map(function (p) { var loc = projectLoc(p); return loc ? Object.assign({}, p, { loc: loc }) : null; }).filter(Boolean);
+        renderIsoMap(isoHost, { projects: list, selected: selected, onSelect: openFiche, me: meLoc });
+        return;
+      }
+      renderMap(host, { onSelect: openFiche, selected: selected, filter: filter });
+    }
+    $all(".map-view [data-view]").forEach(function (b) { b.addEventListener("click", function () { if (b.dataset.view !== vue) setVue(b.dataset.view); }); });
+    stageEl.classList.toggle("view-iso", vue === "iso");
+    $all(".map-view [data-view]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.view === vue)); });
     draw(); redrawMap = draw;
 
     $all("[data-fstat]").forEach(function (b) {
@@ -600,6 +621,7 @@
     // « Autour de moi » : géolocalisation du navigateur (avec accord), sinon la position du lieu rêvé.
     var nearBtn = $("#f-near");
     function showMe() {
+      if (vue === "iso") { draw(); return; }
       if (!window.L || !host._lmap || !meLoc) return;
       if (meMarker) meMarker.remove();
       meMarker = L.circleMarker([meLoc.lat, meLoc.lng], { radius: 7, color: "#0B6049", weight: 2, fillColor: "#9BC7AC", fillOpacity: .95 })
@@ -745,7 +767,8 @@
     var SAMPLE_ID = (D.projets && D.projets[0] && D.projets[0].id) || null;
     var carteTour = [
       { text: "Bienvenue sur la carte vivante ! Je te montre l'essentiel en quelques secondes." },
-      { sel: ".leaflet-marker-icon", text: "Chaque marqueur est un lieu réel. Clique-le pour ouvrir sa fiche." },
+      { sel: ".imark, .leaflet-marker-icon", text: "Chaque plateau est un lieu réel. Clique-le pour ouvrir sa fiche." },
+      { sel: ".map-view", text: "Vue illustrée pour l'ambiance du territoire, vue carte pour la précision : tu passes de l'une à l'autre ici." },
       { sel: ".map-filters", text: "Filtre par avancement (Rêvé en gris, En cours en ambre, Prouvé en vert) et par famille (Eau, Sol, Énergie…), ou n'affiche que ce qui pousse autour de toi." },
       { sel: "#fiche", text: "Voici la fiche d'un lieu : sa promesse, le collectif qui le porte, les solutions posées et son impact vérifié. « Explorer ce projet » déplie le détail.",
         onEnter: function () { if (SAMPLE_ID) openFiche(SAMPLE_ID); },

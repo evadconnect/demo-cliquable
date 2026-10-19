@@ -1194,3 +1194,56 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   body[data-page="index"] .leaflet-control-container { transform: rotateX(-5deg); transform-origin: 100% 0; }
 }
 @media (prefers-reduced-motion: reduce) { .lmark-iso { transition: none; } }
+
+/* ===== Carte illustrée isométrique (vue par défaut de l'accueil) ===== */
+#isomap { position: absolute; inset: 0; display: none; background: radial-gradient(ellipse at 50% 35%, #FFFDF7 0%, #F3EEDD 70%, #EDE6D2 100%); }
+.map-stage.view-iso #isomap { display: block; }
+.map-stage.view-iso #map { visibility: hidden; }
+.imap-svg { position: absolute; left: 16px; right: 16px; top: calc(var(--top-h) + 40px); bottom: 92px; width: auto; height: auto; max-width: calc(100% - 32px); overflow: visible; }
+.imap-town-lbl { font: 600 8.5px var(--f-texte); fill: #4B4A3F; paint-order: stroke; stroke: rgba(255,253,247,.85); stroke-width: 2.5px; }
+.imap-rose-lbl { font: 700 9px var(--f-texte); fill: #2C5234; }
+.imap-caption { font: 500 10px var(--f-texte); fill: var(--texte-2); }
+.imark { cursor: pointer; outline: none; }
+.imark-body { transition: transform .15s ease; transform-box: fill-box; transform-origin: 50% 85%; }
+.imark:hover .imark-body, .imark:focus-visible .imark-body { transform: translateY(-3px) scale(1.1); }
+.imark-lbl { font: 600 9.5px var(--f-texte); fill: var(--encre); paint-order: stroke; stroke: rgba(255,253,247,.9); stroke-width: 3px; opacity: 0; transition: opacity .15s; }
+.imark:hover .imark-lbl, .imark:focus-visible .imark-lbl, .imark.is-selected .imark-lbl, .imark.is-mine .imark-lbl, .imark.is-highlight .imark-lbl { opacity: 1; }
+.imark .mi-shadow { fill: rgba(28, 46, 38, .22); }
+.imark .mi-top { fill: #CFE1CC; stroke: #FFFDF7; stroke-width: 1.2; stroke-linejoin: round; }
+.imark .mi-left { fill: #8A6448; }
+.imark .mi-right { fill: #6E4E37; }
+.imark .mi-trunk { fill: #7A5A40; }
+.imark .mi-leaf { fill: #4E8C6C; }
+.imark .mi-light { fill: #9BC7AC; }
+.imark .mi-fruit { fill: #C06848; }
+.imark .mi-dash { fill: none; stroke: #8C8672; stroke-width: 1.2; stroke-dasharray: 3 2.5; }
+.imark.st-reve .mi-top { fill: #DEDACB; }
+.imark.st-reve .mi-leaf { fill: #A9B5A0; }
+.imark.st-reve .mi-light { fill: #CBD5C4; }
+.imark.st-encours .mi-top { fill: #EAC197; }
+.imark.st-prouve .mi-top { fill: #9BC7AC; }
+.imark.is-mine .mi-top { stroke: #0B6049; stroke-width: 1.6; }
+.imark.is-selected .mi-top { stroke: var(--encre); stroke-width: 1.6; }
+.imark.is-selected .imark-body { filter: drop-shadow(0 0 5px rgba(217, 160, 63, .9)); }
+.imark.is-highlight .imark-body { filter: drop-shadow(0 0 4px rgba(217, 160, 63, .8)); }
+.imark-pulse { fill: none; stroke: #5F7F52; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: pulse 2.4s ease-out infinite; }
+.imap-me-ring { fill: rgba(155, 199, 172, .35); stroke: #0B6049; stroke-width: 1.2; }
+.imap-me-lbl { font: 700 9px var(--f-texte); fill: #0B6049; paint-order: stroke; stroke: rgba(255,253,247,.9); stroke-width: 3px; }
+/* bascule de vue, sous la pilule, à droite */
+.map-view { position: absolute; z-index: 7; top: calc(var(--top-h) + 28px); right: 16px; display: inline-flex; padding: 4px; gap: 2px; background: rgba(255, 253, 247, .94); border: 1px solid var(--bord); border-radius: 999px; box-shadow: var(--ombre); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.map-view button { border: 0; background: none; font: inherit; font-weight: 600; font-size: .86rem; color: var(--texte-2); padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+.map-view button[aria-pressed="true"] { background: var(--foret); color: var(--blanc); }
+.map-stage.has-fiche .map-view { right: 462px; }
+@media (min-width: 901px) {
+  body[data-page="index"] .imap-svg { left: calc(var(--deva-w) + 48px); max-width: calc(100% - var(--deva-w) - 64px); }
+  body.deva-closed[data-page="index"] .imap-svg { left: 16px; max-width: calc(100% - 32px); }
+  .map-stage .map-notice { top: calc(var(--top-h) + 76px); }
+}
+@media (max-width: 900px) {
+  .map-stage.view-iso #isomap { position: relative; inset: auto; order: 2; aspect-ratio: 10 / 8; }
+  .map-stage.view-iso #map { display: none; }
+  .imap-svg { left: 8px; right: 8px; top: 8px; bottom: 8px; max-width: none; }
+  .map-view { position: relative; top: auto; right: auto; align-self: flex-end; margin: 10px 16px 0; order: 1; }
+  .map-stage.has-fiche .map-view { right: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .imark-body, .imark-lbl { transition: none; } .imark-pulse { animation: none; } }

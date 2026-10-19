@@ -17,8 +17,13 @@
 <header id="topbar"></header>
 <div class="shell">
   <main id="main" class="stage">
-    <div class="map-stage">
+    <div class="map-stage view-iso">
+      <div id="isomap" aria-label="Carte illustrée"></div>
       <div id="map"></div>
+      <div class="map-view" role="group" aria-label="Vue de la carte">
+        <button type="button" data-view="iso" aria-pressed="true">Illustrée</button>
+        <button type="button" data-view="osm" aria-pressed="false">Carte</button>
+      </div>
 
       <div class="map-filters" role="group" aria-label="Filtres de la carte">
         <div class="map-filters-head">
@@ -51,6 +56,7 @@
 <script src="assets/backend.js"></script>
 <script src="assets/data.js"></script>
 <script src="assets/scene.js"></script>
+<script src="assets/isomap.js"></script>
 <script src="assets/deva.js"></script>
 <script src="assets/app.js"></script>
 </body>
