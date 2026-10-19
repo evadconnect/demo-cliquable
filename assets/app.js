@@ -356,6 +356,21 @@
 
   /* Carte open source (Leaflet + OpenStreetMap). Repli sur la carte SVG stylisée si Leaflet
      n'est pas chargé (hors-ligne). */
+  // Plateau isométrique miniature pour la carte (SVG inline, couleurs via CSS).
+  function isoMarkerSvg(statut) {
+    return '<svg class="lmark-iso" viewBox="0 0 48 52" aria-hidden="true" focusable="false">' +
+      '<ellipse class="mi-shadow" cx="25" cy="43" rx="15" ry="5"/>' +
+      '<polygon class="mi-left" points="6,28 24,37 24,43 6,34"/>' +
+      '<polygon class="mi-right" points="24,37 42,28 42,34 24,43"/>' +
+      '<polygon class="mi-top" points="24,19 42,28 24,37 6,28"/>' +
+      '<rect class="mi-trunk" x="23" y="18" width="2.4" height="9" rx="1"/>' +
+      '<circle class="mi-leaf" cx="24.2" cy="13" r="7"/>' +
+      '<circle class="mi-light" cx="21.5" cy="10.5" r="3.2"/>' +
+      (statut === "prouve" ? '<circle class="mi-fruit" cx="27.5" cy="15" r="1.4"/><circle class="mi-fruit" cx="21" cy="16" r="1.4"/><circle class="mi-fruit" cx="26" cy="9.5" r="1.4"/>' : "") +
+      (statut === "reve" ? '<polygon class="mi-dash" points="24,19 42,28 24,37 6,28"/>' : "") +
+      "</svg>";
+  }
+
   function renderMap(host, opts) {
     opts = opts || {};
     if (!window.L) return renderMapSvg(host, opts);
@@ -389,11 +404,12 @@
       bounds.push([loc.lat, loc.lng]);
       if (opts.selected === p.id) selLatLng = [loc.lat, loc.lng];
       var sel = opts.selected === p.id, hl = opts.highlight && opts.highlight(p);
-      var icon = L.divIcon({ className: "lmark-ico", iconSize: [32, 42], iconAnchor: [16, 38], html:
-        '<span class="lmark st-' + p.statut + (p.isMine ? " is-mine" : "") + (sel ? " is-selected" : "") + (hl ? " is-highlight" : "") + '">' +
-        (p.isMine ? '<i class="lmark-pulse"></i>' : "") + '<i class="lmark-pin"></i></span>' });
+      // Marqueur 2,5D : un petit plateau isométrique coloré par l'avancement, un arbre dessus (fruits quand c'est prouvé).
+      var icon = L.divIcon({ className: "lmark-ico", iconSize: [48, 52], iconAnchor: [24, 40], html:
+        '<span class="lmark st-' + p.statut + (p.isMine ? " is-mine" : "") + (p.isExample ? " is-example" : "") + (sel ? " is-selected" : "") + (hl ? " is-highlight" : "") + '">' +
+        (p.isMine ? '<i class="lmark-pulse"></i>' : "") + isoMarkerSvg(p.statut) + "</span>" });
       var m = L.marker([loc.lat, loc.lng], { icon: icon, title: p.nom, riseOnHover: true, draggable: !!(opts.locate && p.isMine), keyboard: true, alt: p.nom });
-      m.bindTooltip(p.nom, { direction: "top", offset: [0, -36], permanent: !!p.isMine, className: "lmark-tip" });
+      m.bindTooltip(p.nom, { direction: "top", offset: [0, -34], permanent: !!p.isMine, className: "lmark-tip" });
       if (opts.onSelect) m.on("click", function () { opts.onSelect(p.id); });
       if (opts.locate && p.isMine) m.on("dragend", function (e) { var ll = e.target.getLatLng(); if (host._locateMove) host._locateMove(ll.lat, ll.lng); });
       m.addTo(layer);

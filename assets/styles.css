@@ -1159,3 +1159,38 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 .iso-decor { cursor: pointer; }
 .iso-decor:focus-visible, .iso-decor:hover { filter: drop-shadow(0 0 4px rgba(217, 160, 63, .9)); }
 .scene-wrap.is-drawing .iso-decor { pointer-events: none; }
+
+/* ===== Carte vivante en 2,5D : fond crème désaturé, marqueurs en plateaux isométriques, légère inclinaison ===== */
+.leaflet-tile-pane { filter: sepia(.22) saturate(.68) brightness(1.03) contrast(.96); }
+.lmark { width: 48px; height: 52px; }
+.lmark-iso { display: block; width: 48px; height: 52px; overflow: visible; transition: transform .15s ease; transform-origin: 50% 85%; }
+.lmark .mi-shadow { fill: rgba(28, 46, 38, .22); }
+.lmark .mi-top { fill: #CFE1CC; stroke: #FFFDF7; stroke-width: 1.2; stroke-linejoin: round; }
+.lmark .mi-left { fill: #8A6448; }
+.lmark .mi-right { fill: #6E4E37; }
+.lmark .mi-trunk { fill: #7A5A40; }
+.lmark .mi-leaf { fill: #4E8C6C; }
+.lmark .mi-light { fill: #9BC7AC; }
+.lmark .mi-fruit { fill: #C06848; }
+.lmark .mi-dash { fill: none; stroke: #8C8672; stroke-width: 1.2; stroke-dasharray: 3 2.5; }
+.lmark.st-reve .mi-top { fill: #DEDACB; }
+.lmark.st-reve .mi-leaf { fill: #A9B5A0; }
+.lmark.st-reve .mi-light { fill: #CBD5C4; }
+.lmark.st-encours .mi-top { fill: #EAC197; }
+.lmark.st-prouve .mi-top { fill: #9BC7AC; }
+.lmark.is-example .lmark-iso { opacity: .92; }
+.lmark.is-mine .lmark-iso { transform: scale(1.18); }
+.lmark.is-mine .mi-top { stroke: #0B6049; stroke-width: 1.6; }
+.lmark.is-selected .lmark-iso { transform: scale(1.22); filter: drop-shadow(0 0 5px rgba(217, 160, 63, .9)); }
+.lmark.is-selected .mi-top { stroke: var(--encre); stroke-width: 1.6; }
+.lmark.is-highlight .lmark-iso { filter: drop-shadow(0 0 4px rgba(217, 160, 63, .8)); }
+.lmark-ico:hover .lmark-iso, .leaflet-marker-icon:focus .lmark-iso { transform: scale(1.14) translateY(-2px); }
+.lmark.is-selected:hover .lmark-iso { transform: scale(1.26) translateY(-2px); }
+.lmark-pulse { top: 30px; width: 22px; height: 22px; margin-left: -10px; }
+/* inclinaison douce du fond, sur bureau seulement (les marqueurs restent des éléments cliquables exacts) */
+@media (min-width: 901px) {
+  body[data-page="index"] .map-stage { perspective: 1800px; perspective-origin: 50% 30%; }
+  body[data-page="index"] .map-stage #map { transform: rotateX(5deg) scale(1.08); transform-origin: 50% 65%; }
+  body[data-page="index"] .leaflet-control-container { transform: rotateX(-5deg); transform-origin: 100% 0; }
+}
+@media (prefers-reduced-motion: reduce) { .lmark-iso { transition: none; } }
