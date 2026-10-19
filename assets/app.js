@@ -28,6 +28,7 @@
       chosen: [],
       icis: [],
       placed: [],
+      decor: [],           // décor libre posé sur la maquette (sans impact)
       proofs: [],
       proposals: []
     };
@@ -300,7 +301,7 @@
   }
   // Un « lieu » pour renderScene : données pures (espaces, solutions posées, vitalité, décor).
   function myLieu() {
-    return Object.assign({}, BLANK_SCENE, { nom: projectName(), spaces: state.spaces, placed: state.placed, solutions: SOL, vitalite: verifiedCount() / 3 });
+    return Object.assign({}, BLANK_SCENE, { nom: projectName(), spaces: state.spaces, placed: state.placed, decor: state.decor || [], solutions: SOL, vitalite: verifiedCount() / 3 });
   }
   function lieuFor(project) {
     if (project.isMine) return myLieu();
@@ -1219,7 +1220,7 @@
     // Ajout d'un espace (saisi, ou proposé par Deva parmi les quatre classiques).
     function addSpace(id, nom) {
       if (state.spaces.length >= 9) { toast("Neuf espaces, c'est déjà un beau lieu. Regroupe avant d'en ajouter."); return; }
-      var s = { id: id || uid("s"), nom: nom }; state.spaces.push(s); state.selectedSpace = s.id; save();
+      var s = { id: id || uid("s"), nom: nom, cells: [] }; state.spaces.push(s); state.selectedSpace = s.id; save();
       pulse = s.id; drawAll(); Deva.react("espace");
     }
     function drawSpaceSugg() {
@@ -1393,7 +1394,7 @@
       $all(".sol-chip", bar).forEach(function (b) {
         b.addEventListener("dragstart", function (e) { armed = b.dataset.chosen; e.dataTransfer.setData("text/plain", b.dataset.chosen); e.dataTransfer.effectAllowed = "copy"; wrap.classList.add("is-dropping"); setTimeout(drawScene, 0); });
         b.addEventListener("dragend", function () { wrap.classList.remove("is-dropping"); if (api) api.showHover(null); });
-        b.addEventListener("click", function () { if (drawing) endDraw(); armed = armed === b.dataset.chosen ? null : b.dataset.chosen; drawBar(); drawHint(); drawScene(); var again = $('[data-chosen="' + b.dataset.chosen + '"]'); if (again) again.focus(); });
+        b.addEventListener("click", function () { if (drawing) endDraw(); armedDecor = null; drawDecorChips(); drawDecorHint(); armed = armed === b.dataset.chosen ? null : b.dataset.chosen; drawBar(); drawHint(); drawScene(); var again = $('[data-chosen="' + b.dataset.chosen + '"]'); if (again) again.focus(); });
       });
     }
     function drawHint() {
@@ -1409,6 +1410,7 @@
     // sur sa case si elle est encore libre, sinon sur la case libre la plus proche.
     function resnapPlaced() {
       var zones = EvadScene.layoutZones(state.spaces, 9), walk = zones.walk || {}, occ = {};
+      (state.decor || []).forEach(function (d) { occ[d.i + "," + d.j] = 1; });
       function zoneOf(id) { return zones.filter(function (z) { return z.id === id; })[0]; }
       var perdus = [];
       state.placed.forEach(function (p) {
@@ -1424,57 +1426,102 @@
       });
       if (perdus.length) toast("Plus assez de place dans " + perdus[0] + " : agrandis-le ou retire une solution.");
     }
-    var TAILLES = [{ v: 1, l: "Petit" }, { v: 2, l: "Moyen" }, { v: 3, l: "Grand" }];
     function openZoneMenu(zoneId) {
       var sp = state.spaces.find(function (x) { return x.id === zoneId; }); if (!sp) return;
       var g = $('.iso-zone[data-zone="' + zoneId + '"]', stage); if (!g) return;
-      var r = g.getBoundingClientRect(), wr = wrap.getBoundingClientRect(), cur = Number(sp.taille) || 2;
+      var r = g.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
       menu.dataset.uid = "zone:" + zoneId;
-      var autres = state.spaces.filter(function (x) { return x.id !== sp.id; }), custom = !!(api && api.zones && api.zones.custom);
-      menu.innerHTML = '<p class="menu-title">' + esc(sp.nom) + (custom ? "" : ' <span class="muted small">Taille de l\'espace</span>') + "</p>" +
-        (custom ? "" : TAILLES.map(function (t) { return '<button type="button" role="menuitemradio" aria-checked="' + (t.v === cur) + '" data-taille="' + t.v + '"><span class="size-dot size-' + t.v + '" aria-hidden="true"></span>' + t.l + (t.v === cur ? ' <span class="muted small">(actuel)</span>' : "") + "</button>"; }).join("")) +
-        '<button type="button" role="menuitem" data-draw="' + sp.id + '">' + ICON.arrow + "Choisir ses blocs sur la maquette</button>" +
+      var autres = state.spaces.filter(function (x) { return x.id !== sp.id; });
+      menu.innerHTML = '<p class="menu-title">' + esc(sp.nom) + ' <span class="muted small">' + (sp.cells || []).length + (sp.cells && sp.cells.length > 1 ? " cases" : " case") + "</span></p>" +
+        '<button type="button" role="menuitem" data-draw="' + sp.id + '">' + ICON.arrow + "Redessiner ses blocs</button>" +
         (autres.length ? '<p class="menu-sub">Échanger les blocs avec</p>' + autres.map(function (x) { return '<button type="button" role="menuitem" data-swap="' + x.id + '">' + ICON.arrow + esc(x.nom) + "</button>"; }).join("") : "");
       $all("[data-draw]", menu).forEach(function (b) { b.addEventListener("click", function () { menu.hidden = true; startDraw(b.dataset.draw); }); });
       menu.hidden = false;
       var x = Math.min(Math.max(8, r.left - wr.left + r.width / 2 - 110), wr.width - 228), y = r.top - wr.top + r.height / 2;
       if (y + menu.offsetHeight > wr.height) y = Math.max(8, wr.height - menu.offsetHeight - 8);
       menu.style.left = x + "px"; menu.style.top = y + "px";
-      $all("[data-taille]", menu).forEach(function (b) { b.addEventListener("click", function () {
-        function dims() { var z = EvadScene.layoutZones(state.spaces, 9).filter(function (x) { return x.id === sp.id; })[0]; return z ? z.w + "x" + z.d : ""; }
-        var avant = dims();
-        sp.taille = Number(b.dataset.taille); resnapPlaced(); save(); menu.hidden = true;
-        drawScene(); drawVadance(); refreshChrome();
-        if (dims() === avant) Deva.say(sp.nom + " garde la même emprise pour l'instant : il partage sa colonne et sa rangée avec des espaces plus grands. Réduis-les aussi, ou agrandis-le.", { instant: true });
-        else Deva.say(sp.nom + " passe en " + TAILLES[sp.taille - 1].l.toLowerCase() + ". Les solutions déjà posées restent dans leur espace.", { instant: true });
-      }); });
       // échanger la place de deux espaces sur la grille : leurs solutions suivent chacune leur espace
       $all("[data-swap]", menu).forEach(function (b) { b.addEventListener("click", function () {
         var a = state.spaces.indexOf(sp), k = state.spaces.findIndex(function (x) { return x.id === b.dataset.swap; });
         if (a < 0 || k < 0) return;
         var autre = state.spaces[k];
-        if (state.spaces.some(function (x) { return Array.isArray(x.cells); })) { var cs = sp.cells || []; sp.cells = autre.cells || []; autre.cells = cs; }
-        else { state.spaces[a] = autre; state.spaces[k] = sp; }
+        var cs = sp.cells || []; sp.cells = autre.cells || []; autre.cells = cs;
         resnapPlaced(); save(); menu.hidden = true;
         drawScene(); drawVadance(); refreshChrome();
         Deva.say(sp.nom + " et " + autre.nom + " ont échangé leurs blocs. Leurs solutions ont suivi.", { instant: true });
       }); });
-      var first = $("[role=menuitemradio][aria-checked=true]", menu) || $("[role^=menuitem]", menu); if (first) first.focus();
+      var first = $("[role^=menuitem]", menu); if (first) first.focus();
     }
+    /* ---- Décor libre : arbres, bancs, fleurs, allées. Sans impact ni preuve. ---- */
+    var DECOR = [
+      { id: "arbre", nom: "Arbre", type: "arbre" }, { id: "fruitier", nom: "Arbre fruitier", type: "fruitier" },
+      { id: "haie", nom: "Haie", type: "haieI" }, { id: "fleurs", nom: "Massif de fleurs", type: "fleurs" },
+      { id: "banc", nom: "Banc", type: "banc" }, { id: "rocher", nom: "Rocher", type: "rocher" }, { id: "allee", nom: "Allée", type: "allee" }
+    ];
+    var armedDecor = null;
+    if (!Array.isArray(state.decor)) state.decor = [];
+    function drawDecorChips() {
+      var box = $("#decor-chips"); if (!box) return;
+      box.innerHTML = DECOR.map(function (d) { return '<button type="button" class="sol-chip decor-chip' + (armedDecor === d.id ? " is-armed" : "") + '" data-decor-add="' + d.id + '" aria-pressed="' + (armedDecor === d.id) + '"><span class="fam-dot" aria-hidden="true"></span>' + d.nom + "</button>"; }).join("");
+      $all("[data-decor-add]", box).forEach(function (b) { b.addEventListener("click", function () {
+        if (drawing) endDraw();
+        armed = null; armedDecor = armedDecor === b.dataset.decorAdd ? null : b.dataset.decorAdd;
+        drawBar(); drawHint(); drawDecorChips(); drawDecorHint(); drawScene();
+        var again = $('[data-decor-add="' + b.dataset.decorAdd + '"]'); if (again) again.focus();
+      }); });
+    }
+    function drawDecorHint() {
+      var h = $("#decor-hint"); if (!h) return;
+      var d = DECOR.find(function (x) { return x.id === armedDecor; });
+      if (!d) { h.hidden = true; wrap.classList.remove("is-armed"); return; }
+      h.hidden = false; wrap.classList.add("is-armed");
+      h.innerHTML = "Clique une case libre pour poser <strong>" + d.nom.toLowerCase() + "</strong>, autant de fois que tu veux. " + '<button type="button" class="link-btn" id="decor-stop">Arrêter</button>';
+      $("#decor-stop").addEventListener("click", function () { armedDecor = null; drawDecorChips(); drawDecorHint(); });
+    }
+    function placeDecor(i, j) {
+      var d = DECOR.find(function (x) { return x.id === armedDecor; }); if (!d) return;
+      var key = i + "," + j;
+      if (d.type === "allee") {
+        if ((state.decor || []).some(function (x) { return x.i === i && x.j === j; }) || state.placed.some(function (p) { return p.i === i && p.j === j; })) { toast("Cette case est déjà prise."); return; }
+      } else if (!api.isFree(i, j)) { toast("Cette case est occupée. Choisis une case libre."); return; }
+      state.decor.push({ uid: uid("d"), type: d.type, nom: d.nom, i: i, j: j });
+      save(); drawScene();
+    }
+    function openDecorMenu(u, g) {
+      var d = state.decor.find(function (x) { return x.uid === u; }); if (!d) return;
+      var r = g.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
+      menu.dataset.uid = "decor:" + u;
+      menu.innerHTML = '<p class="menu-title">' + esc(d.nom || "Décor") + ' <span class="muted small">décor, sans impact</span></p>' +
+        (/^haie/.test(d.type) ? '<button type="button" role="menuitem" data-dact="tourner">' + ICON.arrow + "Tourner</button>" : "") +
+        '<button type="button" role="menuitem" data-dact="retirer" class="danger">Retirer</button>';
+      menu.hidden = false;
+      var x = Math.min(Math.max(8, r.left - wr.left + r.width / 2 - 110), wr.width - 228), y = r.top - wr.top + r.height + 6;
+      if (y + menu.offsetHeight > wr.height) y = Math.max(8, r.top - wr.top - menu.offsetHeight - 6);
+      menu.style.left = x + "px"; menu.style.top = y + "px";
+      $all("[data-dact]", menu).forEach(function (b) { b.addEventListener("click", function () {
+        if (b.dataset.dact === "retirer") state.decor = state.decor.filter(function (x) { return x.uid !== u; });
+        else d.type = d.type === "haieI" ? "haieJ" : "haieI";
+        save(); menu.hidden = true; drawScene();
+      }); });
+      var first = $("[role=menuitem]", menu); if (first) first.focus();
+    }
+    // Allées posées : visibles mais sans objet, on les retire en reposant une allée dessus
+    function toggleAllee(i, j) {
+      var k = state.decor.findIndex(function (x) { return x.type === "allee" && x.i === i && x.j === j; });
+      if (k < 0) return false;
+      state.decor.splice(k, 1); save(); drawScene(); return true;
+    }
+
     /* ---- Dessiner les blocs : le porteur clique un espace puis choisit ses cases sur la maquette ---- */
     var drawing = null, painting = null, lastKey = null, prevenu = false;
     function cellsOf(sp) { return sp.cells || (sp.cells = []); }
     // Au premier dessin, la grille automatique devient le point de départ de chaque espace.
-    function figerBlocs() {
-      if (state.spaces.some(function (x) { return Array.isArray(x.cells); })) { state.spaces.forEach(function (x) { if (!Array.isArray(x.cells)) x.cells = []; }); return; }
-      var zones = EvadScene.layoutZones(state.spaces, 9);
-      state.spaces.forEach(function (x) { var z = zones.filter(function (q) { return q.id === x.id; })[0]; x.cells = z ? z.list.map(function (c) { return [c.i, c.j]; }) : []; });
-    }
+    function figerBlocs() { state.spaces.forEach(function (x) { if (!Array.isArray(x.cells)) x.cells = []; }); }
     function startDraw(id) {
-      armed = null; figerBlocs(); drawing = id || (state.spaces[0] && state.spaces[0].id); prevenu = false;
+      armed = null; armedDecor = null; drawDecorHint(); figerBlocs(); drawing = id || (state.spaces[0] && state.spaces[0].id); prevenu = false;
       wrap.classList.add("is-drawing"); save(); drawBar(); drawHint(); drawDrawBar(); drawScene();
       var sp = state.spaces.find(function (x) { return x.id === drawing; });
-      Deva.say("Dessine " + (sp ? sp.nom : "l'espace") + " : clique ou glisse sur les cases pour les lui donner, reclique pour les retirer. Les autres espaces se replient autour.", { instant: true });
+      Deva.say("Dessine " + (sp ? sp.nom : "l'espace") + " : clique ou glisse sur les cases pour les lui donner, reclique pour les retirer. Change d'espace dans la barre au-dessus de la maquette.", { instant: true });
     }
     function endDraw() {
       drawing = null; painting = null; wrap.classList.remove("is-drawing");
@@ -1537,6 +1584,11 @@
       var arm = armed ? state.chosen.find(function (x) { return x.id === armed; }) : null;
       api = renderScene(stage, myLieu(), { interactive: !drawing, activeZone: drawing || (arm ? arm.spaceId : null), label: "Maquette 2.5D de " + projectName() + ". Glisse une solution sur une case d'herbe libre. Clique un espace pour choisir sa taille ou ses blocs.",
         onZone: drawing ? null : function (id) { if (armed) return; openZoneMenu(id); } });
+      $all(".iso-decor", stage).forEach(function (g) {
+        if (drawing) return;
+        g.addEventListener("click", function (e) { if (armedDecor || armed) return; e.stopPropagation(); openDecorMenu(g.dataset.decor, g); });
+        g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDecorMenu(g.dataset.decor, g); } });
+      });
       $all(".iso-item", stage).forEach(function (g) {
         if (drawing) return;
         g.addEventListener("click", function (e) { e.stopPropagation(); openMenu(g.dataset.uid, g); });
@@ -1575,12 +1627,14 @@
       place(id, cell.i, cell.j);
     });
     // poser au clic (tactile et souris)
-    stage.addEventListener("mousemove", function (e) { if (armed) api.showHover(api.cellFromPoint(e.clientX, e.clientY)); });
-    stage.addEventListener("mouseleave", function () { if (armed) api.showHover(null); });
+    stage.addEventListener("mousemove", function (e) { if (armed || armedDecor) api.showHover(api.cellFromPoint(e.clientX, e.clientY)); });
+    stage.addEventListener("mouseleave", function () { if (armed || armedDecor) api.showHover(null); });
     stage.addEventListener("click", function (e) {
-      if (!armed) return;
-      var cell = api.cellFromPoint(e.clientX, e.clientY);
-      if (cell) place(armed, cell.i, cell.j);
+      if (!armed && !armedDecor) return;
+      var cell = api.cellFromPoint(e.clientX, e.clientY); if (!cell) return;
+      if (armed) place(armed, cell.i, cell.j);
+      else if (armedDecor === "allee" && toggleAllee(cell.i, cell.j)) return;
+      else placeDecor(cell.i, cell.j);
     });
 
     // mini-menu d'un élément posé (ou d'un espace, pour sa taille)
@@ -1623,8 +1677,12 @@
         e.preventDefault(); items[(k + (e.key === "ArrowDown" ? 1 : items.length - 1)) % items.length].focus();
       }
     });
-    document.addEventListener("click", function (e) { if (!menu.contains(e.target) && !e.target.closest(".iso-item") && !e.target.closest(".iso-zone")) closeMenu(); });
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && armed) { armed = null; drawBar(); drawHint(); drawScene(); } });
+    document.addEventListener("click", function (e) { if (!menu.contains(e.target) && !e.target.closest(".iso-item") && !e.target.closest(".iso-zone") && !e.target.closest(".iso-decor")) closeMenu(); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape") return;
+      if (armed) { armed = null; drawBar(); drawHint(); drawScene(); }
+      if (armedDecor) { armedDecor = null; drawDecorChips(); drawDecorHint(); if (api) api.showHover(null); }
+    });
 
     var db = $("#draw-blocks"); if (db) db.addEventListener("click", function () { if (!state.spaces.length) { toast("Crée d'abord un espace à l'étape Explorer."); return; } if (drawing) endDraw(); else startDraw(null); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && drawing) endDraw(); });
@@ -1632,7 +1690,10 @@
       openModal("Visiter en 3D dans Luanti", "<p><strong>Bientôt disponible.</strong></p><p>Tu pourras te promener dans ta maquette en 3D, dans Luanti, un monde libre et ouvert, avant même le premier coup de pioche. Idéal pour la montrer aux voisins et aux partenaires.</p>", '<button type="button" class="btn btn-primary" data-close>J\'ai compris</button>');
     });
 
-    drawBar(); drawScene(); drawVadance();
+    drawBar(); drawDecorChips(); drawScene(); drawVadance();
+    // Maquette vierge : on commence par dessiner les blocs du premier espace sans bloc.
+    var sansBloc = state.spaces.find(function (x) { return !(x.cells || []).length; });
+    if (sansBloc) setTimeout(function () { startDraw(sansBloc.id); }, 600);
   }
 
   /* ================= Écran 6 : Entreprendre ================= */
