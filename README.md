@@ -72,7 +72,7 @@ En ligne de commande : `npx vercel` depuis ce dossier.
 | `assets/data.js` | **Toutes les données de démo** : projet fil rouge, 8 projets voisins, 12 solutions du Commun, 6 ICI, 10 quêtes, maquette 2.5D, répliques de Deva, cadres d'export |
 | `assets/app.js` | État de la démo (localStorage), barre du haut, carte, logique de chaque écran |
 | `assets/scene.js` | Scène 2.5D isométrique en SVG (bâtiments, solutions posées en gris, ambre ou vert) |
-- `assets/isomap.js` : carte illustrée isométrique du Sud-Ouest (SVG dessiné par règles, sans tuile ni image) ; vue par défaut de l'accueil, la carte OpenStreetMap reste disponible via la bascule « Carte ».
+- `assets/isomap.js` : carte illustrée isométrique de la France (SVG dessiné par règles, sans tuile ni image ; zoom à la molette ou au pincement, déplacement en glissant) ; vue par défaut de l'accueil, la carte OpenStreetMap reste disponible via la bascule « Carte ».
 | `assets/deva.js` | Panneau Deva, réponses scriptées |
 | `assets/styles.css` | Charte graphique (couleurs en variables en haut du fichier) |
 
