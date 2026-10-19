@@ -220,17 +220,19 @@
     // À l'échelle de la France, un plateau ou un nom de ville serait minuscule : on les grossit
     // en proportion inverse du zoom (en douceur), pour qu'ils restent lisibles de loin comme de près.
     var k = Math.max(0.2, 1 / Math.pow(st.zoom, 0.75));
-    st.towns.forEach(function (t) { var s = Math.max(0.6, Math.min(2.6, k * (t.g0 >= 2 ? 2.4 : 1.7))); t.g.setAttribute("transform", "translate(" + t.x + " " + t.y + ") scale(" + s + ")"); t.g.parentNode.style.opacity = (st.zoom < 1.8 && t.g0 < 2) ? "0" : "1"; });
+    st.towns.forEach(function (t) {
+      var s = Math.max(0.6, Math.min(2.6, k * (t.g0 >= 2 ? 2.4 : 1.7)));
+      t.g.setAttribute("transform", "translate(" + t.x + " " + t.y + ") scale(" + s + ")");
+      var pres = st.lieu && Math.hypot(t.x - st.lieu.x, (t.y - st.lieu.y) * 2) < 110; // une ville sous la maquette s'efface
+      t.g.parentNode.style.opacity = ((st.zoom < 1.8 && t.g0 < 2) || pres) ? "0" : "1";
+    });
     st.marks.forEach(function (m) { var s = m.base * k; m.g.setAttribute("transform", "translate(" + (m.x - 24 * s) + " " + (m.y - 40 * s) + ") scale(" + s + ")"); });
     if (st.me) { var s2 = 1.6 * k; st.me.setAttribute("transform", "translate(" + st.mex + " " + st.mey + ") scale(" + s2 + ")"); }
-    // maquette 2,5D du lieu sélectionné : elle apparaît en s'approchant et prend toute sa taille au zoom maximal
+    // maquette 2,5D du lieu sélectionné : posée sur la grille de la carte, à taille fixe (elle grandit avec le zoom
+    // comme le terrain), elle se révèle entre les zooms 3 et 6 pendant que le plateau s'efface
     if (st.lieu) {
-      var r = st.svg.getBoundingClientRect(), pxu = (r.width || 1) / st.vb.w; // pixels par unité de carte
-      var t = Math.max(0, Math.min(1, (st.zoom - 4) / 5)); // 0 à zoom 4, 1 à zoom 9
-      var wpx = 120 + 220 * t, w = wpx / pxu, h = w * st.lieu.ratio;
-      st.lieu.svg.setAttribute("width", w); st.lieu.svg.setAttribute("height", h);
-      st.lieu.svg.setAttribute("x", st.lieu.x - w / 2); st.lieu.svg.setAttribute("y", st.lieu.y - h * 0.78);
-      st.lieu.svg.style.opacity = t;
+      var t = Math.max(0, Math.min(1, (st.zoom - 3) / 3));
+      st.lieu.g.style.opacity = t;
       if (st.lieu.mark) st.lieu.mark.style.opacity = 1 - t;
     }
     if (st.zc) { st.zc.querySelector("[data-z=in]").disabled = st.zoom >= 9.9; st.zc.querySelector("[data-z=out]").disabled = st.zoom <= 1.01; }
@@ -321,7 +323,7 @@
     var st = host._imap && host.contains(host._imap.svg) ? host._imap : buildTerrain(host);
     var first = !st.ready; st.ready = true;
     st.gm.innerHTML = ""; st.gme.innerHTML = ""; st.marks = []; st.me = null; st.lieu = null;
-    var selMark = null;
+    var selMark = null, selUV = null;
     var projets = (opt.projects || []).map(function (p) { return { p: p, uv: toUV(p.loc.lat, p.loc.lng) }; })
       .filter(function (x) { return x.uv.u >= 0 && x.uv.u <= COLS && x.uv.v >= 0 && x.uv.v <= ROWS; })
       .sort(function (a, b) { return (a.uv.u + a.uv.v) - (b.uv.u + b.uv.v); });
@@ -349,18 +351,28 @@
         g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); opt.onSelect(p.id); } });
       }
       st.marks.push({ g: g, x: c[0], y: c[1], base: base });
-      if (sel) selMark = { g: g, x: c[0], y: c[1], p: p };
+      if (sel) { selMark = { g: g, x: c[0], y: c[1], p: p }; selUV = x.uv; }
     });
     // Un lieu sélectionné : on s'en approche jusqu'à voir sa maquette 2,5D posée sur la carte.
     if (selMark && opt.lieu && window.renderScene) {
       var tmp = document.createElement("div");
-      window.renderScene(tmp, opt.lieu, { life: false, label: "Maquette de " + selMark.p.nom });
+      window.renderScene(tmp, opt.lieu, { life: false, socle: false, label: "Maquette de " + selMark.p.nom });
       var sc = tmp.querySelector("svg");
       if (sc) {
+        // la maquette se cale au centre de la case de la carte qui porte le lieu, à la hauteur du terrain
+        var ci = Math.floor(selUV.u), cj = Math.floor(selUV.v), cc = P(ci + 0.5, cj + 0.5, st.zAt(ci + 0.5, cj + 0.5));
         var vbv = (sc.getAttribute("viewBox") || "0 0 600 420").split(/\s+/).map(Number);
-        sc.setAttribute("class", "imap-lieu"); sc.setAttribute("preserveAspectRatio", "xMidYMax meet"); sc.style.pointerEvents = "none";
-        st.gm.appendChild(sc);
-        st.lieu = { svg: sc, x: selMark.x, y: selMark.y, ratio: vbv[3] / vbv[2], mark: selMark.g };
+        var w = 2.4 * 2 * TW, h = w * vbv[3] / vbv[2];           // un peu plus de deux cases de large
+        var cyFrac = (144 - vbv[1]) / vbv[3];                      // position du centre de la grille dans la vue de la maquette
+        var gl = el("g", { class: "imap-lieu" }, st.gm);
+        // tapis d'herbe fondu sous la maquette, pour l'asseoir dans le paysage
+        var rx = w * 0.56, ry = rx * 0.5;
+        poly(gl, [[cc[0], cc[1] - ry], [cc[0] + rx, cc[1]], [cc[0], cc[1] + ry], [cc[0] - rx, cc[1]]], "#C4D6A4", { class: "imap-lieu-ground" });
+        el("ellipse", { cx: cc[0], cy: cc[1] + ry * 0.9, rx: rx * 0.9, ry: ry * 0.35, fill: "rgba(28,46,38,.18)", class: "imap-lieu-shadow" }, gl);
+        sc.setAttribute("class", "imap-lieu-svg"); sc.setAttribute("preserveAspectRatio", "xMidYMid meet"); sc.style.pointerEvents = "none";
+        sc.setAttribute("width", w); sc.setAttribute("height", h); sc.setAttribute("x", cc[0] - w / 2); sc.setAttribute("y", cc[1] - h * cyFrac);
+        gl.appendChild(sc);
+        st.lieu = { g: gl, x: cc[0], y: cc[1], mark: selMark.g };
       }
     }
     if (selMark && opt.selected !== st.lastSel) {

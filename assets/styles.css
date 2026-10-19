@@ -1272,4 +1272,7 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 }
 
 /* ===== Carte illustrée : la maquette du lieu sélectionné apparaît en zoomant ===== */
-.imap-lieu { overflow: visible; transition: opacity .25s; }
+.imap-lieu { transition: opacity .25s; }
+.imap-lieu-svg { overflow: visible; }
+.imap-lieu-ground { filter: blur(4px); opacity: .95; }
+.imap-lieu-shadow { filter: blur(3px); }
