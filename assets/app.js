@@ -474,7 +474,7 @@
   var pageTour = null; // visite guidée de la page courante, rejouable via « Revoir la visite »
   var TOURS = {
     commun: [
-      { sel: ".doctrine", text: "Le Commun est une bibliothèque libre de solutions. La règle : vérifié bat généré : rien n'entre sans preuve de terrain." },
+      { sel: ".doctrine", text: "Le Commun est une bibliothèque libre de solutions régénératives." },
       { sel: ".commun-tools .search", text: "Cherche une solution par mot-clé : haie, compost, réparer…" },
       { sel: "#commun-fams", text: "Ou filtre par famille pour cibler ce qui t'intéresse." },
       { sel: "#commun-grid .card", text: "Chaque fiche montre la difficulté, le coût, et sur combien de lieux la solution a déjà été éprouvée." },
