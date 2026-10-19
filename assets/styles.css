@@ -1247,3 +1247,25 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   .map-stage.has-fiche .map-view { right: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .imark-body, .imark-lbl { transition: none; } .imark-pulse { animation: none; } }
+
+/* ===== Carte illustrée de la France : zoom, déplacement, commandes ===== */
+.imap-svg { cursor: grab; touch-action: none; }
+.imap-svg.is-panning { cursor: grabbing; }
+.imap-svg:focus-visible { outline: 2px solid var(--foret); outline-offset: 4px; border-radius: 12px; }
+.imap-town { transition: opacity .25s; }
+.imap-caption { position: absolute; left: 50%; transform: translateX(-50%); bottom: 100px; margin: 0; padding: 4px 12px; font-size: .74rem; color: var(--texte-2); background: rgba(255, 253, 247, .8); border-radius: 999px; pointer-events: none; white-space: nowrap; max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis; }
+.imap-zoom { position: absolute; right: 16px; bottom: 100px; display: flex; flex-direction: column; gap: 4px; padding: 4px; background: rgba(255, 253, 247, .94); border: 1px solid var(--bord); border-radius: 14px; box-shadow: var(--ombre); z-index: 7; }
+.imap-zoom button { min-width: 36px; min-height: 36px; border: 0; border-radius: 10px; background: var(--blanc); color: var(--foret); font: inherit; font-size: 1.2rem; font-weight: 700; cursor: pointer; }
+.imap-zoom button:hover { background: var(--creme); }
+.imap-zoom button:disabled { opacity: .4; cursor: default; }
+.imap-zoom .imap-fit { font-size: .74rem; font-weight: 600; padding: 0 8px; }
+.map-stage.has-fiche .imap-zoom { right: 462px; }
+@media (min-width: 901px) {
+  body[data-page="index"] .imap-caption { left: calc(50% + var(--deva-w) / 2 + 24px); }
+  body.deva-closed[data-page="index"] .imap-caption { left: 50%; }
+}
+@media (max-width: 900px) {
+  .imap-caption { bottom: 8px; font-size: .68rem; }
+  .imap-zoom { right: 8px; bottom: 32px; flex-direction: row; }
+  .map-stage.has-fiche .imap-zoom { right: 8px; }
+}
