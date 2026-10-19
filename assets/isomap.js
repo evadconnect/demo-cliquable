@@ -8,8 +8,12 @@
 (function () {
   "use strict";
   var NS = "http://www.w3.org/2000/svg";
-  var COLS = 60, ROWS = 48, TW = 24, TH = 12, SLAB = 22;
-  var LAT0 = 41.2, LAT1 = 51.2, LNG0 = -5.3, LNG1 = 9.7; // cadre : France métropolitaine et Corse
+  var COLS = 100, ROWS = 80, TW = 24, TH = 12, SLAB = 22;
+  // Cadre large (même finesse de case qu'avant : un quart de degré) : la mer qui entoure la France
+  // permet de cadrer n'importe quelle vue sans jamais voir le bord du losange.
+  var LAT0 = 38.2, LAT1 = 54.87, LNG0 = -10.3, LNG1 = 14.7;
+  // losange de la carte : centre et demi-diagonales
+  var GEO = { cx: (COLS - ROWS) * TW / 2, cy: (COLS + ROWS) * TH / 2, W: (COLS + ROWS) * TW / 2, H: (COLS + ROWS) * TH / 2 };
 
   function el(tag, attrs, parent) {
     var n = document.createElementNS(NS, tag);
@@ -126,29 +130,39 @@
     host.innerHTML = "";
     var minX = -ROWS * TW - 24, width = (COLS + ROWS) * TW + 48, minY = -70, height_ = (COLS + ROWS) * TH + SLAB + 120;
     var full = { x: minX, y: minY, w: width, h: height_ };
-    var svg = el("svg", { viewBox: full.x + " " + full.y + " " + full.w + " " + full.h, class: "imap-svg", role: "img", preserveAspectRatio: "xMidYMid meet",
+    var svg = el("svg", { viewBox: full.x + " " + full.y + " " + full.w + " " + full.h, class: "imap-svg", role: "img", preserveAspectRatio: "xMidYMid slice",
       "aria-label": "Carte illustrée de la France avec les lieux EVAD. Positions approximatives. Molette ou boutons pour zoomer, glisser pour se déplacer." }, host);
     var g0 = el("g", {}, svg);
     poly(g0, [P(0, ROWS, 0), P(COLS, ROWS, 0), P(COLS, ROWS, -SLAB), P(0, ROWS, -SLAB)], "#9C6B4A");
     poly(g0, [P(COLS, 0, 0), P(COLS, ROWS, 0), P(COLS, ROWS, -SLAB), P(COLS, 0, -SLAB)], "#80573C");
 
+    // la mer : un seul losange, puis quelques vagues ; les cases de terre seulement sont dessinées une à une
+    var sea = el("g", { class: "imap-sea" }, svg);
+    poly(sea, [P(0, 0, -3), P(COLS, 0, -3), P(COLS, ROWS, -3), P(0, ROWS, -3)], "#A4C7CC");
     var tiles = [], zs = {};
     for (var i = 0; i < COLS; i++) for (var j = 0; j < ROWS; j++) {
       var ll = toLL(i + 0.5, j + 0.5), t = terrain(ll.lat, ll.lng), z = height(t, i, j);
-      zs[i + "," + j] = z; tiles.push({ i: i, j: j, t: t, z: z });
+      zs[i + "," + j] = z;
+      if (t === "sea") {
+        if (hash(i * 2, j) > 0.86) { var w0 = P(i + 0.2 + hash(i, j) * 0.5, j + 0.5, -3); el("path", { d: "M" + w0[0] + " " + w0[1] + " q4 -2 8 0 q4 2 8 0", stroke: "rgba(255,253,247,.55)", "stroke-width": 1, fill: "none" }, sea); }
+        else if (hash(i, j * 3) > 0.5) poly(sea, [P(i, j, -3), P(i + 1, j, -3), P(i + 1, j + 1, -3), P(i, j + 1, -3)], "rgba(255,253,247,.06)");
+        continue;
+      }
+      tiles.push({ i: i, j: j, t: t, z: z });
     }
     tiles.sort(function (a, b) { return (a.i + a.j) - (b.i + b.j) || a.i - b.i; });
     var gt = el("g", { class: "imap-tiles" }, svg);
     tiles.forEach(function (c) {
       var i = c.i, j = c.j, z = c.z, base = COL[c.t][hash(j, i) > 0.5 ? 1 : 0];
+      // bord de mer : une petite tranche sous la case, pour marquer la côte
+      if (!c.z && (!zs[i + "," + (j + 1)] || zs[i + "," + (j + 1)] < 0)) poly(gt, [P(i, j + 1, 0), P(i + 1, j + 1, 0), P(i + 1, j + 1, -3), P(i, j + 1, -3)], "#B9A98B");
+      if (!c.z && (zs[(i + 1) + "," + j] === undefined || zs[(i + 1) + "," + j] < 0)) poly(gt, [P(i + 1, j, 0), P(i + 1, j + 1, 0), P(i + 1, j + 1, -3), P(i + 1, j, -3)], "#A8987A");
       if (z > 0) {
         poly(gt, [P(i, j + 1, z), P(i + 1, j + 1, z), P(i + 1, j + 1, 0), P(i, j + 1, 0)], mix(base, "#1C2E26", 0.25));
         poly(gt, [P(i + 1, j, z), P(i + 1, j + 1, z), P(i + 1, j + 1, 0), P(i + 1, j, 0)], mix(base, "#1C2E26", 0.38));
       }
-      poly(gt, [P(i, j, z), P(i + 1, j, z), P(i + 1, j + 1, z), P(i, j + 1, z)], base, { stroke: c.t === "sea" ? "none" : "rgba(255,253,247,.16)", "stroke-width": 0.5 });
-      if (c.t === "sea") {
-        if (hash(i * 2, j) > 0.7) { var w = P(i + 0.2 + hash(i, j) * 0.5, j + 0.5, z); el("path", { d: "M" + w[0] + " " + w[1] + " q4 -2 8 0 q4 2 8 0", stroke: "rgba(255,253,247,.7)", "stroke-width": 1, fill: "none" }, gt); }
-      } else if (c.t === "forest") {
+      poly(gt, [P(i, j, z), P(i + 1, j, z), P(i + 1, j + 1, z), P(i, j + 1, z)], base, { stroke: "rgba(255,253,247,.16)", "stroke-width": 0.5 });
+      if (c.t === "forest") {
         [[0.3, 0.35], [0.7, 0.65], [0.35, 0.75]].forEach(function (o, k) {
           if (hash(i + k, j) < 0.3) return;
           var p = P(i + o[0], j + o[1], z);
@@ -192,7 +206,7 @@
       towns.push({ g: inner, x: c[0], y: c[1], g0: vl[3] });
     });
     // rose des vents
-    var rose = P(COLS - 2, 1.2, 0), gr = el("g", { class: "imap-rose" }, svg);
+    var ruv = toUV(51.6, 8.2), rose = P(ruv.u, ruv.v, 0), gr = el("g", { class: "imap-rose" }, svg);
     el("path", { d: "M" + rose[0] + " " + (rose[1] - 20) + " l6 14 l-6 -4 l-6 4 z", fill: "#2C5234" }, gr);
     el("text", { x: rose[0], y: rose[1] - 24, class: "imap-rose-lbl", "text-anchor": "middle" }, gr).textContent = "N";
     var gm = el("g", { class: "imap-marks" }, svg), gme = el("g", { class: "imap-me" }, svg);
@@ -203,19 +217,32 @@
     zc.innerHTML = '<button type="button" data-z="in" aria-label="Zoomer">+</button><button type="button" data-z="out" aria-label="Dézoomer">−</button><button type="button" data-z="fit" class="imap-fit">Tout voir</button>';
     host.appendChild(zc);
 
-    var st = { svg: svg, full: full, vb: Object.assign({}, full), gm: gm, gme: gme, towns: towns, zAt: zAt, marks: [], zoom: 1 };
+    var st = { svg: svg, full: full, vb: Object.assign({}, full), gm: gm, gme: gme, towns: towns, zAt: zAt, marks: [], zoom: 1, host: host, ratio: 2 };
     setupNav(host, st, zc);
+    if (window.ResizeObserver) new ResizeObserver(function () { applyView(st); }).observe(host);
+    else window.addEventListener("resize", function () { applyView(st); });
     host._imap = st;
     return st;
   }
 
   /* ---------- zoom et déplacement ---------- */
+  // Plus grande fenêtre possible (largeur) pour un rapport largeur/hauteur donné, inscrite dans le losange.
+  function maxWidth(ratio) { return 2 / (1 / GEO.W + 1 / (ratio * GEO.H)); }
   function applyView(st) {
-    var vb = st.vb, f = st.full;
-    // le cadre reste dans la carte
-    vb.w = Math.min(f.w, Math.max(f.w / 10, vb.w)); vb.h = vb.w * f.h / f.w;
-    vb.x = Math.min(f.x + f.w - vb.w, Math.max(f.x, vb.x)); vb.y = Math.min(f.y + f.h - vb.h, Math.max(f.y, vb.y));
-    st.zoom = f.w / vb.w;
+    var vb = st.vb, r = st.host.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) st.ratio = r.width / r.height;
+    var ratio = st.ratio, wMax = maxWidth(ratio), wMin = wMax / 10;
+    // taille : entre le zoom maximal et la vue « tout voir » ; la hauteur suit l'écran
+    var cxv = vb.x + vb.w / 2, cyv = vb.y + vb.h / 2;
+    vb.w = Math.min(wMax, Math.max(wMin, vb.w)); vb.h = vb.w / ratio;
+    // position : les quatre coins de la fenêtre restent dans le losange
+    var dx = cxv - GEO.cx, dy = cyv - GEO.cy;
+    for (var k = 0; k < 3; k++) {
+      var maxDy = Math.max(0, GEO.H * (1 - (Math.abs(dx) + vb.w / 2) / GEO.W) - vb.h / 2); dy = Math.max(-maxDy, Math.min(maxDy, dy));
+      var maxDx = Math.max(0, GEO.W * (1 - (Math.abs(dy) + vb.h / 2) / GEO.H) - vb.w / 2); dx = Math.max(-maxDx, Math.min(maxDx, dx));
+    }
+    vb.x = GEO.cx + dx - vb.w / 2; vb.y = GEO.cy + dy - vb.h / 2;
+    st.zoom = wMax / vb.w;
     st.svg.setAttribute("viewBox", vb.x + " " + vb.y + " " + vb.w + " " + vb.h);
     // À l'échelle de la France, un plateau ou un nom de ville serait minuscule : on les grossit
     // en proportion inverse du zoom (en douceur), pour qu'ils restent lisibles de loin comme de près.
@@ -236,6 +263,8 @@
       if (st.lieu.mark) st.lieu.mark.style.opacity = 1 - t;
     }
     if (st.zc) { st.zc.querySelector("[data-z=in]").disabled = st.zoom >= 9.9; st.zc.querySelector("[data-z=out]").disabled = st.zoom <= 1.01; }
+    // la hauteur du cadre dépend de l'écran : on garde la largeur voulue comme référence
+    st.vb = vb;
   }
   // Glisse le cadre vers une cible (zoom et centre), en douceur ; toute action de l'utilisateur l'interrompt.
   function animateTo(st, target, ms) {
@@ -250,10 +279,17 @@
     st.anim = requestAnimationFrame(step);
   }
   function stopAnim(st) { if (st.anim) { cancelAnimationFrame(st.anim); st.anim = null; } }
+  // La France entière : plus grande fenêtre sans bord, centrée sur le pays (décalée si un panneau couvre la gauche).
+  function fitAll(st, anime) {
+    var c = toUV(46.6, 2.4), cc = P(c.u, c.v, 0), w = maxWidth(st.ratio), h = w / st.ratio;
+    var r = st.host.getBoundingClientRect(), shift = r.width ? (st.padLeft || 0) / r.width * w / 2 : 0;
+    var target = { x: cc[0] - w / 2 - shift, y: cc[1] - h / 2, w: w, h: h };
+    if (anime) animateTo(st, target, 700); else { st.vb = target; applyView(st); }
+  }
   function zoomAt(st, factor, cx, cy) {
     var vb = st.vb, nw = vb.w / factor;
     if (cx === undefined) { cx = vb.x + vb.w / 2; cy = vb.y + vb.h / 2; }
-    vb.x = cx - (cx - vb.x) / factor; vb.y = cy - (cy - vb.y) / factor; vb.w = nw; vb.h = nw * st.full.h / st.full.w;
+    vb.x = cx - (cx - vb.x) / factor; vb.y = cy - (cy - vb.y) / factor; vb.w = nw; vb.h = nw / st.ratio;
     applyView(st);
   }
   function svgPoint(st, clientX, clientY) {
@@ -265,7 +301,7 @@
     st.zc = zc;
     zc.addEventListener("click", function (e) {
       var b = e.target.closest("[data-z]"); if (!b) return; stopAnim(st);
-      if (b.dataset.z === "in") zoomAt(st, 1.6); else if (b.dataset.z === "out") zoomAt(st, 1 / 1.6); else { st.vb = Object.assign({}, st.full); applyView(st); }
+      if (b.dataset.z === "in") zoomAt(st, 1.6); else if (b.dataset.z === "out") zoomAt(st, 1 / 1.6); else fitAll(st, true);
     });
     st.svg.addEventListener("wheel", function (e) {
       e.preventDefault(); stopAnim(st);
@@ -312,7 +348,7 @@
     zc.addEventListener("keydown", function (e) {
       if (e.key === "+" || e.key === "=") { zoomAt(st, 1.6); e.preventDefault(); }
       else if (e.key === "-") { zoomAt(st, 1 / 1.6); e.preventDefault(); }
-      else if (e.key === "0") { st.vb = Object.assign({}, st.full); applyView(st); }
+      else if (e.key === "0") fitAll(st, true);
       else if (/^Arrow/.test(e.key)) { var step = st.vb.w * 0.08; if (e.key === "ArrowLeft") st.vb.x -= step; if (e.key === "ArrowRight") st.vb.x += step; if (e.key === "ArrowUp") st.vb.y -= step; if (e.key === "ArrowDown") st.vb.y += step; applyView(st); e.preventDefault(); }
     });
   }
@@ -322,6 +358,7 @@
     opt = opt || {};
     var st = host._imap && host.contains(host._imap.svg) ? host._imap : buildTerrain(host);
     var first = !st.ready; st.ready = true;
+    st.padLeft = opt.padLeft || 0; st.padRight = opt.padRight || 0;
     st.gm.innerHTML = ""; st.gme.innerHTML = ""; st.marks = []; st.me = null; st.lieu = null;
     var selMark = null, selUV = null;
     var projets = (opt.projects || []).map(function (p) { return { p: p, uv: toUV(p.loc.lat, p.loc.lng) }; })
@@ -376,10 +413,10 @@
       }
     }
     if (selMark && opt.selected !== st.lastSel) {
-      var f = st.full, w = f.w / 10, h = w * f.h / f.w;
-      // le lieu se place un peu à gauche du centre : la fiche, qui s'ouvre à droite, ne le couvre pas
-      var wide = window.matchMedia("(min-width: 901px)").matches;
-      animateTo(st, { x: selMark.x - w * (wide ? 0.36 : 0.5), y: selMark.y - h * 0.55, w: w, h: h }, 1100);
+      // zoom maximal, le lieu au centre de la zone réellement visible (entre le panneau de Deva et la fiche)
+      var w = maxWidth(st.ratio) / 10, h = w / st.ratio, rr = st.host.getBoundingClientRect();
+      var fx = rr.width ? (st.padLeft + (rr.width - st.padLeft - st.padRight) / 2) / rr.width : 0.5;
+      animateTo(st, { x: selMark.x - w * fx, y: selMark.y - h * 0.55, w: w, h: h }, 1100);
     }
     st.lastSel = opt.selected || null;
     if (opt.me) {
@@ -393,11 +430,16 @@
       }
     }
     // premier affichage : on cadre les lieux (avec de l'air), jamais plus serré que la moitié de la France
-    if (first && st.marks.length) {
-      var x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-      st.marks.forEach(function (m) { x0 = Math.min(x0, m.x); y0 = Math.min(y0, m.y); x1 = Math.max(x1, m.x); y1 = Math.max(y1, m.y); });
-      var w = Math.max((x1 - x0) * 1.9, st.full.w / 2.2), h = w * st.full.h / st.full.w, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2 - 20;
-      st.vb = { x: cx - w / 2, y: cy - h / 2, w: w, h: h };
+    if (first) {
+      applyView(st); // mesure l'écran
+      if (st.marks.length) {
+        var x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+        st.marks.forEach(function (m) { x0 = Math.min(x0, m.x); y0 = Math.min(y0, m.y); x1 = Math.max(x1, m.x); y1 = Math.max(y1, m.y); });
+        var rr0 = st.host.getBoundingClientRect(), visible = rr0.width ? (rr0.width - st.padLeft) / rr0.width : 1;
+        var w0 = Math.max((x1 - x0) * 1.9, maxWidth(st.ratio) / 2.2) / visible, h0 = w0 / st.ratio;
+        var fx0 = rr0.width ? (st.padLeft + (rr0.width - st.padLeft) / 2) / rr0.width : 0.5;
+        st.vb = { x: (x0 + x1) / 2 - w0 * fx0, y: (y0 + y1) / 2 - 20 - h0 / 2, w: w0, h: h0 };
+      } else fitAll(st, false);
     }
     applyView(st);
     return st.svg;
