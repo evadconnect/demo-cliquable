@@ -1132,3 +1132,8 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 .size-2 { width: 15px; height: 15px; }
 .size-3 { width: 20px; height: 20px; }
 .iso-zone[role="button"]:hover polygon { fill: rgba(255,253,247,.18); }
+
+/* ===== Menus de la maquette : sous-titres et actions avec flèche ===== */
+.popmenu .menu-sub { margin: 8px 8px 2px; padding-top: 8px; border-top: 1px solid var(--bord); font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--texte-2); }
+.popmenu [role="menuitem"] svg { width: 16px; height: 16px; flex: none; color: var(--mousse); }
+.popmenu { max-height: 70vh; overflow-y: auto; }
