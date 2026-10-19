@@ -1431,8 +1431,10 @@
       var g = $('.iso-zone[data-zone="' + zoneId + '"]', stage); if (!g) return;
       var r = g.getBoundingClientRect(), wr = wrap.getBoundingClientRect(), cur = Number(sp.taille) || 2;
       menu.dataset.uid = "zone:" + zoneId;
+      var autres = state.spaces.filter(function (x) { return x.id !== sp.id; });
       menu.innerHTML = '<p class="menu-title">' + esc(sp.nom) + ' <span class="muted small">Taille de l\'espace</span></p>' +
-        TAILLES.map(function (t) { return '<button type="button" role="menuitemradio" aria-checked="' + (t.v === cur) + '" data-taille="' + t.v + '"><span class="size-dot size-' + t.v + '" aria-hidden="true"></span>' + t.l + (t.v === cur ? ' <span class="muted small">(actuel)</span>' : "") + "</button>"; }).join("");
+        TAILLES.map(function (t) { return '<button type="button" role="menuitemradio" aria-checked="' + (t.v === cur) + '" data-taille="' + t.v + '"><span class="size-dot size-' + t.v + '" aria-hidden="true"></span>' + t.l + (t.v === cur ? ' <span class="muted small">(actuel)</span>' : "") + "</button>"; }).join("") +
+        (autres.length ? '<p class="menu-sub">Échanger le bloc avec</p>' + autres.map(function (x) { return '<button type="button" role="menuitem" data-swap="' + x.id + '">' + ICON.arrow + esc(x.nom) + "</button>"; }).join("") : "");
       menu.hidden = false;
       var x = Math.min(Math.max(8, r.left - wr.left + r.width / 2 - 110), wr.width - 228), y = r.top - wr.top + r.height / 2;
       if (y + menu.offsetHeight > wr.height) y = Math.max(8, wr.height - menu.offsetHeight - 8);
@@ -1444,6 +1446,15 @@
         drawScene(); drawVadance(); refreshChrome();
         if (dims() === avant) Deva.say(sp.nom + " garde la même emprise pour l'instant : il partage sa colonne et sa rangée avec des espaces plus grands. Réduis-les aussi, ou agrandis-le.", { instant: true });
         else Deva.say(sp.nom + " passe en " + TAILLES[sp.taille - 1].l.toLowerCase() + ". Les solutions déjà posées restent dans leur espace.", { instant: true });
+      }); });
+      // échanger la place de deux espaces sur la grille : leurs solutions suivent chacune leur espace
+      $all("[data-swap]", menu).forEach(function (b) { b.addEventListener("click", function () {
+        var a = state.spaces.indexOf(sp), k = state.spaces.findIndex(function (x) { return x.id === b.dataset.swap; });
+        if (a < 0 || k < 0) return;
+        var tmp = state.spaces[a]; state.spaces[a] = state.spaces[k]; state.spaces[k] = tmp;
+        resnapPlaced(); save(); menu.hidden = true;
+        drawScene(); drawVadance(); refreshChrome();
+        Deva.say(sp.nom + " et " + state.spaces[a].nom + " ont échangé leur bloc. Leurs solutions ont suivi.", { instant: true });
       }); });
       var first = $("[role=menuitemradio][aria-checked=true]", menu) || $("[role^=menuitem]", menu); if (first) first.focus();
     }
@@ -1506,6 +1517,7 @@
         (p.status === "prevu" ? '<button type="button" role="menuitem" data-act="encours"><span class="dot st-encours"></span>Marquer en cours</button>' : "") +
         (p.status === "encours" ? '<button type="button" role="menuitem" data-act="prevu"><span class="dot st-reve"></span>Remettre en prévu</button>' : "") +
         (p.status === "verifie" ? '<a role="menuitem" href="nourrir.html"><span class="dot st-prouve"></span>Voir la preuve</a>' : '<a role="menuitem" href="nourrir.html?pour=' + u + '"><span class="dot st-prouve"></span>Apporter une preuve</a>') +
+        (state.spaces.length > 1 ? '<p class="menu-sub">Déplacer vers</p>' + state.spaces.filter(function (x) { return x.id !== p.spaceId; }).map(function (x) { return '<button type="button" role="menuitem" data-vers="' + x.id + '">' + ICON.arrow + esc(x.nom) + "</button>"; }).join("") : "") +
         '<button type="button" role="menuitem" data-act="retirer" class="danger">Retirer</button>';
       menu.hidden = false;
       var x = Math.min(Math.max(8, r.left - wr.left + r.width / 2 - 110), wr.width - 228), y = r.top - wr.top + r.height + 6;
@@ -1516,6 +1528,15 @@
         if (act === "retirer") { state.placed = state.placed.filter(function (x) { return x.uid !== u; }); Deva.react("retire"); closeMenu(); }
         else { p.status = act; if (act === "encours") Deva.react("encours"); }
         save(); menu.hidden = true; drawScene(act === "retirer" ? null : u); drawBar(); drawVadance(); refreshChrome();
+      }); });
+      $all("[data-vers]", menu).forEach(function (b) { b.addEventListener("click", function () {
+        var z = state.spaces.find(function (x) { return x.id === b.dataset.vers; }); if (!z) return;
+        var cell = api.firstFreeIn(z.id, function (x) { return Math.abs(x.i - p.i) + Math.abs(x.j - p.j); });
+        if (!cell) { toast("Plus de place dans " + z.nom + ". Agrandis-le ou retire un élément."); return; }
+        p.spaceId = z.id; p.i = cell.i; p.j = cell.j;
+        var c = state.chosen.find(function (x) { return x.id === p.chosenId; }); if (c) c.spaceId = z.id;
+        save(); menu.hidden = true; drawScene(u); drawBar(); drawVadance(); refreshChrome();
+        Deva.say(SOL[p.solId].nom + " rejoint " + z.nom + ".", { instant: true });
       }); });
       var first = $("[role=menuitem]", menu); if (first) first.focus();
     }
