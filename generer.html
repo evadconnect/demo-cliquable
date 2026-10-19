@@ -31,9 +31,16 @@
           <p class="place-hint" id="place-hint" aria-live="polite" hidden></p>
         </section>
 
+        <section class="panel decor-bar" aria-labelledby="decor-title">
+          <h2 id="decor-title">Décor</h2>
+          <p class="muted small">Arbres, bancs, fleurs, allées : pour te projeter. Le décor ne compte pas dans l'impact.</p>
+          <div id="decor-chips" role="group" aria-label="Décor à poser"></div>
+          <p class="place-hint" id="decor-hint" aria-live="polite" hidden></p>
+        </section>
+
         <section class="scene-wrap" id="scene-wrap" aria-label="Maquette du lieu">
           <div class="scene-head">
-            <span class="muted small">Clique un espace pour sa taille ou ses blocs.</span>
+            <span class="muted small">Clique un espace pour redessiner ses blocs, un élément pour le modifier.</span>
             <button type="button" class="btn btn-ghost btn-sm" id="draw-blocks">Dessiner les blocs</button>
           </div>
           <div class="draw-bar" id="draw-bar" aria-live="polite" hidden></div>

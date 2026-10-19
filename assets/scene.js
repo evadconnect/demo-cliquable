@@ -176,7 +176,30 @@
     fruitierface: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 1.0, { trunk: BASE.trunk, leaf: "#5E9B79", light: "#9BC7AC", fruit: "#C06848", face: true }); },
     haieI: function (g, s) { for (var k = 0; k < 3; k++) { var b = P(s.i + 0.2 + k * 0.3, s.j + 0.5, 0); el("circle", { cx: b[0], cy: b[1] - 7, r: 7.5, fill: k % 2 ? "#5E9B79" : "#4E8C6C" }, g); el("circle", { cx: b[0] - 2, cy: b[1] - 10, r: 3, fill: "#9BC7AC" }, g); } },
     haieJ: function (g, s) { for (var k = 0; k < 3; k++) { var b = P(s.i + 0.5, s.j + 0.2 + k * 0.3, 0); el("circle", { cx: b[0], cy: b[1] - 7, r: 7.5, fill: k % 2 ? "#5E9B79" : "#4E8C6C" }, g); el("circle", { cx: b[0] - 2, cy: b[1] - 10, r: 3, fill: "#9BC7AC" }, g); } },
-    fruitier: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 0.95, { trunk: BASE.trunk, leaf: "#5E9B79", light: "#9BC7AC", fruit: "#C06848" }); }
+    fruitier: function (g, s) { tree(g, s.i + 0.5, s.j + 0.5, 0.95, { trunk: BASE.trunk, leaf: "#5E9B79", light: "#9BC7AC", fruit: "#C06848" }); },
+    // décor libre : sans impact ni preuve, juste pour se projeter
+    banc: function (g, s) {
+      var f = box(g, s.i + 0.2, s.j + 0.4, 0.6, 0.22, 7, { top: "#C9A273", left: "#B98E62", right: "#A07650" });
+      poly(g, [P(s.i + 0.2, s.j + 0.4, 7), P(s.i + 0.8, s.j + 0.4, 7), P(s.i + 0.8, s.j + 0.4, 15), P(s.i + 0.2, s.j + 0.4, 15)], "#B98E62");
+      [0.26, 0.74].forEach(function (u) { var a = P(s.i + u, s.j + 0.5, 0), b = P(s.i + u, s.j + 0.5, 7); el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#7A5A40", "stroke-width": 2 }, g); });
+      return f;
+    },
+    fleurs: function (g, s) {
+      var cols = ["#E07A8B", "#F2C14E", "#F1F0EA", "#C48BC9", "#E8975E"];
+      for (var k = 0; k < 7; k++) {
+        var p = P(s.i + 0.2 + hash(k, s.i) * 0.6, s.j + 0.2 + hash(s.j, k) * 0.6, 0);
+        el("line", { x1: p[0], y1: p[1], x2: p[0], y2: p[1] - 6, stroke: "#5F7F52", "stroke-width": 1.2 }, g);
+        el("circle", { cx: p[0], cy: p[1] - 7, r: 2.4, fill: cols[k % cols.length] }, g);
+        el("circle", { cx: p[0], cy: p[1] - 7, r: 0.9, fill: "#F6E7B2" }, g);
+      }
+    },
+    rocher: function (g, s) {
+      var b = P(s.i + 0.5, s.j + 0.55, 0);
+      shadow(g, b[0] + 3, b[1] + 1, 12);
+      el("path", { d: "M" + (b[0] - 13) + " " + b[1] + " Q" + (b[0] - 12) + " " + (b[1] - 12) + " " + (b[0] - 2) + " " + (b[1] - 13) + " Q" + (b[0] + 9) + " " + (b[1] - 14) + " " + (b[0] + 13) + " " + (b[1] - 3) + " Q" + (b[0] + 10) + " " + (b[1] + 5) + " " + (b[0] - 13) + " " + b[1] + " Z", fill: "#9A9A8C" }, g);
+      el("path", { d: "M" + (b[0] - 10) + " " + (b[1] - 3) + " Q" + (b[0] - 7) + " " + (b[1] - 10) + " " + (b[0] - 1) + " " + (b[1] - 11) + " Q" + (b[0] + 3) + " " + (b[1] - 8) + " " + (b[0] - 2) + " " + (b[1] - 3) + " Z", fill: "#B5B5A6" }, g);
+      el("circle", { cx: b[0] + 6, cy: b[1] - 2, r: 2.2, fill: "#7FA47B" }, g);
+    }
   };
 
   /* ---------- solutions posées (dessinées selon leur état) ---------- */
@@ -307,55 +330,19 @@
   }
   function layoutZones(spaces, N) {
     var n = (spaces || []).length; if (!n) return [];
-    // Blocs dessinés par le porteur : dès qu'un espace a ses cases, la maquette suit le dessin.
-    if (spaces.some(function (s) { return Array.isArray(s.cells); })) {
-      var pris = {}, bord = false;
-      var zonesD = spaces.map(function (s, k) {
-        var kind = s.kind || zoneKind(s), cells = [];
-        (s.cells || []).forEach(function (c) {
-          var i = c[0], j = c[1], key = i + "," + j;
-          if (i < 0 || j < 0 || i >= N || j >= N || pris[key]) return;
-          pris[key] = 1; cells.push({ i: i, j: j });
-          if (i === 0 || j === 0 || i === N - 1 || j === N - 1) bord = true;
-        });
-        return finirZone({ id: s.id, nom: s.nom, kind: kind, color: KIND_COL[kind] || ZONE_PAL[k % ZONE_PAL.length] }, cells);
-      });
-      zonesD.walk = {}; zonesD.margin = bord ? 0 : 1; zonesD.custom = true;
-      return zonesD;
-    }
-    var cols = n <= 1 ? 1 : n <= 4 ? 2 : 3, rows = Math.ceil(n / cols);
-    var m = (cols <= 2 && rows <= 2) ? 1 : 0, inner = N - 2 * m;
-    // Taille voulue par le porteur (1 petit, 2 moyen, 3 grand) : chaque colonne prend la plus grande
-    // taille de ses espaces, chaque rangée aussi, et la grille se partage au prorata.
-    function taille(s) { var t = Number(s && s.taille); return t >= 1 && t <= 3 ? t : 2; }
-    function poids(c, parCol) {
-      var out = []; for (var k = 0; k < c; k++) out.push(1);
-      spaces.forEach(function (s, k) { var idx = parCol ? k % cols : Math.floor(k / cols); out[idx] = Math.max(out[idx], taille(s)); });
-      return out;
-    }
-    function split(c, w) {
-      var total = inner - (c - 1), sum = w.reduce(function (a, b) { return a + b; }, 0);
-      var sizes = w.map(function (x) { return Math.max(1, Math.floor(total * x / sum)); });
-      var reste = total - sizes.reduce(function (a, b) { return a + b; }, 0);
-      // le reliquat va aux plus gros d'abord, puis on retire aux plus petits si on a dépassé
-      var ordre = w.map(function (x, k) { return k; }).sort(function (a, b) { return w[b] - w[a] || a - b; });
-      for (var r = 0; reste > 0; r = (r + 1) % c) { sizes[ordre[r]]++; reste--; }
-      for (var q = c - 1; reste < 0 && q >= 0; q = (q - 1 + c) % c) { if (sizes[ordre[q]] > 1) { sizes[ordre[q]]--; reste++; } }
-      var out = [], pos = m;
-      for (var k = 0; k < c; k++) { out.push({ a: pos, w: sizes[k] }); pos += sizes[k] + 1; }
-      return out;
-    }
-    var cw = split(cols, poids(cols, true)), rh = split(rows, poids(rows, false));
+    // Chaque espace n'a que les cases que le porteur lui a dessinées : la maquette part vierge.
+    var pris = {}, bord = false;
     var zones = spaces.map(function (s, k) {
-      var c = k % cols, r = Math.floor(k / cols);
       var kind = s.kind || zoneKind(s), cells = [];
-      for (var a = 0; a < cw[c].w; a++) for (var b = 0; b < rh[r].w; b++) cells.push({ i: cw[c].a + a, j: rh[r].a + b });
-      return finirZone({ id: s.id, nom: s.nom, kind: kind, col: c, row: r, lastRow: r === rows - 1, color: KIND_COL[kind] || ZONE_PAL[k % ZONE_PAL.length] }, cells);
+      (s.cells || []).forEach(function (c) {
+        var i = c[0], j = c[1], key = i + "," + j;
+        if (i < 0 || j < 0 || i >= N || j >= N || pris[key]) return;
+        pris[key] = 1; cells.push({ i: i, j: j });
+        if (i === 0 || j === 0 || i === N - 1 || j === N - 1) bord = true;
+      });
+      return finirZone({ id: s.id, nom: s.nom, kind: kind, color: KIND_COL[kind] || ZONE_PAL[k % ZONE_PAL.length] }, cells);
     });
-    var walk = {};
-    for (var a = 1; a < cols; a++) { var x = cw[a].a - 1; for (var j = m; j < N - m; j++) walk[x + "," + j] = true; }
-    for (var b = 1; b < rows; b++) { var y = rh[b].a - 1; for (var i = m; i < N - m; i++) walk[i + "," + y] = true; }
-    zones.walk = walk; zones.margin = m; zones.custom = false;
+    zones.walk = {}; zones.margin = bord ? 0 : 1; zones.custom = true;
     return zones;
   }
   function zoneAt(zones, i, j) {
@@ -372,6 +359,8 @@
     var vitality = Math.max(0, Math.min(1, opt.vitalite || 0));
     var structures = opt.structures || [];
     var placed = opt.placed || [];
+    var userDecor = opt.decor || [], paths = {};
+    userDecor.forEach(function (d) { if (d.type === "allee") paths[d.i + "," + d.j] = true; });
     var solutions = opt.solutions || {};
     var zones = opt.zones || [], walk = zones.walk || {};
 
@@ -386,7 +375,8 @@
       for (var a = 0; a < (s.w || 1); a++) for (var b = 0; b < (s.d || 1); b++) occ[(s.i + a) + "," + (s.j + b)] = "structure";
     });
     placed.forEach(function (p) { occ[p.i + "," + p.j] = p.uid; });
-    function isPath(i, j) { return !!walk[i + "," + j] || (pathLine !== null && pathLine !== false && (i === pathLine || j === pathLine)); }
+    userDecor.forEach(function (d) { if (d.type !== "allee") occ[d.i + "," + d.j] = "decor:" + d.uid; });
+    function isPath(i, j) { return !!walk[i + "," + j] || !!paths[i + "," + j] || (pathLine !== null && pathLine !== false && (i === pathLine || j === pathLine)); }
 
     // socle de terre
     var ground = el("g", {}, svg);
@@ -519,6 +509,7 @@
     var items = [];
     structures.concat(decor, life.structures).forEach(function (s) { items.push({ k: s.i + (s.w || 1) + s.j + (s.d || 1), kind: "s", s: s }); });
     placed.forEach(function (p) { items.push({ k: p.i + p.j + 2, kind: "p", p: p }); });
+    userDecor.forEach(function (d) { if (d.type !== "allee") items.push({ k: d.i + d.j + 2, kind: "d", d: d }); });
     (opt.personnages || []).concat(life.personnages).forEach(function (h) { items.push({ k: h.i + h.j + 1.2, kind: "h", h: h }); });
     items.sort(function (a, b) { return a.k - b.k; });
 
@@ -530,6 +521,11 @@
         if (DRAW[it.s.type]) DRAW[it.s.type](g, s);
       } else if (it.kind === "h") {
         person(el("g", { transform: liftAt(it.h.i, it.h.j) ? "translate(0,-" + LIFT + ")" : null }, objects), it.h.i + 0.5, it.h.j + 0.5, it.h.c);
+      } else if (it.kind === "d") {
+        var d = it.d, gd = el("g", { class: "iso-decor", "data-decor": d.uid, transform: liftAt(d.i, d.j) ? "translate(0,-" + LIFT + ")" : null }, objects);
+        if (opt.interactive) { gd.setAttribute("role", "button"); gd.setAttribute("tabindex", "0"); gd.setAttribute("aria-label", (d.nom || "Décor") + ", décor"); }
+        el("title", {}, gd).textContent = (d.nom || "Décor") + " (décor, sans impact)";
+        if (DRAW[d.type]) DRAW[d.type](gd, { i: d.i, j: d.j, w: 1, d: 1 });
       } else {
         var p = it.p, sol = solutions[p.solId] || {};
         var g2 = el("g", { class: "iso-item is-" + p.status + (opt.justVerified === p.uid ? " just-verified" : ""), "data-uid": p.uid, transform: liftAt(p.i, p.j) ? "translate(0,-" + LIFT + ")" : null }, objects);
@@ -625,6 +621,7 @@
       structures: lieu.structures || [],
       personnages: lieu.personnages || [],
       placed: lieu.placed || [],
+      decor: lieu.decor || [],
       solutions: lieu.solutions || {},
       vitalite: lieu.vitalite || 0,
       interactive: !!options.interactive,
