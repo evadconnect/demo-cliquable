@@ -1196,10 +1196,10 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 @media (prefers-reduced-motion: reduce) { .lmark-iso { transition: none; } }
 
 /* ===== Carte illustrée isométrique (vue par défaut de l'accueil) ===== */
-#isomap { position: absolute; inset: 0; display: none; background: radial-gradient(ellipse at 50% 35%, #FFFDF7 0%, #F3EEDD 70%, #EDE6D2 100%); }
+#isomap { position: absolute; inset: 0; display: none; background: #A4C7CC; overflow: hidden; }
 .map-stage.view-iso #isomap { display: block; }
 .map-stage.view-iso #map { visibility: hidden; }
-.imap-svg { position: absolute; left: 16px; right: 16px; top: calc(var(--top-h) + 40px); bottom: 92px; width: auto; height: auto; max-width: calc(100% - 32px); overflow: visible; }
+.imap-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .imap-town-lbl { font: 600 8.5px var(--f-texte); fill: #4B4A3F; paint-order: stroke; stroke: rgba(255,253,247,.85); stroke-width: 2.5px; }
 .imap-rose-lbl { font: 700 9px var(--f-texte); fill: #2C5234; }
 .imap-caption { font: 500 10px var(--f-texte); fill: var(--texte-2); }
@@ -1235,14 +1235,12 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 .map-view button[aria-pressed="true"] { background: var(--foret); color: var(--blanc); }
 .map-stage.has-fiche .map-view { right: 462px; }
 @media (min-width: 901px) {
-  body[data-page="index"] .imap-svg { left: calc(var(--deva-w) + 48px); max-width: calc(100% - var(--deva-w) - 64px); }
-  body.deva-closed[data-page="index"] .imap-svg { left: 16px; max-width: calc(100% - 32px); }
   .map-stage .map-notice { top: calc(var(--top-h) + 76px); }
 }
 @media (max-width: 900px) {
   .map-stage.view-iso #isomap { position: relative; inset: auto; order: 2; aspect-ratio: 10 / 8; }
   .map-stage.view-iso #map { display: none; }
-  .imap-svg { left: 8px; right: 8px; top: 8px; bottom: 8px; max-width: none; }
+  .imap-svg { inset: 0; }
   .map-view { position: relative; top: auto; right: auto; align-self: flex-end; margin: 10px 16px 0; order: 1; }
   .map-stage.has-fiche .map-view { right: auto; }
 }
