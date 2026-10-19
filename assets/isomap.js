@@ -126,7 +126,7 @@
     host.innerHTML = "";
     var minX = -ROWS * TW - 24, width = (COLS + ROWS) * TW + 48, minY = -70, height_ = (COLS + ROWS) * TH + SLAB + 120;
     var full = { x: minX, y: minY, w: width, h: height_ };
-    var svg = el("svg", { viewBox: full.x + " " + full.y + " " + full.w + " " + full.h, class: "imap-svg", role: "img", tabindex: "0", preserveAspectRatio: "xMidYMid meet",
+    var svg = el("svg", { viewBox: full.x + " " + full.y + " " + full.w + " " + full.h, class: "imap-svg", role: "img", preserveAspectRatio: "xMidYMid meet",
       "aria-label": "Carte illustrée de la France avec les lieux EVAD. Positions approximatives. Molette ou boutons pour zoomer, glisser pour se déplacer." }, host);
     var g0 = el("g", {}, svg);
     poly(g0, [P(0, ROWS, 0), P(COLS, ROWS, 0), P(COLS, ROWS, -SLAB), P(0, ROWS, -SLAB)], "#9C6B4A");
@@ -199,7 +199,7 @@
 
     // légende et commandes, en HTML par-dessus
     var cap = document.createElement("p"); cap.className = "imap-caption"; cap.textContent = "Carte illustrée : positions approximatives. La vue carte donne le détail."; host.appendChild(cap);
-    var zc = document.createElement("div"); zc.className = "imap-zoom"; zc.setAttribute("role", "group"); zc.setAttribute("aria-label", "Zoom de la carte illustrée");
+    var zc = document.createElement("div"); zc.className = "imap-zoom"; zc.setAttribute("role", "group"); zc.setAttribute("aria-label", "Zoom de la carte illustrée. Au clavier : plus, moins, zéro pour tout voir, flèches pour se déplacer.");
     zc.innerHTML = '<button type="button" data-z="in" aria-label="Zoomer">+</button><button type="button" data-z="out" aria-label="Dézoomer">−</button><button type="button" data-z="fit" class="imap-fit">Tout voir</button>';
     host.appendChild(zc);
 
@@ -283,7 +283,7 @@
       drag = null; if (Object.keys(ptrs).length < 2) pinch = null;
       if (!Object.keys(ptrs).length) { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); }
     }
-    st.svg.addEventListener("keydown", function (e) {
+    zc.addEventListener("keydown", function (e) {
       if (e.key === "+" || e.key === "=") { zoomAt(st, 1.6); e.preventDefault(); }
       else if (e.key === "-") { zoomAt(st, 1 / 1.6); e.preventDefault(); }
       else if (e.key === "0") { st.vb = Object.assign({}, st.full); applyView(st); }
