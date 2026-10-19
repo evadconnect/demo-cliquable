@@ -378,8 +378,9 @@
     userDecor.forEach(function (d) { if (d.type !== "allee") occ[d.i + "," + d.j] = "decor:" + d.uid; });
     function isPath(i, j) { return !!walk[i + "," + j] || !!paths[i + "," + j] || (pathLine !== null && pathLine !== false && (i === pathLine || j === pathLine)); }
 
-    // socle de terre
+    // socle de terre (sauf si la maquette est posée sur une autre carte)
     var ground = el("g", {}, svg);
+    if (opt.socle !== false) {
     poly(ground, [P(0, N, 0), P(N, N, 0), P(N, N, -SLAB), P(0, N, -SLAB)], "#9C6B4A");
     poly(ground, [P(N, 0, 0), P(N, N, 0), P(N, N, -SLAB), P(N, 0, -SLAB)], "#80573C");
     poly(ground, [P(0, N, 0), P(N, N, 0), P(N, N, -5), P(0, N, -5)], mix("#789A74", "#50895F", vitality));
@@ -389,6 +390,7 @@
       var u = hash(s2, 3), v = 0.35 + hash(3, s2) * 0.5;
       var q = s2 % 2 ? [P(u * N, N, -SLAB * v)] : [P(N, u * N, -SLAB * v)];
       el("ellipse", { cx: q[0][0], cy: q[0][1], rx: 2.4, ry: 1.3, fill: "rgba(255,253,247,.25)" }, ground);
+    }
     }
 
     // cases
@@ -630,6 +632,7 @@
       zones: layoutZones(lieu.spaces || [], lieu.grille || 9),
       onZone: options.onZone || null,
       activeZone: options.activeZone || null,
+      socle: options.socle !== false,
       life: options.life !== false
     };
     return render(container, opt);
