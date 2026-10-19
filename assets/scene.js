@@ -638,6 +638,23 @@
     return render(container, opt);
   }
 
-  window.EvadScene = { render: render, renderScene: renderScene, layoutZones: layoutZones };
+  /* ---------- vignette d'une solution : une case d'herbe et le dessin de la solution, sans état ----------
+     Sert d'« image » aux cartes du Commun : aucun fichier, le même trait que la maquette. */
+  var ILLU = { a: "#5E9B79", b: "#2F6B52", c: "#9BC7AC", d: "#4E8C6C", stroke: "#2C5234", dash: null, tile: "rgba(78,140,108,.2)", fruit: "#C06848", verified: false };
+  function renderSolutionIcon(container, sceneType, options) {
+    options = options || {};
+    container.innerHTML = "";
+    var svg = el("svg", { viewBox: "-40 -52 80 92", class: "sol-illu-svg", role: "img", "aria-label": options.label || "Illustration de la solution" }, container);
+    var g = el("g", {}, svg);
+    poly(g, [P(0, 0, 0), P(1, 0, 0), P(1, 1, 0), P(0, 1, 0)], "#C9DCB0", { stroke: "rgba(255,253,247,.5)", "stroke-width": 0.8 });
+    poly(g, [P(0, 1, 0), P(1, 1, 0), P(1, 1, -6), P(0, 1, -6)], "#9C6B4A");
+    poly(g, [P(1, 0, 0), P(1, 1, 0), P(1, 1, -6), P(1, 0, -6)], "#80573C");
+    var draw = SOL[sceneType] || SOL.compost;
+    var c = {}; for (var k in ILLU) c[k] = ILLU[k];
+    draw(el("g", { class: "iso-item is-illu" }, g), 0, 0, c);
+    return svg;
+  }
+
+  window.EvadScene = { render: render, renderScene: renderScene, layoutZones: layoutZones, renderSolutionIcon: renderSolutionIcon };
   window.renderScene = renderScene;
 })();

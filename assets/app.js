@@ -978,20 +978,61 @@
   }
 
   /* ================= Écran 2 : le Commun ================= */
+  // Carte d'une solution, recto / verso : devant le nom, l'illustration et la famille ; derrière le détail.
   function solutionCard(s, extra) {
     var diff = ""; for (var k = 1; k <= 3; k++) diff += '<span class="pip' + (k <= s.difficulte ? " on" : "") + '"></span>';
     var diffWord = ["", "accessible", "demande de l'organisation", "exigeante"][s.difficulte];
     var coutWord = ["", "modeste", "moyen", "important"][s.cout];
-    return '<article class="card sol-card fam-' + s.famille + '" data-sol="' + s.id + '">' +
+    var actions = extra && extra.actions ? '<div class="card-actions">' + extra.actions + "</div>" : "";
+    var flipIcon = '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 9a6 6 0 0 1 10.5-3.5M16 11a6 6 0 0 1-10.5 3.5M14 2v4h-4M6 18v-4h4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    return '<article class="card sol-card flip fam-' + s.famille + '" data-sol="' + s.id + '" tabindex="0" aria-label="' + esc(s.nom) + ', ' + FAM[s.famille].label + '. Entrée pour retourner la carte.">' +
+      '<div class="flip-inner">' +
+      '<div class="flip-face flip-front">' +
       '<div class="card-top"><span class="fam-tag fam-' + s.famille + '">' + FAM[s.famille].label + "</span>" + (extra && extra.badge ? extra.badge : "") + "</div>" +
+      '<div class="sol-illu" data-scene="' + esc(s.scene || "compost") + '" data-label="' + esc(s.nom) + '"></div>' +
+      "<h3>" + esc(s.nom) + "</h3>" +
+      '<button type="button" class="flip-btn link-btn" aria-expanded="false">' + flipIcon + "Voir le détail</button>" +
+      actions +
+      "</div>" +
+      '<div class="flip-face flip-back" aria-hidden="true">' +
+      '<div class="card-top"><span class="fam-tag fam-' + s.famille + '">' + FAM[s.famille].label + '</span><button type="button" class="flip-btn icon-btn icon-sm" aria-label="Retourner la carte">' + flipIcon + "</button></div>" +
       "<h3>" + esc(s.nom) + "</h3><p>" + esc(s.change) + "</p>" +
       '<dl class="meta"><div><dt>Difficulté</dt><dd><span class="pips" aria-hidden="true">' + diff + '</span> ' + diffWord + "</dd></div>" +
       "<div><dt>Coût</dt><dd>" + coutWord + "</dd></div>" +
       "<div><dt>Éprouvé</dt><dd>sur " + s.eprouve + " projets</dd></div></dl>" +
-      '<ul class="ici-chips" aria-label="ICI nourris">' + s.ici.map(function (i) { return '<li class="ici-chip">' + esc(ICI[i].nom) + "</li>"; }).join("") + "</ul>" +
-      (extra && extra.actions ? '<div class="card-actions">' + extra.actions + "</div>" : "") +
-      "</article>";
+      '<p class="ici-lbl">ICI nourris</p><ul class="ici-chips" aria-label="ICI nourris">' + s.ici.map(function (i) { return '<li class="ici-chip">' + esc(ICI[i].nom) + "</li>"; }).join("") + "</ul>" +
+      actions +
+      "</div></div></article>";
   }
+  // Après insertion des cartes : dessine les illustrations (SVG, aucune image) et branche le retournement.
+  function hydrateCards(host) {
+    if (!host) return;
+    $all(".sol-illu[data-scene]", host).forEach(function (box) {
+      if (box.dataset.done || !window.EvadScene || !EvadScene.renderSolutionIcon) return;
+      EvadScene.renderSolutionIcon(box, box.dataset.scene, { label: "Illustration : " + box.dataset.label });
+      box.dataset.done = "1";
+    });
+  }
+  function flipCard(card, on) {
+    var flipped = on === undefined ? !card.classList.contains("is-flipped") : on;
+    card.classList.toggle("is-flipped", flipped);
+    var front = card.querySelector(".flip-front"), back = card.querySelector(".flip-back");
+    if (front) front.setAttribute("aria-hidden", String(flipped));
+    if (back) back.setAttribute("aria-hidden", String(!flipped));
+    var b = card.querySelector(".flip-front .flip-btn"); if (b) b.setAttribute("aria-expanded", String(flipped));
+  }
+  document.addEventListener("click", function (e) {
+    var card = e.target.closest(".sol-card.flip"); if (!card) return;
+    if (e.target.closest(".flip-btn")) { flipCard(card); return; }
+    if (e.target.closest("a, button, input, select, label")) return;
+    flipCard(card);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var card = e.target.closest && e.target.closest(".sol-card.flip");
+    if (!card || e.target !== card) return;
+    e.preventDefault(); flipCard(card);
+  });
   function iciCard(x, actions) {
     var nourri = D.solutions.filter(function (s) { return s.ici.indexOf(x.id) >= 0; }).map(function (s) { return s.nom; });
     var fam = D.iciFamilles.find(function (f) { return f.id === x.famille; });
@@ -1015,6 +1056,7 @@
         return true;
       });
       $("#commun-grid").innerHTML = list.length ? list.map(function (s) { return solutionCard(s); }).join("") : '<p class="empty">Rien ne correspond encore dans le Commun. C\'est peut-être à toi de le proposer.</p>';
+      hydrateCards($("#commun-grid"));
       var icis = D.ici.filter(function (x) { return !q || (x.nom + " " + x.observe).toLowerCase().indexOf(q) >= 0; });
       $("#ici-grid").innerHTML = icis.map(function (x) { return iciCard(x); }).join("");
       $("#commun-count").textContent = list.length ? "" : "";
@@ -1344,6 +1386,7 @@
         var on = state.icis.indexOf(x.id) >= 0;
         return iciCard(x, on ? '<span class="added">' + ICON.check + ' Suivi dans mon projet</span><button type="button" class="link-btn" data-ici-off="' + x.id + '">Retirer</button>' : '<button type="button" class="btn btn-amber btn-sm" data-ici="' + x.id + '">Ajouter à mon projet</button>');
       }).join("");
+      hydrateCards($("#ex-list"));
       $all("[data-add]").forEach(function (b) { b.addEventListener("click", function () {
         if (!state.selectedSpace) { toast("Crée d'abord un espace, ou prends-en un proposé par Deva, puis accroche-lui cette solution."); $("#space-name").focus(); return; }
         state.chosen.push({ id: uid("c"), solId: b.dataset.add, spaceId: state.selectedSpace }); save();
