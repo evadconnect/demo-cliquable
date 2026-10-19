@@ -907,15 +907,16 @@
         dock("carte", function () { setTimeout(function () { startTour(carteTour); }, 900); });
       }
       function askIntent() {
+        // Les trois portes d'abord, le champ libre dessous (pour une question ou une demande en mots).
         foot.innerHTML =
-          '<form class="intro-form"><label class="sr-only" for="intro-quete">Ce que tu cherches</label>' +
-          '<input id="intro-quete" class="intro-input" type="text" autocomplete="off" placeholder="Dis-moi en quelques mots…">' +
-          '<button type="submit" class="btn btn-primary intro-send" aria-label="Envoyer à Deva">' + ICON.arrow + '</button></form>' +
           '<div class="intro-doors" role="group" aria-label="Portes d\'entrée">' +
           '<button type="button" class="deva-door is-primary" data-go="regen">Créer un projet</button>' +
           '<button type="button" class="deva-door" data-go="carte">Visiter des lieux</button>' +
           '<button type="button" class="deva-door" data-go="commun">Découvrir des solutions</button>' +
-          '</div>';
+          '</div>' +
+          '<form class="intro-form intro-form-after"><label class="sr-only" for="intro-quete">Une question ou ce que tu cherches</label>' +
+          '<input id="intro-quete" class="intro-input" type="text" autocomplete="off" placeholder="Une question ?">' +
+          '<button type="submit" class="btn btn-primary intro-send" aria-label="Envoyer à Deva">' + ICON.arrow + '</button></form>';
         var form = foot.querySelector(".intro-form"), input = foot.querySelector("#intro-quete");
         requestAnimationFrame(function () { log.scrollTop = log.scrollHeight; });
         input.focus({ preventScroll: true });
