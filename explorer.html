@@ -29,6 +29,19 @@
           <h2 id="mind-title" class="sr-only">Carte mentale du projet</h2>
           <p class="sel-hint" aria-live="polite">Espace sélectionné : <strong id="sel-space"></strong></p>
           <div id="mind"></div>
+          <form class="space-tools" id="space-tools" hidden aria-label="Modifier l'espace sélectionné">
+            <div class="field"><label for="space-rename">Nom de l'espace</label><input id="space-rename" type="text" autocomplete="off" maxlength="40"></div>
+            <div class="field"><label for="space-kind">Nature</label>
+              <select id="space-kind">
+                <option value="">Libre (pelouse)</option>
+                <option value="jardin">Jardin, culture</option>
+                <option value="atelier">Atelier, réemploi</option>
+                <option value="cafe">Café, cuisine, accueil</option>
+                <option value="gouvernance">Gouvernance, agora</option>
+              </select></div>
+            <button type="submit" class="btn btn-ghost btn-sm">Enregistrer</button>
+            <button type="button" class="btn btn-ghost btn-sm btn-danger" id="space-delete">Supprimer</button>
+          </form>
           <form class="add-space" id="add-space">
             <div class="field"><label for="space-name">Nouvel espace</label><input id="space-name" type="text" autocomplete="off" placeholder="Ex. Verger partagé"></div>
             <button type="submit" class="btn btn-ghost">Ajouter un espace</button>

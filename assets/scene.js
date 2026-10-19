@@ -300,15 +300,30 @@
     var n = (spaces || []).length; if (!n) return [];
     var cols = n <= 1 ? 1 : n <= 4 ? 2 : 3, rows = Math.ceil(n / cols);
     var m = (cols <= 2 && rows <= 2) ? 1 : 0, inner = N - 2 * m;
-    function split(c) {
-      var total = inner - (c - 1), base = Math.floor(total / c), rest = total - base * c, out = [], pos = m;
-      for (var k = 0; k < c; k++) { var w = base + (k < rest ? 1 : 0); out.push({ a: pos, w: w }); pos += w + 1; }
+    // Taille voulue par le porteur (1 petit, 2 moyen, 3 grand) : chaque colonne prend la plus grande
+    // taille de ses espaces, chaque rangée aussi, et la grille se partage au prorata.
+    function taille(s) { var t = Number(s && s.taille); return t >= 1 && t <= 3 ? t : 2; }
+    function poids(c, parCol) {
+      var out = []; for (var k = 0; k < c; k++) out.push(1);
+      spaces.forEach(function (s, k) { var idx = parCol ? k % cols : Math.floor(k / cols); out[idx] = Math.max(out[idx], taille(s)); });
       return out;
     }
-    var cw = split(cols), rh = split(rows);
+    function split(c, w) {
+      var total = inner - (c - 1), sum = w.reduce(function (a, b) { return a + b; }, 0);
+      var sizes = w.map(function (x) { return Math.max(1, Math.floor(total * x / sum)); });
+      var reste = total - sizes.reduce(function (a, b) { return a + b; }, 0);
+      // le reliquat va aux plus gros d'abord, puis on retire aux plus petits si on a dépassé
+      var ordre = w.map(function (x, k) { return k; }).sort(function (a, b) { return w[b] - w[a] || a - b; });
+      for (var r = 0; reste > 0; r = (r + 1) % c) { sizes[ordre[r]]++; reste--; }
+      for (var q = c - 1; reste < 0 && q >= 0; q = (q - 1 + c) % c) { if (sizes[ordre[q]] > 1) { sizes[ordre[q]]--; reste++; } }
+      var out = [], pos = m;
+      for (var k = 0; k < c; k++) { out.push({ a: pos, w: sizes[k] }); pos += sizes[k] + 1; }
+      return out;
+    }
+    var cw = split(cols, poids(cols, true)), rh = split(rows, poids(rows, false));
     var zones = spaces.map(function (s, k) {
       var c = k % cols, r = Math.floor(k / cols);
-      var kind = zoneKind(s);
+      var kind = s.kind || zoneKind(s);
       return { id: s.id, nom: s.nom, kind: kind, i0: cw[c].a, j0: rh[r].a, w: cw[c].w, d: rh[r].w, col: c, row: r, lastRow: r === rows - 1, color: KIND_COL[kind] || ZONE_PAL[k % ZONE_PAL.length] };
     });
     var walk = {};
