@@ -1137,3 +1137,12 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 .popmenu .menu-sub { margin: 8px 8px 2px; padding-top: 8px; border-top: 1px solid var(--bord); font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--texte-2); }
 .popmenu [role="menuitem"] svg { width: 16px; height: 16px; flex: none; color: var(--mousse); }
 .popmenu { max-height: 70vh; overflow-y: auto; }
+
+/* ===== Générer : dessiner les blocs des espaces ===== */
+.scene-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 14px 0; }
+.draw-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 10px 14px 0; padding: 8px 12px; background: #FFF3DA; border: 1px solid #EFD9A8; border-radius: 999px; font-size: .88rem; }
+.draw-bar .draw-lbl { font-weight: 600; color: var(--encre); }
+.draw-bar .sol-chip .fam-dot { border: 1px solid rgba(28,46,38,.25); }
+.scene-wrap.is-drawing { border-color: var(--ambre); box-shadow: 0 0 0 3px rgba(217, 160, 63, .25), var(--ombre); }
+.scene-wrap.is-drawing #scene { cursor: cell; touch-action: none; }
+.scene-wrap.is-drawing .iso-item { pointer-events: none; }

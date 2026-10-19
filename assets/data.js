@@ -265,7 +265,7 @@ window.EVAD_DATA = {
       },
       modelisation: {
         label: "Modélisation",
-        intro: "Voici ton lieu en maquette. Glisse tes solutions sur une case libre : elles apparaissent en gris, c'est ce qui est prévu. Clique un espace pour choisir sa taille.",
+        intro: "Voici ton lieu en maquette. Glisse tes solutions sur une case libre : elles apparaissent en gris, c'est ce qui est prévu. Clique un espace pour choisir sa taille, ou dessine ses blocs case par case.",
         suggestions: [
           { q: "Où poser les panneaux solaires ?", a: "Une case bien dégagée côté sud, loin des grands arbres, évite l'ombre de l'après-midi. Le bas de la maquette est le plus ensoleillé." },
           { q: "Pourquoi tout est gris ?", a: "Gris veut dire prévu. Ça passera en ambre quand le chantier démarre, et en vert seulement quand une preuve de terrain le confirme." },
