@@ -1310,3 +1310,14 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 /* ===== Générer : taille et orientation d'une solution armée ===== */
 .dim-ctl { display: inline-flex; align-items: center; gap: 6px; margin: 0 4px; padding: 2px 6px; background: var(--creme); border-radius: 999px; }
 .dim-ctl .icon-btn { width: 26px; height: 26px; min-height: 0; font-weight: 700; }
+
+/* ===== Carte : aucun lieu ne passe les filtres ===== */
+.map-empty { position: absolute; z-index: 6; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(380px, calc(100% - 32px)); padding: 18px 20px; text-align: center;
+  background: rgba(255, 253, 247, .96); border: 1px solid var(--bord); border-radius: var(--r-lg); box-shadow: var(--ombre-haute); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.map-empty p { margin: 0 0 12px; color: var(--texte-2); font-size: .95rem; }
+.map-empty-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+@media (min-width: 901px) {
+  body[data-page="index"] .map-empty { left: calc(50% + var(--deva-w) / 2 + 24px); }
+  body.deva-closed[data-page="index"] .map-empty { left: 50%; }
+}
+@media (max-width: 900px) { .map-empty { top: 40%; } }

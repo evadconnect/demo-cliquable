@@ -596,7 +596,27 @@
       draw();
       if (v === "osm" && host._lmap) setTimeout(function () { host._lmap.invalidateSize(); }, 60);
     }
+    // Aucun lieu ne passe les filtres : la carte le dit, et propose d'élargir ou de rêver le premier lieu du coin.
+    function renderEmpty(count) {
+      var old = stageEl.querySelector(".map-empty");
+      if (count > 0) { if (old) old.remove(); return; }
+      if (old) return;
+      var e = document.createElement("div");
+      e.className = "map-empty"; e.setAttribute("role", "status");
+      e.innerHTML = "<p>" + (nearMe ? "Aucun lieu à moins de 80 km avec ces filtres, pour l'instant." : "Aucun lieu ne correspond à ces filtres, pour l'instant.") + "</p>" +
+        '<div class="map-empty-actions"><button type="button" class="btn btn-ghost btn-sm" id="map-empty-reset">Afficher tous les lieux</button>' +
+        '<a class="btn btn-primary btn-sm" href="rever.html">Rêver le premier lieu</a></div>';
+      stageEl.appendChild(e);
+      e.querySelector("#map-empty-reset").addEventListener("click", resetFilters);
+    }
+    function resetFilters() {
+      Object.keys(fStat).forEach(function (k) { fStat[k] = true; });
+      $all("[data-fstat]").forEach(function (b) { b.setAttribute("aria-pressed", "true"); });
+      fFam = ""; if (famSel) famSel.value = "";
+      if (nearMe) setNear(false); else draw();
+    }
     function draw() {
+      renderEmpty(allProjects().filter(filter).filter(projectLoc).length);
       if (vue === "iso") {
         var list = allProjects().filter(filter).map(function (p) { var loc = projectLoc(p); return loc ? Object.assign({}, p, { loc: loc }) : null; }).filter(Boolean);
         var selP = selected ? projectById(selected) : null;
@@ -739,12 +759,17 @@
         { label: "Créer mon lieu", primary: true, once: false, onClick: function () { location.href = "rever.html"; } }
       ];
     }
+    // Ce que Deva peut promettre de la carte : des lieux réels seulement quand la carte publique est chargée.
+    function carteIntro() {
+      if (carteEnModeExemple()) return "Pour l'instant, elle montre des lieux d'exemple : ceux des collectifs apparaîtront ici dès qu'ils seront publiés.";
+      return "Chaque marqueur est un lieu réel.";
+    }
     // Deva dans la sidebar, une fois la carte révélée (ou si l'intro est passée).
     function startHomeDeva(firstTime) {
       if (!(window.Deva && Deva.prompt)) return;
       if (firstTime) {
         Deva.say((state.prenom ? "Et voilà la carte vivante, " + state.prenom + ". " : "Et voilà la carte vivante. ") +
-          "Chaque marqueur est un lieu réel. Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
+          carteIntro() + " Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
       } else if (state.prenom) {
         Deva.say("Ravi de te revoir, " + state.prenom + ". " + VISION + " Par quoi veux-tu commencer ?", { instant: true, actions: choices() });
       } else {
