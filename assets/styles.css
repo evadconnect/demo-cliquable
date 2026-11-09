@@ -1235,8 +1235,11 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 .map-view button { border: 0; background: none; font: inherit; font-weight: 600; font-size: .86rem; color: var(--texte-2); padding: 6px 14px; border-radius: 999px; cursor: pointer; }
 .map-view button[aria-pressed="true"] { background: var(--foret); color: var(--blanc); }
 .map-stage.has-fiche .map-view { right: 462px; }
+/* le bandeau « mode exemple » se range sous le bascule Illustrée / Carte (et le suit quand la fiche s'ouvre) */
 @media (min-width: 901px) {
-  .map-stage .map-notice { top: calc(var(--top-h) + 76px); }
+  body[data-page="index"] .map-stage .map-notice { top: calc(var(--top-h) + 76px); right: 16px; }
+  /* fiche ouverte : la fiche porte déjà le badge « Exemple », le bandeau se retire plutôt que de passer sous le panneau de Deva */
+  body[data-page="index"] .map-stage.has-fiche .map-notice { display: none; }
 }
 @media (max-width: 900px) {
   .map-stage.view-iso #isomap { position: relative; inset: auto; order: 2; aspect-ratio: 10 / 8; }

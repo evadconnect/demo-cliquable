@@ -247,11 +247,14 @@
     // À l'échelle de la France, un plateau ou un nom de ville serait minuscule : on les grossit
     // en proportion inverse du zoom (en douceur), pour qu'ils restent lisibles de loin comme de près.
     var k = Math.max(0.2, 1 / Math.pow(st.zoom, 0.75));
+    // Les villes suivent presque l'inverse du zoom (elles grossissent à peine à l'écran quand on s'approche),
+    // sans plancher élevé : sinon un nom de ville devenait énorme au zoom maximal. Près de la maquette, elles s'effacent.
+    var kt = Math.max(0.1, 1 / Math.pow(st.zoom, 0.85));
     st.towns.forEach(function (t) {
-      var s = Math.max(0.6, Math.min(2.6, k * (t.g0 >= 2 ? 2.4 : 1.7)));
+      var s = Math.max(0.2, Math.min(2.6, kt * (t.g0 >= 2 ? 2.4 : 1.7)));
       t.g.setAttribute("transform", "translate(" + t.x + " " + t.y + ") scale(" + s + ")");
       var pres = st.lieu && Math.hypot(t.x - st.lieu.x, (t.y - st.lieu.y) * 2) < 110; // une ville sous la maquette s'efface
-      t.g.parentNode.style.opacity = ((st.zoom < 1.8 && t.g0 < 2) || pres) ? "0" : "1";
+      t.g.parentNode.style.opacity = ((st.zoom < 1.8 && t.g0 < 2) || st.zoom > 7 || pres) ? "0" : "1";
     });
     st.marks.forEach(function (m) { var s = m.base * k; m.g.setAttribute("transform", "translate(" + (m.x - 24 * s) + " " + (m.y - 40 * s) + ") scale(" + s + ")"); });
     if (st.me) { var s2 = 1.6 * k; st.me.setAttribute("transform", "translate(" + st.mex + " " + st.mey + ") scale(" + s2 + ")"); }
