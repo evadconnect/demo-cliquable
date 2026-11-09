@@ -113,10 +113,14 @@
     ["Angoulême", 45.65, 0.16, 1], ["Agen", 44.2, 0.62, 1], ["Mont-de-Marsan", 43.89, -0.5, 1], ["Niort", 46.32, -0.46, 1], ["Brive", 45.16, 1.53, 1],
     ["Bergerac", 44.85, 0.48, 1], ["Mulhouse", 47.75, 7.34, 1], ["Troyes", 48.3, 4.08, 1], ["Quimper", 48.0, -4.1, 1], ["Valence", 44.93, 4.89, 1]
   ];
+  // Palette inspirée des jeux de restauration de paysages (Terra Nil) : eau turquoise qui s'éclaircit
+  // vers les côtes, prairies fraîches et fleuries, forêts de canopées rondes, montagnes gris-violet enneigées.
   var COL = {
-    sea: ["#A9CBCF", "#9FC3C8"], plain: ["#CFD9A8", "#C6D19D"], vine: ["#C8CF95", "#BFC78A"], forest: ["#8FB58C", "#86AD83"],
-    marsh: ["#B9CFB4", "#B0C8AC"], hill: ["#B9C98E", "#AFC085"], high: ["#A8B983", "#9EB07A"], mont: ["#A7A99A", "#9C9E90"]
+    sea: ["#5DA2A7", "#5DA2A7"], plain: ["#A8CC78", "#92BE68"], vine: ["#BFC97A", "#AEBB6C"], forest: ["#6FA66A", "#5F9960"],
+    marsh: ["#8FC4A0", "#7FB893"], hill: ["#9CC56E", "#88B562"], high: ["#80AA62", "#6F9A58"], mont: ["#A3A5A8", "#8F929B"]
   };
+  var DEEP = "#5DA2A7", SHALLOW = ["", "#A3DCD2", "#86C9C4", "#70B6B6"], SAND = ["#E6D7AA", "#D6C597"];
+  var FLOWERS = ["#F6D96E", "#FFF8E8", "#F6D96E", "#FFF8E8", "#EFA9B6"], CANOPY = ["#2F7A52", "#246744", "#3F8F5F"], SHADE = "rgba(28,46,38,.2)";
   function height(type, i, j) {
     if (type === "hill") return 6 + hash(i, j) * 4;
     if (type === "high") return 12 + hash(i, j) * 5;
@@ -133,64 +137,108 @@
     var svg = el("svg", { viewBox: full.x + " " + full.y + " " + full.w + " " + full.h, class: "imap-svg", role: "img", preserveAspectRatio: "xMidYMid slice",
       "aria-label": "Carte illustrée de la France avec les lieux EVAD. Positions approximatives. Molette ou boutons pour zoomer, glisser pour se déplacer." }, host);
     var g0 = el("g", {}, svg);
-    poly(g0, [P(0, ROWS, 0), P(COLS, ROWS, 0), P(COLS, ROWS, -SLAB), P(0, ROWS, -SLAB)], "#9C6B4A");
-    poly(g0, [P(COLS, 0, 0), P(COLS, ROWS, 0), P(COLS, ROWS, -SLAB), P(COLS, 0, -SLAB)], "#80573C");
+    poly(g0, [P(0, ROWS, 0), P(COLS, ROWS, 0), P(COLS, ROWS, -SLAB), P(0, ROWS, -SLAB)], "#A97B57");
+    poly(g0, [P(COLS, 0, 0), P(COLS, ROWS, 0), P(COLS, ROWS, -SLAB), P(COLS, 0, -SLAB)], "#8C6345");
+    // halos de régénération : dégradés radiaux, verts qui s'estompent
+    var defs = el("defs", {}, svg);
+    [["prouve", "#4F9F5A", 0.85], ["encours", "#84BF6E", 0.6]].forEach(function (d) {
+      var rg = el("radialGradient", { id: "imap-halo-" + d[0], cx: "50%", cy: "50%", r: "50%" }, defs);
+      el("stop", { offset: "0%", "stop-color": d[1], "stop-opacity": d[2] }, rg);
+      el("stop", { offset: "55%", "stop-color": d[1], "stop-opacity": d[2] * 0.55 }, rg);
+      el("stop", { offset: "100%", "stop-color": d[1], "stop-opacity": 0 }, rg);
+    });
 
-    // la mer : un seul losange, puis quelques vagues ; les cases de terre seulement sont dessinées une à une
+    // la mer : un losange d'eau profonde, des bas-fonds plus clairs près des côtes, de l'écume au rivage
     var sea = el("g", { class: "imap-sea" }, svg);
-    poly(sea, [P(0, 0, -3), P(COLS, 0, -3), P(COLS, ROWS, -3), P(0, ROWS, -3)], "#A4C7CC");
-    var tiles = [], zs = {};
+    poly(sea, [P(0, 0, -3), P(COLS, 0, -3), P(COLS, ROWS, -3), P(0, ROWS, -3)], DEEP);
+    var tiles = [], zs = {}, land = {};
     for (var i = 0; i < COLS; i++) for (var j = 0; j < ROWS; j++) {
       var ll = toLL(i + 0.5, j + 0.5), t = terrain(ll.lat, ll.lng), z = height(t, i, j);
       zs[i + "," + j] = z;
-      if (t === "sea") {
-        if (hash(i * 2, j) > 0.86) { var w0 = P(i + 0.2 + hash(i, j) * 0.5, j + 0.5, -3); el("path", { d: "M" + w0[0] + " " + w0[1] + " q4 -2 8 0 q4 2 8 0", stroke: "rgba(255,253,247,.55)", "stroke-width": 1, fill: "none" }, sea); }
-        else if (hash(i, j * 3) > 0.5) poly(sea, [P(i, j, -3), P(i + 1, j, -3), P(i + 1, j + 1, -3), P(i, j + 1, -3)], "rgba(255,253,247,.06)");
-        continue;
+      if (t !== "sea") { land[i + "," + j] = 1; tiles.push({ i: i, j: j, t: t, z: z }); }
+    }
+    // distance à la côte (en cases, jusqu'à 3) : l'eau s'éclaircit en approchant des terres
+    function coastDist(i, j) {
+      for (var d = 1; d <= 3; d++) for (var a = -d; a <= d; a++) for (var b = -d; b <= d; b++) {
+        if (Math.max(Math.abs(a), Math.abs(b)) === d && land[(i + a) + "," + (j + b)]) return d;
       }
-      tiles.push({ i: i, j: j, t: t, z: z });
+      return 4;
+    }
+    for (var si = 0; si < COLS; si++) for (var sj = 0; sj < ROWS; sj++) {
+      if (land[si + "," + sj]) continue;
+      var dc = coastDist(si, sj);
+      if (dc <= 3) poly(sea, [P(si, sj, -3), P(si + 1, sj, -3), P(si + 1, sj + 1, -3), P(si, sj + 1, -3)], SHALLOW[dc], { opacity: hash(si, sj) > 0.5 ? 0.85 : 1 });
+      if (dc === 1 && hash(si * 3, sj) > 0.5) {
+        var f0 = P(si + 0.15 + hash(si, sj) * 0.4, sj + 0.35 + hash(sj, si) * 0.3, -3);
+        el("path", { d: "M" + f0[0] + " " + f0[1] + " q5 -2.5 10 0", stroke: "rgba(255,253,247,.72)", "stroke-width": 1.1, fill: "none", "stroke-linecap": "round" }, sea);
+      } else if (dc > 3 && hash(si * 2, sj) > 0.9) {
+        var w0 = P(si + 0.2 + hash(si, sj) * 0.5, sj + 0.5, -3);
+        el("path", { d: "M" + w0[0] + " " + w0[1] + " q4 -2 8 0 q4 2 8 0", stroke: "rgba(255,253,247,.4)", "stroke-width": 1, fill: "none" }, sea);
+      }
     }
     tiles.sort(function (a, b) { return (a.i + a.j) - (b.i + b.j) || a.i - b.i; });
     var gt = el("g", { class: "imap-tiles" }, svg);
     tiles.forEach(function (c) {
-      var i = c.i, j = c.j, z = c.z, base = COL[c.t][hash(j, i) > 0.5 ? 1 : 0];
+      // chaque case a sa nuance (fondu entre deux teintes), avec par endroits une tache un peu plus sombre : un patchwork peint, sans grille
+      var i = c.i, j = c.j, z = c.z, base = mix(COL[c.t][0], COL[c.t][1], hash(j, i));
+      if (hash(i * 3, j * 7) > 0.78) base = mix(base, "#2C4A3A", 0.07);
       // bord de mer : une petite tranche sous la case, pour marquer la côte
-      if (!c.z && (!zs[i + "," + (j + 1)] || zs[i + "," + (j + 1)] < 0)) poly(gt, [P(i, j + 1, 0), P(i + 1, j + 1, 0), P(i + 1, j + 1, -3), P(i, j + 1, -3)], "#B9A98B");
-      if (!c.z && (zs[(i + 1) + "," + j] === undefined || zs[(i + 1) + "," + j] < 0)) poly(gt, [P(i + 1, j, 0), P(i + 1, j + 1, 0), P(i + 1, j + 1, -3), P(i + 1, j, -3)], "#A8987A");
+      // bord de mer : une tranche de sable clair sous la case
+      if (!c.z && (!zs[i + "," + (j + 1)] || zs[i + "," + (j + 1)] < 0)) poly(gt, [P(i, j + 1, 0), P(i + 1, j + 1, 0), P(i + 1, j + 1, -3), P(i, j + 1, -3)], SAND[0]);
+      if (!c.z && (zs[(i + 1) + "," + j] === undefined || zs[(i + 1) + "," + j] < 0)) poly(gt, [P(i + 1, j, 0), P(i + 1, j + 1, 0), P(i + 1, j + 1, -3), P(i + 1, j, -3)], SAND[1]);
       if (z > 0) {
-        poly(gt, [P(i, j + 1, z), P(i + 1, j + 1, z), P(i + 1, j + 1, 0), P(i, j + 1, 0)], mix(base, "#1C2E26", 0.25));
-        poly(gt, [P(i + 1, j, z), P(i + 1, j + 1, z), P(i + 1, j + 1, 0), P(i + 1, j, 0)], mix(base, "#1C2E26", 0.38));
+        poly(gt, [P(i, j + 1, z), P(i + 1, j + 1, z), P(i + 1, j + 1, 0), P(i, j + 1, 0)], mix(base, "#2C4A3A", 0.2));
+        poly(gt, [P(i + 1, j, z), P(i + 1, j + 1, z), P(i + 1, j + 1, 0), P(i + 1, j, 0)], mix(base, "#2C4A3A", 0.32));
       }
-      poly(gt, [P(i, j, z), P(i + 1, j, z), P(i + 1, j + 1, z), P(i, j + 1, z)], base, { stroke: "rgba(255,253,247,.16)", "stroke-width": 0.5 });
+      poly(gt, [P(i, j, z), P(i + 1, j, z), P(i + 1, j + 1, z), P(i, j + 1, z)], base, { stroke: base, "stroke-width": 0.4 });
+      // un arbre à canopée ronde : ombre portée, boule de feuillage, reflet
+      function tree(u, v, r, col) {
+        var p = P(u, v, z);
+        el("ellipse", { cx: p[0], cy: p[1] + 0.6, rx: r * 0.95, ry: r * 0.42, fill: SHADE }, gt);
+        el("circle", { cx: p[0], cy: p[1] - r * 0.75, r: r, fill: col }, gt);
+        el("circle", { cx: p[0] - r * 0.32, cy: p[1] - r * 1.05, r: r * 0.38, fill: "rgba(255,253,247,.2)" }, gt);
+      }
       if (c.t === "forest") {
-        [[0.3, 0.35], [0.7, 0.65], [0.35, 0.75]].forEach(function (o, k) {
-          if (hash(i + k, j) < 0.3) return;
-          var p = P(i + o[0], j + o[1], z);
-          el("path", { d: "M" + p[0] + " " + p[1] + " l-3 0 l3 -7 l3 7 z", fill: k % 2 ? "#4E8C6C" : "#3F7A5C" }, gt);
+        [[0.3, 0.3], [0.72, 0.62], [0.32, 0.76], [0.7, 0.22]].forEach(function (o, k) {
+          if (hash(i + k, j) < 0.25) return;
+          tree(i + o[0], j + o[1], 2 + hash(i, j + k) * 1.5, CANOPY[(i + j + k) % 3]);
         });
       } else if (c.t === "vine") {
-        [0.3, 0.6].forEach(function (f) { var a = P(i + 0.1, j + f, z), b = P(i + 0.9, j + f, z); el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#8E9A5A", "stroke-width": 0.9, opacity: 0.8 }, gt); });
+        [0.28, 0.52, 0.76].forEach(function (f) { var a = P(i + 0.1, j + f, z), b = P(i + 0.9, j + f, z); el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#8FA05E", "stroke-width": 0.9, opacity: 0.85 }, gt); });
       } else if (c.t === "mont") {
         var pk = P(i + 0.5, j + 0.5, z), hpk = 10 + hash(i, j) * 8;
-        el("path", { d: "M" + (pk[0] - 9) + " " + (pk[1] + 2) + " L" + pk[0] + " " + (pk[1] - hpk) + " L" + (pk[0] + 9) + " " + (pk[1] + 2) + " Z", fill: "#8E9084" }, gt);
-        el("path", { d: "M" + (pk[0] - 3) + " " + (pk[1] - hpk + 4.5) + " L" + pk[0] + " " + (pk[1] - hpk) + " L" + (pk[0] + 3) + " " + (pk[1] - hpk + 4.5) + " Z", fill: "#F4F1E8" }, gt);
-      } else if ((c.t === "hill" || c.t === "high") && hash(j, i * 3) > 0.72) {
-        var q = P(i + 0.5, j + 0.5, z);
-        el("path", { d: "M" + q[0] + " " + q[1] + " l-3 0 l3 -6 l3 6 z", fill: "#5F7F52" }, gt);
-      } else if (c.t === "marsh" && hash(i, j * 2) > 0.5) {
+        el("path", { d: "M" + (pk[0] - 9) + " " + (pk[1] + 2) + " L" + pk[0] + " " + (pk[1] - hpk) + " L" + (pk[0] + 9) + " " + (pk[1] + 2) + " Z", fill: "#8C8F9C" }, gt);
+        el("path", { d: "M" + pk[0] + " " + (pk[1] - hpk) + " L" + (pk[0] + 9) + " " + (pk[1] + 2) + " L" + pk[0] + " " + (pk[1] + 2) + " Z", fill: "rgba(28,46,38,.14)" }, gt);
+        el("path", { d: "M" + (pk[0] - 3.2) + " " + (pk[1] - hpk + 4.8) + " L" + pk[0] + " " + (pk[1] - hpk) + " L" + (pk[0] + 3.2) + " " + (pk[1] - hpk + 4.8) + " Z", fill: "#F7F5EE" }, gt);
+        if (hash(j, i) > 0.55) { var pk2 = P(i + 0.2, j + 0.7, z), h2 = 5 + hash(j, i) * 4; el("path", { d: "M" + (pk2[0] - 5) + " " + (pk2[1] + 1) + " L" + pk2[0] + " " + (pk2[1] - h2) + " L" + (pk2[0] + 5) + " " + (pk2[1] + 1) + " Z", fill: "#9B9EA8" }, gt); }
+      } else if ((c.t === "hill" || c.t === "high") && hash(j, i * 3) > 0.6) {
+        tree(i + 0.35 + hash(i, j) * 0.3, j + 0.4 + hash(j, i) * 0.3, 1.6 + hash(i * 2, j) * 0.8, c.t === "high" ? "#4E8A5E" : "#5F9A5E");
+      } else if (c.t === "marsh") {
         var m = P(i + 0.5, j + 0.5, z);
-        el("path", { d: "M" + m[0] + " " + m[1] + " l-2 -4 M" + m[0] + " " + m[1] + " l2 -5 M" + m[0] + " " + m[1] + " l0 -5", stroke: "#6E9A7B", "stroke-width": 1, fill: "none" }, gt);
-      } else if (c.t === "plain" && hash(i * 5, j) > 0.88) {
-        var r = P(i + 0.3 + hash(i, j) * 0.4, j + 0.5, z);
-        el("path", { d: "M" + r[0] + " " + r[1] + " l-2 -3 M" + r[0] + " " + r[1] + " l2 -4", stroke: "#A6B37A", "stroke-width": 1, fill: "none" }, gt);
+        if (hash(i, j * 2) > 0.45) el("path", { d: "M" + m[0] + " " + m[1] + " l-2 -4 M" + m[0] + " " + m[1] + " l2 -5 M" + m[0] + " " + m[1] + " l0 -5", stroke: "#5E8F74", "stroke-width": 1, fill: "none", "stroke-linecap": "round" }, gt);
+        else { var mw = P(i + 0.35 + hash(j, i) * 0.3, j + 0.6, z); el("ellipse", { cx: mw[0], cy: mw[1], rx: 4.5, ry: 2, fill: "#A9D8D1", opacity: .9 }, gt); }
+      } else if (c.t === "plain" || c.t === "hill") {
+        // prairies : des fleurs par touffes, quelques herbes hautes
+        if (hash(i * 5, j) > 0.8) {
+          for (var f = 0; f < 3; f++) {
+            var fp = P(i + 0.25 + hash(i + f, j) * 0.5, j + 0.25 + hash(j, i + f) * 0.5, z);
+            el("circle", { cx: fp[0], cy: fp[1], r: 0.7, fill: FLOWERS[(i + j + f) % 5], opacity: .9 }, gt);
+          }
+        } else if (hash(i * 7, j) > 0.86) {
+          var r = P(i + 0.3 + hash(i, j) * 0.4, j + 0.5, z);
+          el("path", { d: "M" + r[0] + " " + r[1] + " l-2 -3 M" + r[0] + " " + r[1] + " l2 -4", stroke: "#9DAE6E", "stroke-width": 1, fill: "none", "stroke-linecap": "round" }, gt);
+        }
       }
     });
+    // halos de régénération, posés sur le terrain et sous les fleuves (redessinés avec les lieux)
+    var gh = el("g", { class: "imap-halos" }, svg);
     function zAt(u, v) { var k = Math.floor(u) + "," + Math.floor(v); return Math.max(0, zs[k] || 0); }
     // fleuves
     var gw = el("g", { class: "imap-water" }, svg);
     RIVERS.forEach(function (r) {
       var d = r.pts.map(function (ll, k) { var uv = toUV(ll[0], ll[1]); var p = P(uv.u, uv.v, zAt(uv.u, uv.v)); return (k ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
-      el("path", { d: d, stroke: "#8FBFC4", "stroke-width": r.w, fill: "none", "stroke-linecap": "round", "stroke-linejoin": "round" }, gw);
+      el("path", { d: d, stroke: "rgba(255,253,247,.45)", "stroke-width": r.w + 1.6, fill: "none", "stroke-linecap": "round", "stroke-linejoin": "round" }, gw);
+      el("path", { d: d, stroke: "#7FC6C6", "stroke-width": r.w, fill: "none", "stroke-linecap": "round", "stroke-linejoin": "round" }, gw);
     });
     // villes (mises à l'échelle inverse du zoom pour rester lisibles)
     var gv = el("g", { class: "imap-towns" }, svg), towns = [];
@@ -210,6 +258,15 @@
     el("path", { d: "M" + rose[0] + " " + (rose[1] - 20) + " l6 14 l-6 -4 l-6 4 z", fill: "#2C5234" }, gr);
     el("text", { x: rose[0], y: rose[1] - 24, class: "imap-rose-lbl", "text-anchor": "middle" }, gr).textContent = "N";
     var gm = el("g", { class: "imap-marks" }, svg), gme = el("g", { class: "imap-me" }, svg);
+    // vie ambiante : trois vols d'oiseaux qui traversent lentement (animation CSS, coupée si l'utilisateur préfère moins de mouvement)
+    var gb = el("g", { class: "imap-birds", "aria-hidden": "true" }, svg), birds = [];
+    [[46.4, -5.2], [44.6, -0.2], [48.9, 2.0]].forEach(function (b, k) {
+      var uv = toUV(b[0], b[1]), c = P(uv.u, uv.v, 70), g = el("g", { class: "imap-bird imap-bird-" + k }, gb), inner = el("g", {}, g);
+      [[0, 0, 1.2, 1], [-9, 3, 1, 0.8], [7, 4, 0.9, 0.7]].forEach(function (o) {
+        el("path", { d: "M" + (o[0] - 4) + " " + o[1] + " q2 -2.6 4 0 q2 -2.6 4 0", stroke: "#2C4A3A", "stroke-width": o[2], fill: "none", "stroke-linecap": "round", opacity: o[3] }, inner);
+      });
+      birds.push({ g: inner, x: c[0], y: c[1] });
+    });
 
     // légende et commandes, en HTML par-dessus
     var cap = document.createElement("p"); cap.className = "imap-caption"; cap.textContent = "Carte illustrée : positions approximatives. La vue carte donne le détail."; host.appendChild(cap);
@@ -217,7 +274,7 @@
     zc.innerHTML = '<button type="button" data-z="in" aria-label="Zoomer">+</button><button type="button" data-z="out" aria-label="Dézoomer">−</button><button type="button" data-z="fit" class="imap-fit">Tout voir</button>';
     host.appendChild(zc);
 
-    var st = { svg: svg, full: full, vb: Object.assign({}, full), gm: gm, gme: gme, towns: towns, zAt: zAt, marks: [], zoom: 1, host: host, ratio: 2 };
+    var st = { svg: svg, full: full, vb: Object.assign({}, full), gm: gm, gme: gme, gh: gh, towns: towns, birds: birds, zAt: zAt, marks: [], zoom: 1, host: host, ratio: 2 };
     setupNav(host, st, zc);
     if (window.ResizeObserver) new ResizeObserver(function () { applyView(st); }).observe(host);
     else window.addEventListener("resize", function () { applyView(st); });
@@ -257,6 +314,7 @@
       t.g.parentNode.style.opacity = ((st.zoom < 1.8 && t.g0 < 2) || st.zoom > 7 || pres) ? "0" : "1";
     });
     st.marks.forEach(function (m) { var s = m.base * k; m.g.setAttribute("transform", "translate(" + (m.x - 24 * s) + " " + (m.y - 40 * s) + ") scale(" + s + ")"); });
+    (st.birds || []).forEach(function (b) { b.g.setAttribute("transform", "translate(" + b.x + " " + b.y + ") scale(" + (1.1 * k) + ")"); });
     if (st.me) { var s2 = 1.6 * k; st.me.setAttribute("transform", "translate(" + st.mex + " " + st.mey + ") scale(" + s2 + ")"); }
     // maquette 2,5D du lieu sélectionné : posée sur la grille de la carte, à taille fixe (elle grandit avec le zoom
     // comme le terrain), elle se révèle entre les zooms 3 et 6 pendant que le plateau s'efface
@@ -362,11 +420,27 @@
     var st = host._imap && host.contains(host._imap.svg) ? host._imap : buildTerrain(host);
     var first = !st.ready; st.ready = true;
     st.padLeft = opt.padLeft || 0; st.padRight = opt.padRight || 0;
-    st.gm.innerHTML = ""; st.gme.innerHTML = ""; st.marks = []; st.me = null; st.lieu = null;
+    st.gm.innerHTML = ""; st.gme.innerHTML = ""; st.gh.innerHTML = ""; st.marks = []; st.me = null; st.lieu = null;
     var selMark = null, selUV = null;
     var projets = (opt.projects || []).map(function (p) { return { p: p, uv: toUV(p.loc.lat, p.loc.lng) }; })
       .filter(function (x) { return x.uv.u >= 0 && x.uv.u <= COLS && x.uv.v >= 0 && x.uv.v <= ROWS; })
       .sort(function (a, b) { return (a.uv.u + a.uv.v) - (b.uv.u + b.uv.v); });
+    // La régénération se voit sur le paysage : un lieu prouvé fait reverdir et fleurir autour de lui,
+    // un lieu en cours commence à verdir, un lieu rêvé n'est encore qu'un contour en pointillé.
+    projets.forEach(function (x) {
+      var p = x.p, hc = P(x.uv.u, x.uv.v, st.zAt(x.uv.u, x.uv.v));
+      if (p.statut === "prouve" || p.statut === "encours") {
+        var R = (p.statut === "prouve" ? 2.4 : 1.5) * TW;
+        el("ellipse", { cx: hc[0], cy: hc[1], rx: R, ry: R / 2, fill: "url(#imap-halo-" + p.statut + ")", class: "imap-halo st-" + p.statut }, st.gh);
+        var n = p.statut === "prouve" ? 12 : 4;
+        for (var f = 0; f < n; f++) {
+          var ang = hash(f, n) * 6.283, rad = (0.3 + hash(f, 3) * 0.6) * R;
+          el("circle", { cx: hc[0] + Math.cos(ang) * rad, cy: hc[1] + Math.sin(ang) * rad / 2, r: 1, fill: FLOWERS[f % 5], opacity: .95, class: "imap-halo-flower" }, st.gh);
+        }
+      } else {
+        el("ellipse", { cx: hc[0], cy: hc[1], rx: 1.1 * TW, ry: 0.55 * TW, fill: "none", stroke: "rgba(255,253,247,.75)", "stroke-width": 0.9, "stroke-dasharray": "3 3", class: "imap-halo st-reve" }, st.gh);
+      }
+    });
     projets.forEach(function (x) {
       var p = x.p, c = P(x.uv.u, x.uv.v, st.zAt(x.uv.u, x.uv.v)), base = p.isMine ? 1.9 : 1.6;
       var sel = opt.selected === p.id, hl = opt.highlight && opt.highlight(p);
@@ -407,7 +481,7 @@
         var gl = el("g", { class: "imap-lieu" }, st.gm);
         // tapis d'herbe fondu sous la maquette, pour l'asseoir dans le paysage
         var rx = w * 0.56, ry = rx * 0.5;
-        poly(gl, [[cc[0], cc[1] - ry], [cc[0] + rx, cc[1]], [cc[0], cc[1] + ry], [cc[0] - rx, cc[1]]], "#C4D6A4", { class: "imap-lieu-ground" });
+        poly(gl, [[cc[0], cc[1] - ry], [cc[0] + rx, cc[1]], [cc[0], cc[1] + ry], [cc[0] - rx, cc[1]]], "#9CC46E", { class: "imap-lieu-ground" });
         el("ellipse", { cx: cc[0], cy: cc[1] + ry * 0.9, rx: rx * 0.9, ry: ry * 0.35, fill: "rgba(28,46,38,.18)", class: "imap-lieu-shadow" }, gl);
         sc.setAttribute("class", "imap-lieu-svg"); sc.setAttribute("preserveAspectRatio", "xMidYMid meet"); sc.style.pointerEvents = "none";
         sc.setAttribute("width", w); sc.setAttribute("height", h); sc.setAttribute("x", cc[0] - w / 2); sc.setAttribute("y", cc[1] - h * cyFrac);

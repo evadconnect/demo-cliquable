@@ -1197,7 +1197,10 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 @media (prefers-reduced-motion: reduce) { .lmark-iso { transition: none; } }
 
 /* ===== Carte illustrée isométrique (vue par défaut de l'accueil) ===== */
-#isomap { position: absolute; inset: 0; display: none; background: #A4C7CC; overflow: hidden; }
+#isomap { position: absolute; inset: 0; display: none; background: #5DA2A7; overflow: hidden; }
+/* lumière chaude et douce : un léger voile crème au centre, un peu plus d'ombre vers les bords */
+#isomap::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background: radial-gradient(ellipse at 45% 35%, rgba(255, 246, 220, .16), rgba(255, 246, 220, 0) 55%), radial-gradient(ellipse at 50% 50%, rgba(28, 46, 38, 0) 60%, rgba(28, 46, 38, .14) 100%); }
 .map-stage.view-iso #isomap { display: block; }
 .map-stage.view-iso #map { visibility: hidden; }
 .imap-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -1330,3 +1333,11 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 @media (min-width: 901px) {
   body[data-page="index"] .near-pop { position: absolute; right: 0; bottom: calc(100% + 10px); width: min(360px, calc(100vw - var(--deva-w) - 72px)); }
 }
+
+/* ===== Carte illustrée : vie ambiante et régénération ===== */
+.imap-halo { transition: opacity .3s; }
+.imap-bird { animation: imap-fly 90s linear infinite; }
+.imap-bird-1 { animation-duration: 120s; animation-delay: -40s; }
+.imap-bird-2 { animation-duration: 105s; animation-delay: -70s; }
+@keyframes imap-fly { from { transform: translate(-420px, 30px); } to { transform: translate(900px, -50px); } }
+@media (prefers-reduced-motion: reduce) { .imap-bird { animation: none; } }
