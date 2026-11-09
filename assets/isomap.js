@@ -129,6 +129,114 @@
     return 0;
   }
 
+  /* ---------- villes modélisées (visibles au niveau ville) ---------- */
+  // Un petit volume isométrique : deux faces visibles (gauche et droite) et un toit.
+  function isoBox(g, u, v, w, d, h, wall, roof, z) {
+    var z0 = z || 0, c = P(u + w, v + d, z0), dd = P(u, v + d, z0), b = P(u + w, v, z0);
+    var at = P(u, v, z0 + h), bt = P(u + w, v, z0 + h), ct = P(u + w, v + d, z0 + h), dt = P(u, v + d, z0 + h);
+    poly(g, [dd, c, ct, dt], mix(wall, "#2C4A3A", 0.2));
+    poly(g, [b, c, ct, bt], mix(wall, "#2C4A3A", 0.34));
+    poly(g, [at, bt, ct, dt], roof, { stroke: mix(roof, "#FFFDF7", 0.35), "stroke-width": 0.4 });
+  }
+  // Bordeaux : le port de la Lune (croissant de Garonne), les quais et la place de la Bourse avec son miroir d'eau,
+  // le pont de pierre, la flèche Pey-Berland, la Grosse Cloche, le Jardin public, la Cité du Vin, la Bastide en face.
+  var VILLES_MODELES = {
+    Bordeaux: function (g, u0, v0, z) {
+      var S = 1.35, items = [];
+      function U(du) { return u0 + du * S; }
+      function V(dv) { return v0 + dv * S; }
+      function PP(d) { return P(U(d[0]), V(d[1]), z); }
+      function add(key, fn) { items.push({ key: key, fn: fn }); }
+      var STONE = "#EEE3CB", TILE = "#C98B6A", SLATE = "#7E8A95";
+      // la Garonne : une courbe en croissant, du sud-est vers le nord (la Gironde) ; la ville s'est lovée dans la courbe
+      var A = [1.25, 1.55], B = [1.85, -0.75], C = [-0.6, -2.3];
+      function Q(t) { var a = (1 - t) * (1 - t), b = 2 * (1 - t) * t, c = t * t; return [a * A[0] + b * B[0] + c * C[0], a * A[1] + b * B[1] + c * C[1]]; }
+      function side(t, d) { // point décalé de d par rapport au fleuve : d > 0 vers la rive gauche (ouest), d < 0 vers la rive droite
+        var q = Q(t), dv = [2 * (1 - t) * (B[0] - A[0]) + 2 * t * (C[0] - B[0]), 2 * (1 - t) * (B[1] - A[1]) + 2 * t * (C[1] - B[1])];
+        var n = [-dv[1], dv[0]], L = Math.hypot(n[0], n[1]) || 1; n = [n[0] / L, n[1] / L]; if (n[0] > 0) n = [-n[0], -n[1]];
+        return [q[0] + n[0] * d, q[1] + n[1] * d];
+      }
+      function pip(poly, pt) { var c = false; for (var a = 0, b = poly.length - 1; a < poly.length; b = a++) { var yi = poly[a][1], xi = poly[a][0], yj = poly[b][1], xj = poly[b][0]; if ((yi > pt[1]) !== (yj > pt[1]) && pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi) c = !c; } return c; }
+      var k, gauche = [], droite = [];
+      // la rive gauche est un croissant parallèle au fleuve : le port de la Lune
+      for (k = 0; k <= 14; k++) gauche.push(side(k / 14, 0.42));
+      for (k = 14; k >= 0; k--) gauche.push(side(k / 14, 1.0 + 1.15 * Math.sin(Math.PI * k / 14)));
+      for (k = 0; k <= 8; k++) droite.push(side(0.18 + k / 8 * 0.52, -0.42));
+      for (k = 8; k >= 0; k--) droite.push(side(0.18 + k / 8 * 0.52, -0.95 - 0.25 * Math.sin(Math.PI * k / 8)));
+      // sol urbain : pierre blonde, en demi-lune sur la rive gauche, une bande sur la rive droite (la Bastide)
+      var sol = el("g", {}, g);
+      poly(sol, gauche.map(PP), "#E7DDC6", { stroke: "#D8CBAE", "stroke-width": 0.6, "stroke-linejoin": "round" });
+      poly(sol, droite.map(PP), "#E4DAC3", { stroke: "#D8CBAE", "stroke-width": 0.6, "stroke-linejoin": "round" });
+      // le fleuve et ses quais
+      var r0 = PP(A), r1 = PP(B), r2 = PP(C), dRiv = "M" + r0[0] + " " + r0[1] + " Q" + r1[0] + " " + r1[1] + " " + r2[0] + " " + r2[1];
+      el("path", { d: dRiv, stroke: "#ECE2CA", "stroke-width": 12, fill: "none", "stroke-linecap": "round" }, sol);
+      el("path", { d: dRiv, stroke: "#7FC6C6", "stroke-width": 7.5, fill: "none", "stroke-linecap": "round" }, sol);
+      // miroir d'eau, sur le quai devant la place de la Bourse
+      var mi = side(0.47, 0.5);
+      poly(sol, [PP([mi[0] - 0.22, mi[1] - 0.12]), PP([mi[0] + 0.22, mi[1] - 0.12]), PP([mi[0] + 0.22, mi[1] + 0.12]), PP([mi[0] - 0.22, mi[1] + 0.12])], "#CFE8E6", { opacity: .9 });
+      // Jardin public
+      var jardin = side(0.8, 1.0), jp = PP(jardin);
+      el("ellipse", { cx: jp[0], cy: jp[1], rx: 9, ry: 4.5, fill: "#9CC46E" }, sol);
+      [[-3, -1], [2, 0.5], [-0.5, 1.5]].forEach(function (o) { el("circle", { cx: jp[0] + o[0], cy: jp[1] + o[1] - 2.2, r: 1.9, fill: "#3F8F5F" }, sol); });
+      // repères à ne pas recouvrir d'îlots : [u, v, rayon]
+      var bourse = side(0.47, 0.82), cath = side(0.58, 1.45), cloche = side(0.3, 1.0), cite = side(0.93, 0.55), pont = 0.2;
+      var libres = [[bourse[0], bourse[1], 0.38], [cath[0] + 0.25, cath[1], 0.34], [cloche[0], cloche[1], 0.18], [jardin[0], jardin[1], 0.32], [cite[0], cite[1], 0.26], [mi[0], mi[1], 0.2]];
+      // îlots d'immeubles : un semis régulier dans la demi-lune, hauteurs homogènes (la ville de pierre du XVIIIe)
+      var n = 0;
+      for (var du = -2.4; du < 2.4; du += 0.34) for (var dv = -2.7; dv < 2.7; dv += 0.3) {
+        var cu = du + (hash(n, 1) - 0.5) * 0.08, cv = dv + (hash(n, 2) - 0.5) * 0.08, c = [cu + 0.15, cv + 0.13]; n++;
+        if (!pip(gauche, c) && !pip(droite, c)) continue;
+        if (hash(n, 7) > 0.88) continue; // une place, une cour : la ville respire
+        if (libres.some(function (l) { return Math.hypot(c[0] - l[0], c[1] - l[1]) < l[2]; })) continue;
+        if (Math.abs(side(pont, 0.1)[1] - c[1]) < 0.16 && c[0] > side(pont, 0.5)[0] - 0.2) continue; // l'axe du pont reste dégagé
+        (function (cu, cv, k) {
+          add(cu + cv, function () { isoBox(g, U(cu), V(cv), 0.26 * S, 0.23 * S, 3.6 + hash(k, 3) * 2.2, STONE, hash(k, 5) > 0.3 ? TILE : SLATE, z); });
+        })(cu, cv, n);
+      }
+      // place de la Bourse : longue façade en arc face au fleuve, pavillon central
+      add(bourse[0] + bourse[1], function () {
+        isoBox(g, U(bourse[0] - 0.45), V(bourse[1] - 0.12), 0.9 * S, 0.22 * S, 6, STONE, SLATE, z);
+        isoBox(g, U(bourse[0] - 0.12), V(bourse[1] - 0.15), 0.24 * S, 0.27 * S, 8.5, STONE, SLATE, z);
+      });
+      // cathédrale Saint-André et la flèche de la tour Pey-Berland
+      add(cath[0] + cath[1], function () {
+        isoBox(g, U(cath[0]), V(cath[1]), 0.5 * S, 0.22 * S, 8, "#F1E7D2", SLATE, z);
+        isoBox(g, U(cath[0] + 0.55), V(cath[1] + 0.03), 0.14 * S, 0.14 * S, 13, "#F1E7D2", SLATE, z);
+        var t = P(U(cath[0] + 0.62), V(cath[1] + 0.1), z + 13);
+        el("path", { d: "M" + (t[0] - 3) + " " + (t[1] + 1) + " L" + t[0] + " " + (t[1] - 11) + " L" + (t[0] + 3) + " " + (t[1] + 1) + " Z", fill: "#6F7B86" }, g);
+        el("circle", { cx: t[0], cy: t[1] - 11.5, r: 0.9, fill: "#D9A03F" }, g);
+      });
+      // Grosse Cloche : une tour à dôme
+      add(cloche[0] + cloche[1], function () {
+        isoBox(g, U(cloche[0]), V(cloche[1]), 0.13 * S, 0.13 * S, 9, "#EADFC6", "#B5A98C", z);
+        var c = P(U(cloche[0] + 0.09), V(cloche[1] + 0.09), z + 9);
+        el("ellipse", { cx: c[0], cy: c[1] - 1.5, rx: 2.6, ry: 2.2, fill: "#6F7B86" }, g);
+        el("circle", { cx: c[0], cy: c[1] - 3.6, r: .8, fill: "#D9A03F" }, g);
+      });
+      // Cité du Vin : une forme ronde et dorée, au nord des quais
+      add(cite[0] + cite[1], function () {
+        var c = PP(cite);
+        el("ellipse", { cx: c[0], cy: c[1] + 0.5, rx: 5, ry: 2.2, fill: SHADE }, g);
+        el("path", { d: "M" + (c[0] - 4) + " " + c[1] + " q-1 -8 4 -9 q5 -1 4.5 6 q-.5 4 -4.5 4 q-3.5 0 -4 -1 z", fill: "#D9A03F" }, g);
+        el("path", { d: "M" + (c[0] - 2) + " " + (c[1] - 2) + " q1 -4 4 -4.5", stroke: "rgba(255,253,247,.6)", "stroke-width": 1, fill: "none", "stroke-linecap": "round" }, g);
+      });
+      // pont de pierre : dix-sept arches entre les deux rives
+      var pa = side(pont, 0.5), pb = side(pont, -0.5);
+      add(pa[0] + pa[1] + 0.3, function () {
+        var a = PP(pa), b = PP(pb);
+        el("line", { x1: a[0], y1: a[1] + 1.2, x2: b[0], y2: b[1] + 1.2, stroke: "rgba(28,46,38,.25)", "stroke-width": 2.6, "stroke-linecap": "round" }, g);
+        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#E6D9BD", "stroke-width": 2.6, "stroke-linecap": "round" }, g);
+        for (var q = 1; q < 7; q++) { var x = a[0] + (b[0] - a[0]) * q / 7, y = a[1] + (b[1] - a[1]) * q / 7; el("circle", { cx: x, cy: y + 1.4, r: .55, fill: "#7FC6C6" }, g); }
+      });
+      // du fond vers l'avant, pour que les volumes se recouvrent correctement
+      items.sort(function (a, b) { return a.key - b.key; }).forEach(function (it) { it.fn(); });
+      // le nom, au sud de la ville
+      var lb = PP(side(0.12, 1.3));
+      var lbl = el("text", { x: lb[0], y: lb[1] + 8, class: "imap-city-lbl", "text-anchor": "middle" }, g); lbl.textContent = "Bordeaux";
+      return lbl;
+    }
+  };
+
   /* ---------- terrain (dessiné une seule fois par conteneur) ---------- */
   function buildTerrain(host) {
     host.innerHTML = "";
@@ -240,6 +348,15 @@
       el("path", { d: d, stroke: "rgba(255,253,247,.45)", "stroke-width": r.w + 1.6, fill: "none", "stroke-linecap": "round", "stroke-linejoin": "round" }, gw);
       el("path", { d: d, stroke: "#7FC6C6", "stroke-width": r.w, fill: "none", "stroke-linecap": "round", "stroke-linejoin": "round" }, gw);
     });
+    // villes modélisées : une maquette posée sur le terrain, visible au niveau ville
+    var gc = el("g", { class: "imap-cities" }, svg), cities = [];
+    VILLES.forEach(function (vl) {
+      var mod = VILLES_MODELES[vl[0]]; if (!mod) return;
+      var uv = toUV(vl[1], vl[2]), cz = zAt(uv.u, uv.v), cc = P(uv.u, uv.v, cz);
+      var gg = el("g", { class: "imap-city", opacity: 0 }, gc);
+      var lbl = mod(gg, uv.u, uv.v, cz);
+      cities.push({ g: gg, lbl: lbl, nom: vl[0], x: cc[0], y: cc[1] });
+    });
     // villes (mises à l'échelle inverse du zoom pour rester lisibles)
     var gv = el("g", { class: "imap-towns" }, svg), towns = [];
     VILLES.forEach(function (vl) {
@@ -277,7 +394,7 @@
     var crumbs = document.createElement("nav"); crumbs.className = "imap-crumbs"; crumbs.setAttribute("aria-label", "Niveau de la carte");
     host.appendChild(crumbs);
 
-    var st = { svg: svg, full: full, vb: Object.assign({}, full), gm: gm, gme: gme, gh: gh, towns: towns, birds: birds, zAt: zAt, marks: [], zoom: 1, host: host, ratio: 2, crumbs: crumbs };
+    var st = { svg: svg, full: full, vb: Object.assign({}, full), gm: gm, gme: gme, gh: gh, towns: towns, cities: cities, birds: birds, zAt: zAt, marks: [], zoom: 1, host: host, ratio: 2, crumbs: crumbs };
     setupNav(host, st, zc);
     crumbs.addEventListener("click", function (e) {
       var b = e.target.closest("button[data-lvl]"); if (!b) return;
@@ -317,11 +434,20 @@
     // Les villes suivent presque l'inverse du zoom (elles grossissent à peine à l'écran quand on s'approche),
     // sans plancher élevé : sinon un nom de ville devenait énorme au zoom maximal. Près de la maquette, elles s'effacent.
     var kt = Math.max(0.1, 1 / Math.pow(st.zoom, 0.85));
+    // maquettes de villes : visibles dès qu'on quitte la vue France ; elles s'effacent sous la maquette d'un lieu tout proche
+    var shown = {};
+    (st.cities || []).forEach(function (c) {
+      var near = st.lieu && st.zoom >= 5 && Math.hypot(c.x - st.lieu.x, (c.y - st.lieu.y) * 2) < 90;
+      var on = st.zoom >= 1.9 && !near;
+      c.g.setAttribute("opacity", on ? 1 : 0); c.g.style.pointerEvents = "none";
+      if (c.lbl) c.lbl.style.opacity = (on && st.zoom < 5) ? 1 : 0;
+      shown[c.nom] = on;
+    });
     st.towns.forEach(function (t) {
       var s = Math.max(0.2, Math.min(2.6, kt * (t.g0 >= 2 ? 2.4 : 1.7)));
       t.g.setAttribute("transform", "translate(" + t.x + " " + t.y + ") scale(" + s + ")");
       var pres = st.lieu && st.zoom >= 5 && Math.hypot(t.x - st.lieu.x, (t.y - st.lieu.y) * 2) < 110; // une ville sous la maquette s'efface (au niveau lieu seulement)
-      t.g.parentNode.style.opacity = ((st.zoom < 1.8 && t.g0 < 2) || st.zoom > 7 || pres) ? "0" : "1";
+      t.g.parentNode.style.opacity = ((st.zoom < 1.8 && t.g0 < 2) || st.zoom > 7 || pres || shown[t.nom]) ? "0" : "1";
     });
     st.marks.forEach(function (m) { var s = m.base * k; m.g.setAttribute("transform", "translate(" + (m.x - 24 * s) + " " + (m.y - 40 * s) + ") scale(" + s + ")"); });
     (st.birds || []).forEach(function (b) { b.g.setAttribute("transform", "translate(" + b.x + " " + b.y + ") scale(" + (1.1 * k) + ")"); });

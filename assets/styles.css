@@ -1356,3 +1356,7 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   body[data-page="index"] .imap-crumbs { top: calc(var(--top-h) + 28px); left: calc(var(--deva-w) + 36px); }
 }
 @media (max-width: 900px) { .imap-crumbs { font-size: .78rem; } .imap-crumbs [aria-current] { max-width: 150px; } }
+
+/* ===== Carte illustrée : villes modélisées ===== */
+.imap-city { transition: opacity .35s; }
+.imap-city-lbl { font: 700 7px var(--f-texte); letter-spacing: .04em; fill: #4B4A3F; paint-order: stroke; stroke: rgba(255,253,247,.85); stroke-width: 2.2px; transition: opacity .25s; }
