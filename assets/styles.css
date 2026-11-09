@@ -1341,3 +1341,18 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 .imap-bird-2 { animation-duration: 105s; animation-delay: -70s; }
 @keyframes imap-fly { from { transform: translate(-420px, 30px); } to { transform: translate(900px, -50px); } }
 @media (prefers-reduced-motion: reduce) { .imap-bird { animation: none; } }
+
+/* ===== Carte illustrée : fil d'Ariane France › ville › lieu ===== */
+.imap-crumbs { position: absolute; z-index: 7; top: 12px; left: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; max-width: calc(100% - 24px);
+  background: rgba(255, 253, 247, .94); border: 1px solid var(--bord); border-radius: 999px; box-shadow: var(--ombre); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); font-size: .84rem; color: var(--texte-2); }
+.imap-crumbs button { border: 0; background: none; font: inherit; font-weight: 600; color: var(--foret); cursor: pointer; padding: 0; text-decoration: underline dotted; text-underline-offset: 3px; }
+.imap-crumbs button:hover { color: var(--encre); }
+.imap-crumbs button:focus-visible { outline: 2px solid var(--foret); outline-offset: 2px; border-radius: 4px; }
+.imap-crumbs [aria-current] { font-weight: 700; color: var(--encre); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+.imap-crumbs .sep { opacity: .55; }
+/* au niveau ville, les noms des lieux restent affichés */
+.imap-svg.is-ville .imark-lbl { opacity: 1; }
+@media (min-width: 901px) {
+  body[data-page="index"] .imap-crumbs { top: calc(var(--top-h) + 28px); left: calc(var(--deva-w) + 36px); }
+}
+@media (max-width: 900px) { .imap-crumbs { font-size: .78rem; } .imap-crumbs [aria-current] { max-width: 150px; } }

@@ -621,7 +621,7 @@
         var list = allProjects().filter(filter).map(function (p) { var loc = projectLoc(p); return loc ? Object.assign({}, p, { loc: loc }) : null; }).filter(Boolean);
         var selP = selected ? projectById(selected) : null;
         var wide = window.matchMedia("(min-width: 901px)").matches, devaW = (wide && !document.body.classList.contains("deva-closed")) ? (parseInt(getComputedStyle(document.documentElement).getPropertyValue("--deva-w"), 10) || 380) + 48 : 0;
-        renderIsoMap(isoHost, { projects: list, selected: selected, lieu: selP ? lieuFor(selP) : null, onSelect: openFiche, me: meLoc ? { lat: meLoc.lat, lng: meLoc.lng, label: nearLabel } : null, padLeft: devaW, padRight: (wide && selected) ? 460 : 0 });
+        renderIsoMap(isoHost, { projects: list, selected: selected, lieu: selP ? lieuFor(selP) : null, onSelect: openFiche, onBack: function () { if (selected) closeFiche(); }, me: meLoc ? { lat: meLoc.lat, lng: meLoc.lng, label: nearLabel } : null, padLeft: devaW, padRight: (wide && selected) ? 460 : 0 });
         return;
       }
       renderMap(host, { onSelect: openFiche, selected: selected, filter: filter });

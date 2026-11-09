@@ -251,7 +251,7 @@
         el("path", { d: "M" + (dx - 3.5) + " " + (dy - 5) + " L" + dx + " " + (dy - 8.5) + " L" + (dx + 3.5) + " " + (dy - 5) + " Z", fill: "#B8674A" }, inner);
       }
       el("text", { x: 0, y: 12, class: "imap-town-lbl", "text-anchor": "middle" }, inner).textContent = vl[0];
-      towns.push({ g: inner, x: c[0], y: c[1], g0: vl[3] });
+      towns.push({ g: inner, x: c[0], y: c[1], g0: vl[3], nom: vl[0] });
     });
     // rose des vents
     var ruv = toUV(51.6, 8.2), rose = P(ruv.u, ruv.v, 0), gr = el("g", { class: "imap-rose" }, svg);
@@ -273,9 +273,19 @@
     var zc = document.createElement("div"); zc.className = "imap-zoom"; zc.setAttribute("role", "group"); zc.setAttribute("aria-label", "Zoom de la carte illustrée. Au clavier : plus, moins, zéro pour tout voir, flèches pour se déplacer.");
     zc.innerHTML = '<button type="button" data-z="in" aria-label="Zoomer">+</button><button type="button" data-z="out" aria-label="Dézoomer">−</button><button type="button" data-z="fit" class="imap-fit">Tout voir</button>';
     host.appendChild(zc);
+    // fil d'Ariane : France › ville › lieu, pour savoir où l'on est et remonter d'un niveau
+    var crumbs = document.createElement("nav"); crumbs.className = "imap-crumbs"; crumbs.setAttribute("aria-label", "Niveau de la carte");
+    host.appendChild(crumbs);
 
-    var st = { svg: svg, full: full, vb: Object.assign({}, full), gm: gm, gme: gme, gh: gh, towns: towns, birds: birds, zAt: zAt, marks: [], zoom: 1, host: host, ratio: 2 };
+    var st = { svg: svg, full: full, vb: Object.assign({}, full), gm: gm, gme: gme, gh: gh, towns: towns, birds: birds, zAt: zAt, marks: [], zoom: 1, host: host, ratio: 2, crumbs: crumbs };
     setupNav(host, st, zc);
+    crumbs.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-lvl]"); if (!b) return;
+      stopAnim(st);
+      if (st.onBack) st.onBack(b.dataset.lvl); // la page referme la fiche du lieu
+      if (b.dataset.lvl === "france") fitAll(st, true);
+      else if (st.ville) animateTo(st, cityTarget(st, st.ville, null), 900);
+    });
     if (window.ResizeObserver) new ResizeObserver(function () { applyView(st); }).observe(host);
     else window.addEventListener("resize", function () { applyView(st); });
     host._imap = st;
@@ -310,7 +320,7 @@
     st.towns.forEach(function (t) {
       var s = Math.max(0.2, Math.min(2.6, kt * (t.g0 >= 2 ? 2.4 : 1.7)));
       t.g.setAttribute("transform", "translate(" + t.x + " " + t.y + ") scale(" + s + ")");
-      var pres = st.lieu && Math.hypot(t.x - st.lieu.x, (t.y - st.lieu.y) * 2) < 110; // une ville sous la maquette s'efface
+      var pres = st.lieu && st.zoom >= 5 && Math.hypot(t.x - st.lieu.x, (t.y - st.lieu.y) * 2) < 110; // une ville sous la maquette s'efface (au niveau lieu seulement)
       t.g.parentNode.style.opacity = ((st.zoom < 1.8 && t.g0 < 2) || st.zoom > 7 || pres) ? "0" : "1";
     });
     st.marks.forEach(function (m) { var s = m.base * k; m.g.setAttribute("transform", "translate(" + (m.x - 24 * s) + " " + (m.y - 40 * s) + ") scale(" + s + ")"); });
@@ -324,22 +334,80 @@
       if (st.lieu.mark) st.lieu.mark.style.opacity = 1 - t;
     }
     if (st.zc) { st.zc.querySelector("[data-z=in]").disabled = st.zoom >= 9.9; st.zc.querySelector("[data-z=out]").disabled = st.zoom <= 1.01; }
+    updateCrumbs(st);
     // la hauteur du cadre dépend de l'écran : on garde la largeur voulue comme référence
     st.vb = vb;
   }
+  /* ---------- niveaux : France, ville, lieu ---------- */
+  // La ville repère la plus proche d'un point de la carte (les grandes villes attirent un peu plus loin).
+  function nearestTown(st, x, y) {
+    var best = null, bd = 1e9;
+    st.towns.forEach(function (t) { var d = Math.hypot(t.x - x, (t.y - y) * 2) / (1 + t.g0 * 0.5); if (d < bd) { bd = d; best = t; } });
+    return best;
+  }
+  // Centre réellement visible de la fenêtre (entre le panneau de Deva et la fiche), en fraction de la largeur.
+  function visibleFx(st) {
+    var rr = st.host.getBoundingClientRect();
+    return rr.width ? ((st.padLeft || 0) + (rr.width - (st.padLeft || 0) - (st.padRight || 0)) / 2) / rr.width : 0.5;
+  }
+  // Vue « ville » : la ville et ses environs ; si le lieu visé est un peu loin, on cadre entre les deux.
+  function cityTarget(st, town, lieu) {
+    var w = maxWidth(st.ratio) / 3.2, h = w / st.ratio, cx = town.x, cy = town.y;
+    if (lieu && (Math.abs(lieu.x - town.x) > w * 0.28 || Math.abs(lieu.y - town.y) > h * 0.28)) { cx = (town.x + lieu.x) / 2; cy = (town.y + lieu.y) / 2; }
+    return { x: cx - w * visibleFx(st), y: cy - h / 2, w: w, h: h };
+  }
+  function lieuTarget(st, lieu) {
+    var w = maxWidth(st.ratio) / 10, h = w / st.ratio;
+    return { x: lieu.x - w * visibleFx(st), y: lieu.y - h * 0.55, w: w, h: h };
+  }
+  function crumbEl(tag, text, attrs) {
+    var n = document.createElement(tag); n.textContent = text;
+    for (var k in attrs || {}) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  // Niveau courant d'après le zoom : France (vue large), ville (zoom moyen), lieu (maquette visible).
+  function updateCrumbs(st) {
+    if (!st.crumbs) return;
+    var lvl = st.zoom < 1.7 ? "france" : (st.sel && st.zoom >= 5.5 ? "lieu" : "ville");
+    if (lvl !== "france") {
+      var cx = st.sel ? st.sel.x : st.vb.x + st.vb.w * visibleFx(st), cy = st.sel ? st.sel.y : st.vb.y + st.vb.h / 2;
+      st.ville = nearestTown(st, cx, cy);
+    }
+    st.svg.classList.toggle("is-ville", lvl === "ville");
+    var key = lvl + "|" + (st.ville ? st.ville.nom : "") + "|" + (st.sel ? st.sel.nom : "");
+    if (key === st.crumbKey) return;
+    st.crumbKey = key; st.crumbs.innerHTML = "";
+    var sep = function () { return crumbEl("span", "›", { class: "sep", "aria-hidden": "true" }); };
+    if (lvl === "france") st.crumbs.appendChild(crumbEl("span", "France", { "aria-current": "location" }));
+    else {
+      st.crumbs.appendChild(crumbEl("button", "France", { type: "button", "data-lvl": "france", title: "Revoir toute la France" }));
+      st.crumbs.appendChild(sep());
+      if (lvl === "ville") st.crumbs.appendChild(crumbEl("span", st.ville.nom, { "aria-current": "location" }));
+      else {
+        st.crumbs.appendChild(crumbEl("button", st.ville.nom, { type: "button", "data-lvl": "ville", title: "Revenir autour de " + st.ville.nom }));
+        st.crumbs.appendChild(sep());
+        st.crumbs.appendChild(crumbEl("span", st.sel.nom, { "aria-current": "location" }));
+      }
+    }
+  }
+
   // Glisse le cadre vers une cible (zoom et centre), en douceur ; toute action de l'utilisateur l'interrompt.
-  function animateTo(st, target, ms) {
-    if (st.anim) cancelAnimationFrame(st.anim);
+  function animateTo(st, target, ms, done) {
+    stopAnim(st);
     var from = Object.assign({}, st.vb), t0 = performance.now();
     function step(now) {
       var t = Math.min(1, (now - t0) / ms), e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
       st.vb = { x: from.x + (target.x - from.x) * e, y: from.y + (target.y - from.y) * e, w: from.w + (target.w - from.w) * e, h: from.h + (target.h - from.h) * e };
       applyView(st);
       st.anim = t < 1 ? requestAnimationFrame(step) : null;
+      if (t >= 1 && done) done();
     }
     st.anim = requestAnimationFrame(step);
   }
-  function stopAnim(st) { if (st.anim) { cancelAnimationFrame(st.anim); st.anim = null; } }
+  function stopAnim(st) {
+    if (st.anim) { cancelAnimationFrame(st.anim); st.anim = null; }
+    if (st.pause) { clearTimeout(st.pause); st.pause = null; }
+  }
   // La France entière : plus grande fenêtre sans bord, centrée sur le pays (décalée si un panneau couvre la gauche).
   function fitAll(st, anime) {
     var c = toUV(46.6, 2.4), cc = P(c.u, c.v, 0), w = maxWidth(st.ratio), h = w / st.ratio;
@@ -489,11 +557,15 @@
         st.lieu = { g: gl, x: cc[0], y: cc[1], mark: selMark.g };
       }
     }
+    st.sel = selMark ? { x: selMark.x, y: selMark.y, nom: selMark.p.nom } : null;
+    st.onBack = opt.onBack || null;
     if (selMark && opt.selected !== st.lastSel) {
-      // zoom maximal, le lieu au centre de la zone réellement visible (entre le panneau de Deva et la fiche)
-      var w = maxWidth(st.ratio) / 10, h = w / st.ratio, rr = st.host.getBoundingClientRect();
-      var fx = rr.width ? (st.padLeft + (rr.width - st.padLeft - st.padRight) / 2) / rr.width : 0.5;
-      animateTo(st, { x: selMark.x - w * fx, y: selMark.y - h * 0.55, w: w, h: h }, 1100);
+      // Depuis la France entière, on passe d'abord par la ville la plus proche (une courte pause), puis on descend
+      // jusqu'au lieu, où la maquette apparaît. Depuis une vue déjà rapprochée, on va droit au lieu.
+      var town = nearestTown(st, selMark.x, selMark.y), fin = lieuTarget(st, selMark);
+      if (st.zoom < 2.2 && town) {
+        animateTo(st, cityTarget(st, town, selMark), 900, function () { st.pause = setTimeout(function () { st.pause = null; animateTo(st, fin, 1100); }, 450); });
+      } else animateTo(st, fin, 1100);
     }
     st.lastSel = opt.selected || null;
     if (opt.me) {
