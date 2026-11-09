@@ -621,7 +621,7 @@
         var list = allProjects().filter(filter).map(function (p) { var loc = projectLoc(p); return loc ? Object.assign({}, p, { loc: loc }) : null; }).filter(Boolean);
         var selP = selected ? projectById(selected) : null;
         var wide = window.matchMedia("(min-width: 901px)").matches, devaW = (wide && !document.body.classList.contains("deva-closed")) ? (parseInt(getComputedStyle(document.documentElement).getPropertyValue("--deva-w"), 10) || 380) + 48 : 0;
-        renderIsoMap(isoHost, { projects: list, selected: selected, lieu: selP ? lieuFor(selP) : null, onSelect: openFiche, me: meLoc, padLeft: devaW, padRight: (wide && selected) ? 460 : 0 });
+        renderIsoMap(isoHost, { projects: list, selected: selected, lieu: selP ? lieuFor(selP) : null, onSelect: openFiche, me: meLoc ? { lat: meLoc.lat, lng: meLoc.lng, label: nearLabel } : null, padLeft: devaW, padRight: (wide && selected) ? 460 : 0 });
         return;
       }
       renderMap(host, { onSelect: openFiche, selected: selected, filter: filter });
@@ -640,40 +640,105 @@
     famSel.addEventListener("change", function () { fFam = famSel.value; draw(); });
     // Pré-filtrage de la carte par famille d'intérêt (choisie dans l'onboarding).
     function applyFamily(fam) { fFam = fam || ""; if (famSel) famSel.value = fFam; draw(); }
-    // « Autour de moi » : géolocalisation du navigateur (avec accord), sinon la position du lieu rêvé.
-    var nearBtn = $("#f-near");
+    // « Autour de moi » : la position du navigateur (avec accord), le lieu rêvé, ou une commune tapée
+    // (recherche Nominatim, comme à l'étape Rêver). Le choix reste dans la page, rien n'est enregistré.
+    var nearBtn = $("#f-near"), nearLabel = "", nearPop = null;
+    function nearText(on) { return on ? "Autour de " + (nearLabel || "moi") + " (80 km)" : "Autour de moi"; }
     function showMe() {
       if (vue === "iso") { draw(); return; }
       if (!window.L || !host._lmap || !meLoc) return;
       if (meMarker) meMarker.remove();
       meMarker = L.circleMarker([meLoc.lat, meLoc.lng], { radius: 7, color: "#0B6049", weight: 2, fillColor: "#9BC7AC", fillOpacity: .95 })
-        .addTo(host._lmap).bindTooltip("Toi", { direction: "top", offset: [0, -8] });
+        .addTo(host._lmap).bindTooltip(nearLabel || "Toi", { direction: "top", offset: [0, -8] });
       host._lmap.setView([meLoc.lat, meLoc.lng], 9);
     }
     function setNear(on) {
-      nearMe = on; nearBtn.setAttribute("aria-pressed", String(on)); nearBtn.textContent = on ? "Autour de moi (80 km)" : "Autour de moi";
+      nearMe = on; nearBtn.setAttribute("aria-pressed", String(on)); nearBtn.textContent = nearText(on);
       if (!on && meMarker) { meMarker.remove(); meMarker = null; }
       draw();
     }
+    function closeNearPop() {
+      if (!nearPop) return;
+      nearPop.remove(); nearPop = null; nearBtn.setAttribute("aria-expanded", "false");
+    }
+    // Un endroit choisi (position, lieu rêvé ou commune) : le filtre s'active autour.
+    function nearFrom(lat, lng, label, phrase) {
+      meLoc = { lat: +lat, lng: +lng }; nearLabel = label || "";
+      closeNearPop(); setNear(true); showMe();
+      if (phrase && window.Deva && Deva.say) Deva.say(phrase, { instant: true });
+    }
+    function communeLabel(r) {
+      var a = r.address || {};
+      return a.city || a.town || a.village || a.municipality || a.hamlet || r.name || (r.display_name || "").split(",")[0];
+    }
+    function locateMe(status) {
+      status.textContent = "Localisation…";
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        nearFrom(pos.coords.latitude, pos.coords.longitude, "", "Je te situe : voici les lieux à moins de 80 km. Ta position reste dans cette page, rien n'est enregistré.");
+      }, function () {
+        status.textContent = "Position indisponible ou refusée : tape plutôt le nom de ta commune.";
+        var q = nearPop && nearPop.querySelector("#near-q"); if (q) q.focus();
+      }, { timeout: 8000, maximumAge: 300000 });
+    }
+    // Sur grand écran, le popover s'aligne sur le bouton, sans passer sous le panneau de Deva ni sortir de l'écran.
+    function placeNearPop() {
+      if (!nearPop) return;
+      if (!window.matchMedia("(min-width: 901px)").matches) { nearPop.style.left = ""; nearPop.style.right = ""; return; }
+      var fb = filters.getBoundingClientRect(), bb = nearBtn.getBoundingClientRect(), w = nearPop.offsetWidth;
+      var minX = document.body.classList.contains("deva-closed") ? 16 : (parseInt(getComputedStyle(document.documentElement).getPropertyValue("--deva-w"), 10) || 380) + 32;
+      var x = Math.max(minX, Math.min(bb.right - w, window.innerWidth - 16 - w));
+      nearPop.style.left = (x - fb.left) + "px"; nearPop.style.right = "auto";
+    }
+    window.addEventListener("resize", placeNearPop);
+    function openNearPop() {
+      closeNearPop();
+      nearPop = document.createElement("div");
+      nearPop.className = "near-pop"; nearPop.setAttribute("role", "dialog"); nearPop.setAttribute("aria-label", "Autour de quel endroit ?");
+      var quick = (navigator.geolocation ? '<button type="button" class="chip" id="near-geo">Ma position</button>' : "") +
+        (state.project.loc ? '<button type="button" class="chip" id="near-lieu">Mon lieu' + (state.project.lieu ? " (" + esc(state.project.lieu) + ")" : "") + "</button>" : "");
+      nearPop.innerHTML =
+        '<div class="near-pop-head"><p class="f-title">Autour de quel endroit ?</p><button type="button" class="icon-btn icon-sm" id="near-close" aria-label="Fermer">' + ICON.close + "</button></div>" +
+        (quick ? '<div class="row">' + quick + "</div>" : "") +
+        '<label class="f-title" for="near-q">' + (quick ? "Ou une commune" : "Une commune") + "</label>" +
+        '<div class="geo-row"><input id="near-q" type="search" placeholder="Nom de la commune" autocomplete="off" enterkeyhint="search"><button type="button" class="btn btn-ghost btn-sm" id="near-search">Chercher</button></div>' +
+        '<ul class="geo-results" id="near-results"></ul>' +
+        '<p class="geo-status" id="near-status">Ta position ou ta commune restent dans cette page, rien n\'est enregistré.</p>';
+      nearBtn.insertAdjacentElement("afterend", nearPop);
+      nearBtn.setAttribute("aria-expanded", "true");
+      placeNearPop();
+      var q = $("#near-q", nearPop), res = $("#near-results", nearPop), status = $("#near-status", nearPop);
+      $("#near-close", nearPop).addEventListener("click", closeNearPop);
+      var g = $("#near-geo", nearPop); if (g) g.addEventListener("click", function () { locateMe(status); });
+      var l = $("#near-lieu", nearPop); if (l) l.addEventListener("click", function () { nearFrom(state.project.loc.lat, state.project.loc.lng, state.project.lieu ? state.project.lieu.split(",")[0] : "mon lieu"); });
+      function search() {
+        var txt = q.value.trim(); if (txt.length < 2) { status.textContent = "Tape au moins 2 caractères."; return; }
+        status.textContent = "Recherche…"; res.innerHTML = "";
+        fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&countrycodes=fr&accept-language=fr&q=" + encodeURIComponent(txt))
+          .then(function (r) { return r.json(); })
+          .then(function (list) {
+            if (!list.length) { status.textContent = "Aucune commune trouvée. Essaie une autre orthographe."; return; }
+            status.textContent = "Choisis la bonne :";
+            res.innerHTML = list.map(function (r, k) { return '<li><button type="button" data-k="' + k + '">' + esc(r.display_name) + "</button></li>"; }).join("");
+            $all("button", res).forEach(function (b) { b.addEventListener("click", function () {
+              var r = list[+b.dataset.k], lbl = communeLabel(r);
+              nearFrom(r.lat, r.lon, lbl, "Voici les lieux à moins de 80 km de " + lbl + ".");
+            }); });
+            var first = $("button", res); if (first) first.focus();
+          })
+          .catch(function () { status.textContent = "Recherche indisponible pour l'instant. Réessaie dans un moment."; });
+      }
+      $("#near-search", nearPop).addEventListener("click", search);
+      q.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); search(); } });
+      q.focus();
+    }
+    nearBtn.setAttribute("aria-haspopup", "dialog"); nearBtn.setAttribute("aria-expanded", "false");
     nearBtn.addEventListener("click", function () {
       if (nearMe) { setNear(false); return; }
-      if (meLoc) { setNear(true); showMe(); return; }
-      if (!navigator.geolocation) {
-        if (state.project.loc) { setNear(true); return; }
-        toast("Ton navigateur ne permet pas la géolocalisation. Situe ton lieu à l'étape Rêver pour utiliser ce filtre."); return;
-      }
-      nearBtn.setAttribute("aria-busy", "true"); nearBtn.textContent = "Localisation…";
-      navigator.geolocation.getCurrentPosition(function (pos) {
-        meLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        nearBtn.removeAttribute("aria-busy");
-        setNear(true); showMe();
-        if (window.Deva && Deva.say) Deva.say("Je te situe : voici les lieux à moins de 80 km. Ta position reste dans cette page, rien n'est enregistré.", { instant: true });
-      }, function () {
-        nearBtn.removeAttribute("aria-busy"); nearBtn.textContent = "Autour de moi";
-        if (state.project.loc) { setNear(true); toast("Géolocalisation indisponible : je prends la position de ton lieu."); return; }
-        toast("Géolocalisation refusée ou indisponible. Situe ton lieu à l'étape Rêver pour utiliser ce filtre.");
-      }, { timeout: 8000, maximumAge: 300000 });
+      if (nearPop) { closeNearPop(); return; }
+      openNearPop();
     });
+    document.addEventListener("click", function (e) { if (nearPop && !nearPop.contains(e.target) && e.target !== nearBtn) closeNearPop(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && nearPop) { closeNearPop(); nearBtn.focus(); } });
 
     var filters = $(".map-filters"), ftoggle = $("#filters-toggle");
     ftoggle.addEventListener("click", function () {

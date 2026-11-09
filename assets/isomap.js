@@ -428,7 +428,7 @@
         var mc = P(mu.u, mu.v, st.zAt(mu.u, mu.v)), g2 = el("g", {}, st.gme);
         el("ellipse", { cx: 0, cy: 0, rx: 9, ry: 4.5, class: "imap-me-ring" }, g2);
         el("circle", { cx: 0, cy: -1, r: 4, fill: "#9BC7AC", stroke: "#0B6049", "stroke-width": 1.6 }, g2);
-        el("text", { x: 0, y: -9, class: "imap-me-lbl", "text-anchor": "middle" }, g2).textContent = "Toi";
+        el("text", { x: 0, y: -9, class: "imap-me-lbl", "text-anchor": "middle" }, g2).textContent = opt.me.label || "Toi";
         st.me = g2; st.mex = mc[0]; st.mey = mc[1];
       }
     }

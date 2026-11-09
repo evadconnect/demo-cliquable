@@ -1321,3 +1321,12 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
   body.deva-closed[data-page="index"] .map-empty { left: 50%; }
 }
 @media (max-width: 900px) { .map-empty { top: 40%; } }
+
+/* ===== Carte : « Autour de moi », choix de l'endroit (position, lieu rêvé ou commune) ===== */
+.near-pop { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 12px; background: var(--blanc); border: 1px solid var(--bord); border-radius: var(--r); box-shadow: var(--ombre-haute); }
+.near-pop-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.near-pop .geo-row input { min-height: 36px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--bord); background: var(--blanc); font-size: .9rem; }
+.near-pop .geo-results button { font-size: .84rem; }
+@media (min-width: 901px) {
+  body[data-page="index"] .near-pop { position: absolute; right: 0; bottom: calc(100% + 10px); width: min(360px, calc(100vw - var(--deva-w) - 72px)); }
+}
