@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proposer une solution, le Commun d'EVAD</title>
+<meta name="description" content="Proposer une solution au Commun d'EVAD. Chaque proposition est relue par le conseil régénératif.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" type="image/svg+xml" href="assets/img/logo-evad.svg">
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+<header class="entete">
+  <a class="entete-logo" href="../index.html?intro=1" aria-label="EVAD, revenir à l'accueil"><img src="assets/img/logo-evad.svg" alt="EVAD" width="86" height="28"></a>
+  <nav class="entete-nav" aria-label="Aller à">
+    <a href="../index.html"><svg class="picto" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6.5l6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5zM9 4v13.5M15 6.5V20"/></svg>Carte</a>
+    <a href="index.html" aria-current="page"><svg class="picto" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 7c-1.7-2-4.3-2.4-8-2.4V18c3.7 0 6.3.4 8 2.4 1.7-2 4.3-2.4 8-2.4V4.6c-3.7 0-6.3.4-8 2.4zM12 7v13.4"/></svg>Commun</a>
+    <a class="btn btn-primaire" href="../rever.html"><svg class="picto" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 19C5 10.5 10.5 5 19 5c0 8.5-5.5 14-14 14z"/><path d="M6.5 17.5C9.5 14 12.5 11 16 8.5"/></svg>Créer un projet</a>
+  </nav>
+</header>
+<main id="contenu" class="etroit">
+  <div id="bandeau-mode" class="bandeau" role="status" hidden></div>
+  <p class="fil"><a href="index.html">Le Commun</a><span aria-hidden="true">›</span><span>Proposer une solution</span></p>
+  <p class="surtitre">Contribuer au Commun</p>
+  <h1>Proposer une solution</h1>
+  <p class="chapo" style="color:var(--texte-2);font-size:1.08rem">Tu as éprouvé quelque chose sur ton lieu ? Décris-le en quelques lignes. Ta proposition est relue par le conseil régénératif avant d'entrer dans le Commun.</p>
+  <div id="zone" aria-live="polite"><div class="squelette" aria-hidden="true" style="min-height:220px"></div></div>
+</main>
+<footer class="pied">
+  <div class="conteneur">
+    <p>Le Commun d'EVAD : une bibliothèque libre de solutions pour les projets régénératifs. Une solution n'y entre qu'après validation par le conseil régénératif.</p>
+    <p><a href="proposer.html">Proposer une solution</a></p>
+  </div>
+</footer>
+<noscript><p class="conteneur">Le Commun a besoin de JavaScript pour afficher les solutions.</p></noscript>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/picto.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/proposer.js"></script>
+</body>
+</html>
