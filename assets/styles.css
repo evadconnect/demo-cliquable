@@ -365,8 +365,6 @@ body[data-page="index"] .stage { padding: 0; }
 .sol-link-go { display: inline-flex; color: var(--mousse); opacity: .6; }
 .sol-link-go svg { width: 16px; height: 16px; }
 .sol-link:hover .sol-link-go { opacity: 1; }
-.sol-card.is-highlight { outline: 3px solid var(--ambre); outline-offset: 2px; animation: cardpulse 1s ease-out; }
-@keyframes cardpulse { 0% { box-shadow: 0 0 0 0 rgba(217, 145, 84, .5); } 100% { box-shadow: 0 0 0 16px rgba(217, 145, 84, 0); } }
 .jauges { display: grid; gap: 8px; }
 .jauge { display: grid; grid-template-columns: 118px auto 1fr; gap: 10px; align-items: center; font-size: .88rem; }
 .jauge-lbl { font-weight: 600; }
@@ -376,12 +374,7 @@ body[data-page="index"] .stage { padding: 0; }
 #scene .iso-svg, #nr-scene .iso-svg { max-height: max(380px, calc(100vh - var(--top-h) - 190px)); margin: 0 auto; }
 
 /* ---------- Commun ---------- */
-.commun-tools { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
-.search { position: relative; flex: 1; min-width: 220px; max-width: 420px; }
-.search svg { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); color: var(--texte-2); }
-.search input { width: 100%; min-height: 46px; padding: 10px 16px 10px 42px; border-radius: 999px; border: 1px solid var(--bord); background: var(--blanc); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 .card { background: var(--blanc); border: 1px solid var(--bord); border-radius: var(--r); padding: 16px 18px; box-shadow: var(--ombre); display: flex; flex-direction: column; }
 .card h3 { margin: 8px 0 6px; }
 .card p { font-size: .9rem; color: var(--texte-2); }
@@ -410,20 +403,6 @@ body[data-page="index"] .stage { padding: 0; }
 .ici-chip { font-size: .76rem; padding: 3px 9px; border-radius: 999px; background: #F7E6C4; color: #6E4B12; font-weight: 500; }
 .ici-card { background: #FDF5E3; border-color: #EFD9A8; }
 .ici-tag { font-size: .74rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ambre-fonce); }
-.doctrine { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; background: var(--foret); color: var(--blanc); border-radius: var(--r-lg); padding: 22px 26px; margin: 8px 0 28px; }
-.doctrine h2 { color: var(--blanc); margin-bottom: 4px; }
-.doctrine p { margin: 0; color: #D5E8DC; max-width: 70ch; }
-.doctrine svg { width: 54px; height: 54px; }
-.section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 32px 0 14px; }
-.drawer {
-  position: fixed; top: 0; right: 0; bottom: 0; z-index: 60; width: min(480px, 100%); background: var(--blanc);
-  box-shadow: var(--ombre-haute); padding: 22px 24px 32px; overflow-y: auto; transform: translateX(105%); transition: transform .28s ease; visibility: hidden;
-}
-.drawer.open { transform: none; visibility: visible; }
-.drawer-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
-.confirm { background: #D5E8DC; border-radius: var(--r); padding: 18px; color: var(--foret); }
-.confirm:focus { outline: 3px solid var(--ambre); }
-#my-proposals ul { list-style: none; padding: 0; display: grid; gap: 8px; }
 
 /* ---------- formulaires ---------- */
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
@@ -436,9 +415,6 @@ body[data-page="index"] .stage { padding: 0; }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--mousse); outline: none; box-shadow: 0 0 0 3px rgba(169, 196, 138, .5); }
 .field [aria-invalid="true"] { border-color: var(--terre); }
 .err { color: var(--terre-fonce); font-size: .84rem; margin: 0; }
-.checks { display: grid; gap: 6px; }
-.check { display: flex; gap: 8px; align-items: center; font-size: .9rem; min-height: 32px; }
-.check input { width: 18px; height: 18px; accent-color: var(--foret); }
 
 /* ---------- Rêver ---------- */
 .split { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); gap: 20px; align-items: start; }
@@ -689,7 +665,6 @@ body[data-page="index"] .stage { padding: 0; }
   .k-col { min-height: 0; }
   .prog-row { grid-template-columns: 1fr; gap: 6px; }
   .loop-card { grid-template-columns: 1fr; text-align: left; }
-  .doctrine { grid-template-columns: 1fr; }
   .mini-fiche { position: relative; left: auto; right: auto; bottom: auto; width: auto; margin: 8px; grid-template-columns: 1fr; }
   .split .map-card { position: relative; top: auto; }
   .mini-scene { max-width: 260px; }
@@ -970,15 +945,7 @@ body.tour-chat #deva { z-index: 2200; }
   .build-frame { z-index: 35; }
 }
 
-/* ===== Le Commun, plus moderne et plus épuré ===== */
-.doctrine.doctrine-slim { grid-template-columns: auto 1fr; gap: 12px; align-items: center; background: transparent; color: var(--texte-2);
-  border: 1px solid var(--bord); border-left: 4px solid var(--mousse); border-radius: var(--r); padding: 10px 16px; margin: 0 0 16px; }
-.doctrine-slim p { margin: 0; color: var(--texte-2); font-size: .9rem; max-width: none; }
-.doctrine-slim strong { color: var(--foret); }
-.doctrine-slim svg { width: 26px; height: 26px; }
-body[data-page="commun"] .page-head { margin-bottom: 14px; }
-body[data-page="commun"] .commun-tools { position: sticky; top: var(--top-h); z-index: 5; background: var(--creme); padding: 10px 0 12px; margin: 0 0 18px; border-bottom: 1px solid var(--bord); }
-body[data-page="commun"] .grid { gap: 18px; }
+/* ===== Cartes de solutions, plus modernes et plus épurées ===== */
 .sol-card { border-top: 1px solid var(--bord); border-left: 4px solid var(--fam, var(--mousse)); box-shadow: none; transition: transform .15s ease, box-shadow .15s ease; }
 .sol-card:hover { transform: translateY(-2px); box-shadow: var(--ombre); }
 .sol-card h3 { font-size: 1.05rem; margin: 8px 0 4px; }
@@ -1000,20 +967,10 @@ body[data-page="commun"] .grid { gap: 18px; }
   :root { --chat-h: max(440px, calc(100vh - var(--top-h) - 44px)); }
   body[data-page="index"] .map-stage { height: calc(100vh - var(--top-h) - 16px); margin-top: 4px; }
   .map-stage .map-notice { top: 104px; }
-  body[data-page="commun"] .commun-tools { top: calc(var(--top-h) + 24px); }
 }
-/* le Commun : chaque bloc est une brique posée sur le fond */
-.doctrine.doctrine-slim { background: var(--blanc); border: 1px solid var(--bord); border-left: 4px solid var(--mousse); box-shadow: var(--ombre); }
-body[data-page="commun"] .commun-tools { background: rgba(255, 253, 247, .94); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-  border: 1px solid var(--bord); border-radius: 999px; padding: 8px 10px; box-shadow: var(--ombre); margin: 0 0 20px; }
-body[data-page="commun"] .search input { border-color: transparent; background: var(--creme); }
-body[data-page="commun"] .search input:focus { outline: none; background: var(--blanc); border-color: var(--mousse); }
-body[data-page="commun"] .grid { gap: 20px; }
+/* les cartes de solutions : chaque carte est une brique posée sur le fond */
 .sol-card { border-radius: var(--r-lg); box-shadow: var(--ombre); }
 .sol-card:hover { transform: translateY(-3px); box-shadow: var(--ombre-haute); }
-#ici-grid .card { border-radius: var(--r-lg); box-shadow: var(--ombre); transition: transform .15s ease, box-shadow .15s ease; }
-#ici-grid .card:hover { transform: translateY(-3px); box-shadow: var(--ombre-haute); }
-body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 
 /* ===== Carte vivante sous la pilule : le fond cartographique occupe tout l'écran ===== */
 @media (min-width: 901px) {
@@ -1101,18 +1058,6 @@ body[data-page="commun"] .section-title { margin: 36px 0 14px; }
 /* ===== L'avatar de Deva dans l'en-tête du chat ===== */
 .deva-head .deva-avatar .deva-face { height: 42px; width: auto; border-radius: 12px; }
 .deva-head { padding-left: 14px; }
-
-/* ===== Le volet « Proposer une solution » devient une brique flottante (comme la fiche de la carte) ===== */
-@media (min-width: 901px) {
-  .drawer { top: calc(var(--top-h) + 28px); right: 16px; bottom: 16px; width: min(460px, calc(100% - 32px));
-    border: 1px solid var(--bord); border-radius: var(--r-lg); background: rgba(255, 253, 247, .97);
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-    transform: translateX(24px) scale(.98); opacity: 0; transition: transform .32s cubic-bezier(.2, .8, .2, 1), opacity .25s ease, visibility 0s linear .32s; }
-  .drawer.open { transform: none; opacity: 1; transition: transform .32s cubic-bezier(.2, .8, .2, 1), opacity .25s ease, visibility 0s; }
-  .drawer-head { position: sticky; top: -22px; margin: -22px -24px 12px; padding: 18px 24px 10px; background: rgba(255, 253, 247, .97); border-bottom: 1px solid var(--bord); border-radius: var(--r-lg) var(--r-lg) 0 0; }
-  .drawer-head h2 { margin: 0; font-size: 1.3rem; }
-}
-@media (prefers-reduced-motion: reduce) { .drawer, .drawer.open { transition: none; } }
 
 /* ===== Maquette : l'espace cible respire quand une solution est armée ===== */
 .iso-zone-active { animation: zonePulse 1.6s ease-in-out infinite; }

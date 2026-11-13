@@ -29,8 +29,7 @@
       icis: [],
       placed: [],
       decor: [],           // décor libre posé sur la maquette (sans impact)
-      proofs: [],
-      proposals: []
+      proofs: []
     };
   }
   var state = defaultState();
@@ -209,7 +208,7 @@
       '<a class="btn btn-primary btn-sm toplink-cta" href="rever.html" aria-label="Créer un projet">' + NAV_ICON.projet + '<span class="lbl-long">Créer un projet</span><span class="lbl-short">Projet</span></a>';
     var nav = '<nav class="topnav" aria-label="Aller à">' +
       link("index.html", "carte", "Carte", page === "index") +
-      link("le-commun/", "commun", "Commun", page === "commun") +
+      link("le-commun/", "commun", "Commun", false) +
       projet + "</nav>";
     // Mon lieu (dès qu'il a un nom) à droite, le raccourci vers Deva à côté du logo.
     var st = fricheStatut(), hasLieu = !!state.project.name.trim();
@@ -241,7 +240,7 @@
 
   function renderFooter() {
     var page = document.body.dataset.page;
-    var hasTour = page === "index" || page === "commun" || page === "rever";
+    var hasTour = page === "index" || page === "rever";
     var html = "<p>EVAD bêta" + (window.EvadDB && EvadDB.env !== "prod" ? " (base de test)" : "") +
       ". Ton projet est gardé sur cet appareil ; la carte et le Commun sont ouverts à tous.</p>" +
       '<span class="footer-actions">' +
@@ -473,14 +472,6 @@
   function buildIn(el, ms) { if (!el) return; el.classList.add("is-building"); setTimeout(function () { el.classList.remove("is-building"); }, ms || 1800); }
   var pageTour = null; // visite guidée de la page courante, rejouable via « Revoir la visite »
   var TOURS = {
-    commun: [
-      { sel: ".doctrine", text: "Le Commun est une bibliothèque libre de solutions régénératives." },
-      { sel: ".commun-tools .search", text: "Cherche une solution par mot-clé : haie, compost, réparer…" },
-      { sel: "#commun-fams", text: "Ou filtre par famille pour cibler ce qui t'intéresse." },
-      { sel: "#commun-grid .card", text: "Chaque fiche montre la difficulté, le coût, et sur combien de lieux la solution a déjà été éprouvée." },
-      { sel: "#ici-grid", text: "Les ICI sont les indicateurs concrets qu'on observe sur un lieu quand ça marche." },
-      { sel: "#open-propose", text: "Tu as éprouvé quelque chose ? Propose-le : la communauté le reliera à ses preuves." }
-    ],
     rever: [
       { sel: ".top-stepper", text: "Créer un lieu, c'est le parcours REGEN en 5 étapes, ici dans la barre du haut : Rêver, Explorer, Générer, Entreprendre, Nourrir. On démarre par Rêver." },
       { sel: ".map-card", text: "Inspire-toi des projets qui poussent déjà autour de toi : clique un marqueur. Clique la carte pour situer ton futur lieu." },
@@ -1068,7 +1059,7 @@
     else startHomeDeva(false);
   }
 
-  /* ================= Écran 2 : le Commun ================= */
+  /* ================= Cartes du Commun (solutions et ICI), utilisées à l'étape Explorer ================= */
   // Carte d'une solution, recto / verso : devant le nom, l'illustration et la famille ; derrière le détail.
   function solutionCard(s, extra) {
     var diff = ""; for (var k = 1; k <= 3; k++) diff += '<span class="pip' + (k <= s.difficulte ? " on" : "") + '"></span>';
@@ -1135,63 +1126,6 @@
     host.innerHTML = (withAll !== false ? '<button type="button" class="chip" data-fam="" aria-pressed="' + (!current) + '">Toutes</button>' : "") +
       D.familles.map(function (f) { return '<button type="button" class="chip fam-chip fam-' + f.id + '" data-fam="' + f.id + '" aria-pressed="' + (current === f.id) + '">' + f.label + "</button>"; }).join("");
     $all("[data-fam]", host).forEach(function (b) { b.addEventListener("click", function () { onChange(b.dataset.fam); }); });
-  }
-
-  function pageCommun() {
-    var fam = "", q = "";
-    function draw() {
-      familyChips($("#commun-fams"), fam, function (f) { fam = f; draw(); });
-      var list = D.solutions.filter(function (s) {
-        if (fam && s.famille !== fam) return false;
-        if (q) { var t = (s.nom + " " + s.change + " " + FAM[s.famille].label + " " + s.ici.map(function (i) { return ICI[i].nom; }).join(" ")).toLowerCase(); if (t.indexOf(q) < 0) return false; }
-        return true;
-      });
-      $("#commun-grid").innerHTML = list.length ? list.map(function (s) { return solutionCard(s); }).join("") : '<p class="empty">Rien ne correspond encore dans le Commun. C\'est peut-être à toi de le proposer.</p>';
-      hydrateCards($("#commun-grid"));
-      var icis = D.ici.filter(function (x) { return !q || (x.nom + " " + x.observe).toLowerCase().indexOf(q) >= 0; });
-      $("#ici-grid").innerHTML = icis.map(function (x) { return iciCard(x); }).join("");
-      $("#commun-count").textContent = list.length ? "" : "";
-    }
-    $("#commun-search").addEventListener("input", function () { q = this.value.trim().toLowerCase(); draw(); });
-    draw();
-
-    // volet « Proposer une solution »
-    var drawer = $("#propose");
-    $("#p-famille").innerHTML = D.familles.map(function (f) { return '<option value="' + f.id + '">' + f.label + "</option>"; }).join("");
-    $("#p-ici").innerHTML = D.ici.map(function (x) { return '<label class="check"><input type="checkbox" name="ici" value="' + x.id + '"> ' + esc(x.nom) + "</label>"; }).join("");
-    function openDrawer() { drawer.classList.add("open"); drawer.setAttribute("aria-hidden", "false"); $("#propose-form").hidden = false; $("#propose-ok").hidden = true; $("#p-nom").focus(); }
-    function closeDrawer() { drawer.classList.remove("open"); drawer.setAttribute("aria-hidden", "true"); $("#open-propose").focus(); }
-    $("#open-propose").addEventListener("click", openDrawer);
-    $all("[data-close-propose]").forEach(function (b) { b.addEventListener("click", closeDrawer); });
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && drawer.classList.contains("open")) closeDrawer(); });
-    $("#propose-form").addEventListener("submit", function (e) {
-      e.preventDefault();
-      var nom = $("#p-nom").value.trim();
-      if (!nom) { $("#p-nom").focus(); $("#p-nom").setAttribute("aria-invalid", "true"); return; }
-      state.proposals.push({ id: uid("pr"), nom: nom, famille: $("#p-famille").value, change: $("#p-change").value.trim(), ici: $all("input[name=ici]:checked").map(function (c) { return c.value; }), ou: $("#p-ou").value.trim() });
-      save();
-      this.reset(); $("#p-nom").removeAttribute("aria-invalid");
-      this.hidden = true; $("#propose-ok").hidden = false; $("#propose-ok").focus();
-      drawProposals();
-    });
-    function drawProposals() {
-      var box = $("#my-proposals");
-      box.hidden = !state.proposals.length;
-      box.innerHTML = '<h3 class="mini-title">Tes propositions en relecture</h3><ul>' + state.proposals.map(function (p) { return '<li><span class="badge st-reve">En relecture</span> ' + esc(p.nom) + ' <span class="muted">(' + FAM[p.famille].label + ")</span></li>"; }).join("") + "</ul>";
-    }
-    drawProposals();
-
-    // Arrivée depuis « Explorer ce projet » : mettre en avant la solution ciblée.
-    var target = param("sol");
-    if (target && SOL[target]) {
-      var card = $('#commun-grid [data-sol="' + target + '"]');
-      if (card) {
-        card.classList.add("is-highlight");
-        card.setAttribute("tabindex", "-1");
-        setTimeout(function () { card.scrollIntoView({ behavior: "smooth", block: "center" }); card.focus({ preventScroll: true }); }, 120);
-        setTimeout(function () { card.classList.remove("is-highlight"); }, 3200);
-      }
-    }
   }
 
   /* ================= Écran 3 : Rêver ================= */
@@ -2190,7 +2124,7 @@
   }
 
   /* ================= Démarrage ================= */
-  var PAGES = { index: pageIndex, commun: pageCommun, rever: pageRever, explorer: pageExplorer, generer: pageGenerer, entreprendre: pageEntreprendre, nourrir: pageNourrir, monlieu: pageMonLieu };
+  var PAGES = { index: pageIndex, rever: pageRever, explorer: pageExplorer, generer: pageGenerer, entreprendre: pageEntreprendre, nourrir: pageNourrir, monlieu: pageMonLieu };
   // Charge le compte, son projet (en ligne, ou le cache local s'il est plus récent) et les lieux publics.
   function boot(page) {
     var hasMap = page === "index" || page === "rever";
@@ -2208,7 +2142,7 @@
         if (cache && (!remote || cache.localUpdatedAt > remote.localUpdatedAt + 1000)) {
           state = cache; if (remote && !state.projectId) state.projectId = remote.projectId;
           if (cache.localUpdatedAt) scheduleSync(); // des changements locaux n'avaient pas été envoyés
-        } else if (remote) { state = remote; state.proposals = (cache && cache.proposals) || []; writeCache(); }
+        } else if (remote) { state = remote; writeCache(); }
         else if (cache) state = cache;
       }).catch(function (e) {
         console.warn("[EVAD] projet en ligne indisponible :", e.message);
@@ -2229,7 +2163,6 @@
       // Parcours ouvert à tous : pas de compte requis, les données restent sur l'appareil.
       if (window.Deva) {
         if (page === "index") { Deva.init("accueil", { silent: true }); }
-        else if (page === "commun") { Deva.init("commun"); }
         else if (page === "monlieu") { Deva.init("monlieu"); }
         else if (step) { Deva.init(step.deva); }
       }
