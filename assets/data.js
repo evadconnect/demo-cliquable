@@ -211,7 +211,7 @@ window.EVAD_DATA = {
         actions: [
           { label: "Créer mon projet", href: "rever.html", primary: true },
           { label: "Visiter la carte", href: "#map" },
-          { label: "Parcourir le Commun", href: "commun.html" }
+          { label: "Parcourir le Commun", href: "le-commun/" }
         ],
         suggestions: [
           { q: "C'est quoi EVAD ?", a: "EVAD accompagne les collectifs qui font pousser des lieux régénératifs : rêver un lieu, le modéliser, agir, puis prouver ce qui a vraiment changé. Ce qui est vérifié nourrit le rêve des suivants." },
