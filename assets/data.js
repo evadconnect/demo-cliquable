@@ -220,20 +220,6 @@ window.EVAD_DATA = {
           { q: "Faut-il un compte ?", a: "Non, tout est ouvert : explore la carte et le Commun, et lance ton propre lieu sans créer de compte. Ton projet est gardé sur cet appareil." }
         ]
       },
-      commun: {
-        label: "Le Commun",
-        intro: "Voici le Commun : une bibliothèque libre de solutions éprouvées sur le terrain, reliées à leurs preuves. Cherche par mot ou par famille. Si tu as éprouvé quelque chose, propose-le.",
-        actions: [
-          { label: "Créer mon projet", href: "rever.html", primary: true },
-          { label: "Retour à la carte", href: "index.html" }
-        ],
-        suggestions: [
-          { q: "Comment choisir une solution ?", a: "Regarde sur combien de projets elle a déjà été éprouvée et quels ICI elle nourrit. Vérifié bat généré." },
-          { q: "C'est quoi un ICI ?", a: "Un indicateur de changement d'impact : ce qu'on observe concrètement quand ça marche, comme le retour des vers de terre ou des voisins qui s'entraident." },
-          { q: "Puis-je proposer une solution ?", a: "Oui, avec le bouton « Proposer une solution ». La communauté la reliera à ses preuves avant de l'ajouter au Commun." },
-          { q: "Faut-il un compte ?", a: "Non, le Commun est libre d'accès. Tu peux tout consulter sans te connecter." }
-        ]
-      },
       monlieu: {
         label: "Mon lieu",
         intro: "Voici ton lieu au quotidien : ce qu'il y a à faire aujourd'hui, les preuves attendues, et ce qui a avancé cette semaine. Clique un espace de la maquette pour te concentrer dessus.",
