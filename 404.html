@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page introuvable, EVAD</title>
+<meta name="robots" content="noindex">
+<script>
+(function () {
+  // /le-commun/solution/<slug> est un alias partageable de /le-commun/solution.html?slug=<slug>
+  var m = /^(.*\/le-commun)\/solution\/([a-z0-9-]+)\/?$/.exec(location.pathname);
+  if (m) location.replace(m[1] + "/solution.html?slug=" + encodeURIComponent(m[2]) + location.hash);
+})();
+</script>
+<style>
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #FAF6EA; color: #1C2E26; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; padding: 24px; }
+a { color: #0B6049; font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+<h1>Cette page est introuvable</h1>
+<p>Elle a peut-être déménagé. Tu peux repartir de la carte ou du Commun.</p>
+<p><a href="/demo-cliquable/">La carte</a> · <a href="/demo-cliquable/le-commun/">Le Commun</a></p>
+</main>
+</body>
+</html>

@@ -209,7 +209,7 @@
       '<a class="btn btn-primary btn-sm toplink-cta" href="rever.html" aria-label="Créer un projet">' + NAV_ICON.projet + '<span class="lbl-long">Créer un projet</span><span class="lbl-short">Projet</span></a>';
     var nav = '<nav class="topnav" aria-label="Aller à">' +
       link("index.html", "carte", "Carte", page === "index") +
-      link("commun.html", "commun", "Commun", page === "commun") +
+      link("le-commun/", "commun", "Commun", page === "commun") +
       projet + "</nav>";
     // Mon lieu (dès qu'il a un nom) à droite, le raccourci vers Deva à côté du logo.
     var st = fricheStatut(), hasLieu = !!state.project.name.trim();
@@ -755,7 +755,7 @@
       var toSol = function (x) { return [x.solId, { prevu: "reve", encours: "encours", verifie: "prouve" }[x.status]]; };
       var sols = p.isMine ? state.placed.map(toSol) : p.isPublic ? (p.placedRemote || []).filter(function (x) { return SOL[x.solId]; }).map(toSol) : (p.solutions || []);
       var detail = sols.length
-        ? "<ul class='sol-list'>" + sols.map(function (s) { return "<li><a class='sol-link' href='commun.html?sol=" + s[0] + "'><span class='dot st-" + s[1] + "' aria-hidden='true'></span><span>" + esc(SOL[s[0]].nom) + " <span class='muted'>(" + D.statuts[s[1]].label.toLowerCase() + ")</span></span><span class='sol-link-go' aria-hidden='true'>" + ICON.arrow + "</span></a></li>"; }).join("") + "</ul>"
+        ? "<ul class='sol-list'>" + sols.map(function (s) { return "<li><a class='sol-link' href='le-commun/solution.html?slug=" + s[0] + "'><span class='dot st-" + s[1] + "' aria-hidden='true'></span><span>" + esc(SOL[s[0]].nom) + " <span class='muted'>(" + D.statuts[s[1]].label.toLowerCase() + ")</span></span><span class='sol-link-go' aria-hidden='true'>" + ICON.arrow + "</span></a></li>"; }).join("") + "</ul>"
         : "<p class='muted'>Aucune solution posée pour l'instant. Commence le parcours pour faire pousser ce lieu.</p>";
       fiche.innerHTML =
         '<div class="fiche-head"><span>' + statutBadge(p.statut) + (p.isExample ? ' <span class="badge badge-exemple" title="Projet fictif, pour illustrer">Exemple</span>' : "") + '</span><button type="button" class="icon-btn" id="fiche-close" aria-label="Fermer la fiche">' + ICON.close + "</button></div>" +
@@ -820,7 +820,7 @@
     function choices() {
       return [
         { label: "Visiter les lieux régénératifs", once: false, onClick: visitMap },
-        { label: "Découvrir les solutions du Commun", once: false, onClick: function () { location.href = "commun.html"; } },
+        { label: "Découvrir les solutions du Commun", once: false, onClick: function () { location.href = "le-commun/"; } },
         { label: "Créer mon lieu", primary: true, once: false, onClick: function () { location.href = "rever.html"; } }
       ];
     }
@@ -989,8 +989,9 @@
       function routeTo(kind) {
         // REGEN et Commun : la construction commence ici et se poursuit sur l'autre page (drapeau de session).
         if (kind === "regen" || kind === "commun") {
-          try { sessionStorage.setItem("evad-arrive", kind); } catch (e) { /* ignore */ }
-          dock(kind, function () { location.href = (kind === "regen" ? "rever.html" : "commun.html") + "?tour=1"; });
+          // Le Commun est désormais un site à part (le-commun/) : pas de drapeau d'arrivée ni de visite guidée pour lui.
+          if (kind === "regen") { try { sessionStorage.setItem("evad-arrive", kind); } catch (e) { /* ignore */ } }
+          dock(kind, function () { location.href = kind === "regen" ? "rever.html?tour=1" : "le-commun/"; });
           return;
         }
         // Carte : page courante, la carte se monte puis Deva en fait le tour.

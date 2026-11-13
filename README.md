@@ -74,6 +74,7 @@ En ligne de commande : `npx vercel` depuis ce dossier.
 | `assets/scene.js` | Scène 2.5D isométrique en SVG (bâtiments, solutions posées en gris, ambre ou vert) |
 - `assets/isomap.js` : carte illustrée isométrique de la France (SVG dessiné par règles, sans tuile ni image ; zoom à la molette ou au pincement, déplacement en glissant) ; vue par défaut de l'accueil, la carte OpenStreetMap reste disponible via la bascule « Carte ».
 | `assets/deva.js` | Panneau Deva, réponses scriptées |
+| `le-commun/` | **Le Commun** : bibliothèque de solutions (liste, fiche, proposition), données Supabase dans le schéma `referentiel`. Voir [`le-commun/README.md`](le-commun/README.md) |
 | `assets/styles.css` | Charte graphique (couleurs en variables en haut du fichier) |
 
 ## Bon à savoir

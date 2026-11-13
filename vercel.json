@@ -1,0 +1,7 @@
+{
+  "cleanUrls": false,
+  "redirects": [
+    { "source": "/le-commun/solution/:slug", "destination": "/le-commun/solution.html?slug=:slug", "permanent": false },
+    { "source": "/commun.html", "destination": "/le-commun/", "permanent": false }
+  ]
+}
