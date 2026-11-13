@@ -1,0 +1,1230 @@
+{
+ "version": "2026-11-13",
+ "categories": [
+  {
+   "slug": "alimentation",
+   "nom": "Alimentation",
+   "couleur": "#4E8C6C",
+   "picto": "panier",
+   "ordre": 1
+  },
+  {
+   "slug": "energie",
+   "nom": "Énergie",
+   "couleur": "#B9832B",
+   "picto": "eclair",
+   "ordre": 2
+  },
+  {
+   "slug": "eau",
+   "nom": "Eau",
+   "couleur": "#5C8E95",
+   "picto": "goutte",
+   "ordre": 3
+  },
+  {
+   "slug": "eco-construction",
+   "nom": "Éco-construction",
+   "couleur": "#9A7B4F",
+   "picto": "maison",
+   "ordre": 4
+  },
+  {
+   "slug": "gouvernance",
+   "nom": "Gouvernance",
+   "couleur": "#A45A40",
+   "picto": "cercle",
+   "ordre": 5
+  },
+  {
+   "slug": "reemploi",
+   "nom": "Réemploi",
+   "couleur": "#7B6A9A",
+   "picto": "boucle",
+   "ordre": 6
+  },
+  {
+   "slug": "sol-vivant",
+   "nom": "Sol et vivant",
+   "couleur": "#8A6448",
+   "picto": "pousse",
+   "ordre": 7
+  }
+ ],
+ "types_projet": [
+  {
+   "slug": "jardin-partage",
+   "nom": "Jardin partagé",
+   "picto": "arrosoir",
+   "ordre": 1
+  },
+  {
+   "slug": "tiers-lieu",
+   "nom": "Tiers-lieu",
+   "picto": "porte",
+   "ordre": 2
+  },
+  {
+   "slug": "eco-lieu",
+   "nom": "Éco-lieu",
+   "picto": "hameau",
+   "ordre": 3
+  },
+  {
+   "slug": "fablab",
+   "nom": "Fablab",
+   "picto": "engrenage",
+   "ordre": 4
+  }
+ ],
+ "solutions": [
+  {
+   "slug": "recup-eau",
+   "titre": "Récupération d'eau de pluie",
+   "categorie": "eau",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Les toits remplissent des cuves : on arrose le jardin sans puiser dans le réseau, même en été.",
+   "mise_en_place": "Un week-end",
+   "impact_ecologie": 3,
+   "impact_social": 1,
+   "impact_economie_locale": 2,
+   "pourquoi": "L'eau de pluie tombe sur les toits et repart à l'égout. La garder dans des cuves permet d'arroser en été sans tirer sur le réseau, et rend le lieu moins fragile pendant les restrictions.",
+   "point_vigilance": "Une cuve pleine pèse lourd : pose-la sur un sol stable et de niveau. Ferme-la pour éviter les moustiques, et réserve cette eau à l'arrosage, pas à la boisson.",
+   "credits": "Jeu de démonstration EVAD.",
+   "source": null,
+   "types": [
+    "jardin-partage",
+    "eco-lieu",
+    "tiers-lieu"
+   ],
+   "etapes": [
+    "Repérer la descente de gouttière la plus proche du jardin.",
+    "Poser la cuve sur un socle stable, légèrement surélevé pour glisser un arrosoir sous le robinet.",
+    "Raccorder la gouttière avec un collecteur filtrant et prévoir un trop-plein vers le sol.",
+    "Fermer la cuve et la protéger du soleil pour limiter les algues.",
+    "Vidanger et rincer la cuve une fois par an, avant l'hiver."
+   ],
+   "ressources": [
+    {
+     "nom": "Cuve de récupération",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Collecteur filtrant de gouttière",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Socle ou parpaings",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    }
+   ],
+   "oups": [
+    {
+     "probleme": "L'eau verdit et sent mauvais.",
+     "rattrapage": "La cuve reçoit trop de lumière ou de feuilles : opacifie-la, nettoie le filtre et vidange."
+    },
+    {
+     "probleme": "La cuve déborde au pied du mur.",
+     "rattrapage": "Ajoute un trop-plein qui renvoie l'eau vers une noue ou un massif, loin des fondations."
+    }
+   ],
+   "complementaires": [
+    "mare",
+    "planches",
+    "jardin-de-pluie"
+   ]
+  },
+  {
+   "slug": "mare",
+   "titre": "Mare pédagogique",
+   "categorie": "eau",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Un coin d'eau qui attire grenouilles et libellules, et où les écoles viennent observer.",
+   "mise_en_place": "Quelques semaines",
+   "impact_ecologie": 3,
+   "impact_social": 2,
+   "impact_economie_locale": 1,
+   "pourquoi": "Un point d'eau, même petit, attire en quelques mois libellules, grenouilles et oiseaux. C'est aussi un support d'observation que les écoles et les familles adorent.",
+   "point_vigilance": "Sécurise les abords si des enfants fréquentent le lieu : pente douce, faible profondeur près du bord, barrière basse si besoin. Jamais de poissons, ils mangent les larves.",
+   "credits": "Jeu de démonstration EVAD.",
+   "source": null,
+   "types": [
+    "jardin-partage",
+    "eco-lieu"
+   ],
+   "etapes": [
+    "Choisir un endroit à mi-ombre, loin des grands arbres.",
+    "Creuser en pente douce avec plusieurs paliers de profondeur.",
+    "Poser un feutre puis une bâche, ou tasser de l'argile si le sol s'y prête.",
+    "Remplir à l'eau de pluie et laisser les plantes locales s'installer.",
+    "Laisser faire : la vie arrive seule, sans rien introduire."
+   ],
+   "ressources": [
+    {
+     "nom": "Bâche ou argile",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Feutre de protection",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Plantes aquatiques locales",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    }
+   ],
+   "oups": [
+    {
+     "probleme": "L'eau devient verte au printemps.",
+     "rattrapage": "C'est souvent passager. Ajoute des plantes oxygénantes et un peu d'ombre, sans vider la mare."
+    }
+   ],
+   "complementaires": [
+    "haie"
+   ]
+  },
+  {
+   "slug": "haie",
+   "titre": "Haie fruitière",
+   "categorie": "sol-vivant",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Une haie de petits fruits qui coupe le vent, abrite les oiseaux et nourrit les passants.",
+   "mise_en_place": "Une saison",
+   "impact_ecologie": 3,
+   "impact_social": 1,
+   "impact_economie_locale": 2,
+   "pourquoi": "Une haie de petits fruits coupe le vent, abrite les oiseaux et les insectes utiles, et donne à cueillir aux passants. Elle dessine aussi les limites du lieu sans clôture.",
+   "point_vigilance": "Plante en saison de repos, de novembre à mars, et arrose les deux premiers étés. Renseigne-toi sur les distances à respecter avec les voisins.",
+   "credits": "Jeu de démonstration EVAD.",
+   "source": null,
+   "types": [
+    "jardin-partage",
+    "eco-lieu"
+   ],
+   "etapes": [
+    "Tracer la ligne et ameublir le sol sur une bande d'un mètre.",
+    "Choisir des essences locales variées : groseillier, cassis, noisetier, sureau, prunellier.",
+    "Planter en quinconce, en mélangeant les espèces.",
+    "Pailler épais pour garder l'humidité.",
+    "Arroser les deux premiers étés, tailler légèrement ensuite."
+   ],
+   "ressources": [
+    {
+     "nom": "Jeunes plants en racines nues",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Paillage : broyat ou paille",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Tuteurs et protections",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    }
+   ],
+   "oups": [
+    {
+     "probleme": "Plusieurs plants ne reprennent pas.",
+     "rattrapage": "Remplace-les à l'automne suivant et renforce le paillage : le manque d'eau la première année est la cause la plus courante."
+    }
+   ],
+   "complementaires": [
+    "compost",
+    "four"
+   ]
+  },
+  {
+   "slug": "compost",
+   "titre": "Compost partagé",
+   "categorie": "sol-vivant",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Les voisins déposent leurs épluchures, le jardin récupère un sol vivant.",
+   "mise_en_place": "Un week-end",
+   "impact_ecologie": 2,
+   "impact_social": 3,
+   "impact_economie_locale": 1,
+   "pourquoi": "Les épluchures du quartier deviennent un sol vivant pour le jardin au lieu de partir à la benne. Le bac à compost est aussi un endroit où l'on se croise chaque semaine.",
+   "point_vigilance": "Un compost partagé tient grâce à ses référents. Prévois au moins deux personnes formées et une réserve de matière sèche toujours pleine.",
+   "credits": "Jeu de démonstration EVAD.",
+   "source": null,
+   "types": [
+    "jardin-partage",
+    "tiers-lieu",
+    "eco-lieu"
+   ],
+   "etapes": [
+    "Réunir quelques foyers volontaires et désigner deux référents.",
+    "Installer trois bacs : apports, maturation, matière sèche.",
+    "Afficher des consignes simples sur ce qui se composte ou non.",
+    "Brasser à chaque apport et couvrir de matière sèche.",
+    "Récolter et partager le compost mûr au bout de quelques mois."
+   ],
+   "ressources": [
+    {
+     "nom": "Trois bacs en bois",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Broyat ou feuilles mortes",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Fourche et brass-compost",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Panneau de consignes",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    }
+   ],
+   "oups": [
+    {
+     "probleme": "Le compost sent mauvais et attire les moucherons.",
+     "rattrapage": "Il est trop humide : ajoute de la matière sèche, brasse, et rappelle la consigne de couvrir chaque apport."
+    },
+    {
+     "probleme": "Des déchets non compostables apparaissent.",
+     "rattrapage": "Renforce l'affichage et propose un temps d'accueil pour les nouveaux participants."
+    }
+   ],
+   "complementaires": [
+    "planches",
+    "poulailler"
+   ]
+  },
+  {
+   "slug": "solaire",
+   "titre": "Panneaux solaires citoyens",
+   "categorie": "energie",
+   "niveau_techno": "high",
+   "biomimetique": false,
+   "description_courte": "Les habitants financent ensemble une centrale sur le lieu et gardent l'énergie au pays.",
+   "mise_en_place": "Plusieurs mois",
+   "impact_ecologie": 2,
+   "impact_social": 2,
+   "impact_economie_locale": 3,
+   "pourquoi": "Quand les habitants financent ensemble une centrale sur le toit du lieu, l'énergie et ses revenus restent sur le territoire. Le projet crée un collectif durable autour d'un bien commun.",
+   "point_vigilance": "Fais vérifier la charpente et l'étanchéité avant tout. Le montage juridique et le raccordement prennent du temps : rapproche-toi d'un réseau d'énergie citoyenne.",
+   "credits": "Jeu de démonstration EVAD.",
+   "source": null,
+   "types": [
+    "tiers-lieu",
+    "eco-lieu",
+    "fablab"
+   ],
+   "etapes": [
+    "Faire étudier le toit : orientation, ombrages, solidité.",
+    "Constituer le collectif citoyen et choisir sa forme juridique.",
+    "Réunir le financement auprès des habitants.",
+    "Faire poser et raccorder par une entreprise qualifiée.",
+    "Suivre la production et la partager avec les sociétaires."
+   ],
+   "ressources": [
+    {
+     "nom": "Étude de structure",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Panneaux et onduleurs",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Pose et raccordement par un professionnel",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    }
+   ],
+   "oups": [
+    {
+     "probleme": "Le raccordement prend beaucoup plus de temps que prévu.",
+     "rattrapage": "Dépose la demande dès que l'étude est faite, et garde le collectif informé à chaque étape."
+    }
+   ],
+   "complementaires": [
+    "chauffage-solaire-thermique",
+    "budget",
+    "toiture-vegetalisee"
+   ]
+  },
+  {
+   "slug": "four",
+   "titre": "Four à pain au bois de taille",
+   "categorie": "energie",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Le bois des tailles de haies chauffe un four où l'on cuit ensemble le pain du quartier.",
+   "mise_en_place": "Quelques semaines",
+   "impact_ecologie": 1,
+   "impact_social": 3,
+   "impact_economie_locale": 2,
+   "pourquoi": "Le bois des tailles de haies chauffe un four où l'on cuit ensemble le pain du quartier. La fournée devient un rendez-vous régulier qui fait venir des gens très différents.",
+   "point_vigilance": "Un four à bois se place loin des bâtiments et des arbres, sur un sol incombustible. Vérifie les règles locales et l'assurance du lieu.",
+   "credits": "Jeu de démonstration EVAD.",
+   "source": null,
+   "types": [
+    "tiers-lieu",
+    "eco-lieu",
+    "jardin-partage"
+   ],
+   "etapes": [
+    "Choisir un emplacement dégagé et accessible.",
+    "Monter le socle puis la voûte, en chantier participatif avec un artisan.",
+    "Laisser sécher plusieurs semaines avant la première chauffe.",
+    "Organiser les fournées : qui allume, qui pétrit, qui range."
+   ],
+   "ressources": [
+    {
+     "nom": "Briques réfractaires ou terre crue",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Socle maçonné",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Bois sec issu des tailles",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    }
+   ],
+   "oups": [
+    {
+     "probleme": "La voûte se fissure aux premières chauffes.",
+     "rattrapage": "Elle a séché trop vite : rebouche à la terre et remonte en température très progressivement."
+    }
+   ],
+   "complementaires": [
+    "pain-rassis-revalorise",
+    "conseil"
+   ]
+  },
+  {
+   "slug": "ressourcerie",
+   "titre": "Ressourcerie de quartier",
+   "categorie": "reemploi",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Ce qui allait à la benne trouve une deuxième vie et un petit emploi local se crée.",
+   "mise_en_place": "Plusieurs mois",
+   "impact_ecologie": 2,
+   "impact_social": 2,
+   "impact_economie_locale": 3,
+   "pourquoi": "Ce qui partait à la benne retrouve une deuxième vie : meubles, vaisselle, outils. La ressourcerie crée de l'activité locale et donne accès à des objets à petit prix.",
+   "point_vigilance": "Le stock déborde vite. Fixe des règles de collecte claires et un espace limité, et prévois une filière pour ce qui ne se revend pas.",
+   "credits": "Jeu de démonstration EVAD.",
+   "source": null,
+   "types": [
+    "tiers-lieu",
+    "fablab"
+   ],
+   "etapes": [
+    "Trouver un local accessible avec une zone de dépôt.",
+    "Définir ce qui est accepté et ce qui ne l'est pas.",
+    "Organiser le tri, le nettoyage et la remise en état.",
+    "Ouvrir une permanence régulière de collecte et de vente.",
+    "Nouer des liens avec la déchèterie et les associations voisines."
+   ],
+   "ressources": [
+    {
+     "nom": "Local avec rayonnages",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Outillage de remise en état",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Balance pour le suivi des objets",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    }
+   ],
+   "oups": [
+    {
+     "probleme": "Le local est saturé en quelques semaines.",
+     "rattrapage": "Suspends la collecte le temps d'écouler le stock, et organise une journée de dons."
+    }
+   ],
+   "complementaires": [
+    "repair",
+    "pain-rassis-revalorise"
+   ]
+  },
+  {
+   "slug": "repair",
+   "titre": "Repair café",
+   "categorie": "reemploi",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Un samedi par mois, on apprend à réparer ensemble grille-pain, vélos et vêtements.",
+   "mise_en_place": "Un week-end",
+   "impact_ecologie": 2,
+   "impact_social": 3,
+   "impact_economie_locale": 1,
+   "pourquoi": "Un samedi par mois, des bénévoles aident chacun à réparer son grille-pain, son vélo ou son vêtement. On jette moins et on apprend ensemble.",
+   "point_vigilance": "Les bénévoles réparent avec les visiteurs, pas à leur place. Fais signer une décharge simple et écarte les appareils dangereux.",
+   "credits": "Jeu de démonstration EVAD.",
+   "source": null,
+   "types": [
+    "tiers-lieu",
+    "fablab"
+   ],
+   "etapes": [
+    "Réunir trois ou quatre bénévoles bricoleurs.",
+    "Rassembler une caisse d'outils et quelques pièces courantes.",
+    "Fixer un rendez-vous régulier et l'annoncer dans le quartier.",
+    "Accueillir, diagnostiquer, réparer ensemble, noter ce qui a été sauvé."
+   ],
+   "ressources": [
+    {
+     "nom": "Caisse d'outils partagée",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Multimètre et fer à souder",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Machine à coudre",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    }
+   ],
+   "oups": [
+    {
+     "probleme": "Trop de monde, pas assez de réparateurs.",
+     "rattrapage": "Passe aux inscriptions par créneau et invite les visiteurs réguliers à devenir bénévoles."
+    }
+   ],
+   "complementaires": []
+  },
+  {
+   "slug": "planches",
+   "titre": "Planches de culture en lasagnes",
+   "categorie": "alimentation",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "On cultive sur une ancienne dalle en empilant carton, broyat et compost : pas besoin de bon sol au départ.",
+   "mise_en_place": "Un week-end",
+   "impact_ecologie": 2,
+   "impact_social": 1,
+   "impact_economie_locale": 3,
+   "pourquoi": "On peut cultiver sur une ancienne dalle ou un sol pauvre en empilant carton, broyat et compost. Pas besoin de bonne terre au départ : la planche fabrique son propre sol.",
+   "point_vigilance": "Utilise du carton brun sans encre ni adhésif. La planche s'affaisse la première année : recharge-la en matière chaque automne.",
+   "credits": "Jeu de démonstration EVAD.",
+   "source": null,
+   "types": [
+    "jardin-partage",
+    "eco-lieu"
+   ],
+   "etapes": [
+    "Délimiter la planche, large d'un bras tendu de chaque côté.",
+    "Poser du carton mouillé à même le sol.",
+    "Alterner couches brunes, broyat et feuilles, et couches vertes, tontes et épluchures.",
+    "Finir par dix centimètres de compost mûr.",
+    "Planter aussitôt, pailler, arroser."
+   ],
+   "ressources": [
+    {
+     "nom": "Carton brun",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Broyat et feuilles mortes",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Compost mûr",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Bordures en bois de récupération",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    }
+   ],
+   "oups": [
+    {
+     "probleme": "Les limaces dévorent les jeunes plants.",
+     "rattrapage": "Repique des plants plus développés, arrose le matin et laisse de la place aux auxiliaires."
+    }
+   ],
+   "complementaires": [
+    "poulailler"
+   ]
+  },
+  {
+   "slug": "poulailler",
+   "titre": "Poulailler partagé",
+   "categorie": "alimentation",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Quelques poules mangent les restes, donnent des œufs et un prétexte pour passer tous les jours.",
+   "mise_en_place": "Quelques semaines",
+   "impact_ecologie": 2,
+   "impact_social": 2,
+   "impact_economie_locale": 2,
+   "pourquoi": "Quelques poules mangent les restes, donnent des œufs et offrent une raison de passer au lieu tous les jours. Le soin partagé soude un petit groupe de voisins.",
+   "point_vigilance": "Des animaux, c'est un engagement quotidien, vacances comprises. Vérifie le règlement local, protège l'abri des prédateurs et organise un planning solide.",
+   "credits": "Jeu de démonstration EVAD.",
+   "source": null,
+   "types": [
+    "jardin-partage",
+    "eco-lieu"
+   ],
+   "etapes": [
+    "Vérifier ce que permet le règlement de la commune.",
+    "Constituer une équipe de soin avec un planning hebdomadaire.",
+    "Construire un abri fermé la nuit et un parcours ombragé.",
+    "Accueillir trois ou quatre poules.",
+    "Partager les œufs et tenir un petit cahier de suivi."
+   ],
+   "ressources": [
+    {
+     "nom": "Abri et parcours grillagé",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Mangeoire et abreuvoir",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Paille et grain",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    }
+   ],
+   "oups": [
+    {
+     "probleme": "Personne ne passe pendant les vacances.",
+     "rattrapage": "Prévois des remplaçants dès le départ et un distributeur qui tient deux jours."
+    }
+   ],
+   "complementaires": []
+  },
+  {
+   "slug": "conseil",
+   "titre": "Conseil de lieu ouvert",
+   "categorie": "gouvernance",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Chaque mois, toute personne qui fréquente le lieu peut proposer et décider avec le collectif.",
+   "mise_en_place": "Un week-end",
+   "impact_ecologie": 1,
+   "impact_social": 3,
+   "impact_economie_locale": 1,
+   "pourquoi": "Chaque mois, toute personne qui fréquente le lieu peut proposer et décider avec le collectif. Les décisions sont mieux comprises et le lieu ne repose plus sur deux ou trois personnes.",
+   "point_vigilance": "Un conseil ouvert a besoin d'un cadre : ordre du jour connu à l'avance, temps de parole partagé, compte rendu affiché.",
+   "credits": "Jeu de démonstration EVAD.",
+   "source": null,
+   "types": [
+    "jardin-partage",
+    "tiers-lieu",
+    "eco-lieu",
+    "fablab"
+   ],
+   "etapes": [
+    "Fixer un rendez-vous mensuel, toujours au même moment.",
+    "Publier l'ordre du jour une semaine avant.",
+    "Désigner à chaque séance un animateur et un gardien du temps.",
+    "Décider par consentement plutôt qu'au vote quand c'est possible.",
+    "Afficher le compte rendu dans le lieu."
+   ],
+   "ressources": [
+    {
+     "nom": "Une salle et un cercle de chaises",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Un tableau d'affichage",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    }
+   ],
+   "oups": [
+    {
+     "probleme": "Ce sont toujours les mêmes qui parlent.",
+     "rattrapage": "Fais un tour de parole systématique et propose des petits groupes avant la décision."
+    }
+   ],
+   "complementaires": [
+    "budget"
+   ]
+  },
+  {
+   "slug": "budget",
+   "titre": "Budget participatif du lieu",
+   "categorie": "gouvernance",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Une part du budget est décidée par les usagers : ils choisissent les prochains chantiers.",
+   "mise_en_place": "Quelques semaines",
+   "impact_ecologie": 1,
+   "impact_social": 2,
+   "impact_economie_locale": 2,
+   "pourquoi": "Une part du budget est décidée par les usagers : ils proposent et choisissent les prochains chantiers. On dépense pour ce qui compte vraiment aux yeux de ceux qui font vivre le lieu.",
+   "point_vigilance": "Annonce clairement la somme en jeu et ce qui est finançable. Un vote dont le résultat n'est pas suivi d'effet abîme la confiance.",
+   "credits": "Jeu de démonstration EVAD.",
+   "source": null,
+   "types": [
+    "jardin-partage",
+    "tiers-lieu",
+    "eco-lieu",
+    "fablab"
+   ],
+   "etapes": [
+    "Réserver une part du budget annuel.",
+    "Recueillir les idées pendant un mois, dans une urne et en ligne.",
+    "Vérifier la faisabilité de chaque idée avec le collectif.",
+    "Organiser le vote, ouvert à tous les usagers.",
+    "Réaliser le projet retenu et afficher l'avancement."
+   ],
+   "ressources": [
+    {
+     "nom": "Une urne et des bulletins",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    },
+    {
+     "nom": "Un panneau de suivi",
+     "cout_installation_min": null,
+     "cout_installation_max": null,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": null
+    }
+   ],
+   "oups": [
+    {
+     "probleme": "Peu de personnes votent.",
+     "rattrapage": "Fais durer le vote deux semaines et installe l'urne là où les gens passent, pas au fond du bureau."
+    }
+   ],
+   "complementaires": []
+  },
+  {
+   "slug": "desimpermeabilisation",
+   "titre": "Désimperméabilisation des sols",
+   "categorie": "eau",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Retirer le bitume ou le béton pour que la pluie retourne dans le sol, sous des plantations ou un revêtement qui laisse passer l'eau.",
+   "mise_en_place": "6 à 12 mois",
+   "impact_ecologie": 3,
+   "impact_social": 2,
+   "impact_economie_locale": 1,
+   "pourquoi": "Un sol qui respire absorbe la pluie, nourrit les plantes et rafraîchit le lieu en été. On limite aussi les flaques, les débordements et la pollution des cours d'eau.",
+   "point_vigilance": "Le chantier ne se limite pas à casser l'enrobé : il faut prévoir l'évacuation des gravats, parfois une dépollution, et la reconstitution d'un sol vivant. Un diagnostic du sol avant de commencer évite les mauvaises surprises.",
+   "credits": "D'après la fiche « Désimperméabilisation » de Plus fraîche ma ville (ADEME), contenu sous licence ouverte Etalab 2.0. Coûts hors taxes, fourniture et pose, repris de cette fiche. Résumé et adaptation : EVAD.",
+   "source": "https://plusfraichemaville.fr/fiche-solution/desimpermabilisation",
+   "types": [
+    "tiers-lieu",
+    "eco-lieu",
+    "jardin-partage"
+   ],
+   "etapes": [
+    "Diagnostiquer le sol : sa capacité à infiltrer l'eau et une éventuelle pollution.",
+    "Repérer avec les usagers les surfaces à ouvrir en priorité.",
+    "Choisir entre pleine terre plantée et revêtement perméable, en préférant les solutions fondées sur la nature.",
+    "Chercher les financements.",
+    "Réaliser les travaux, puis entretenir pour que le sol reste perméable."
+   ],
+   "ressources": [
+    {
+     "nom": "Désimperméabilisation, coût global",
+     "cout_installation_min": 60,
+     "cout_installation_max": 150,
+     "cout_entretien_min": 1,
+     "cout_entretien_max": 10,
+     "unite": "€ HT / m²"
+    },
+    {
+     "nom": "Noue d'infiltration végétalisée",
+     "cout_installation_min": 60,
+     "cout_installation_max": 90,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / mètre linéaire"
+    },
+    {
+     "nom": "Jardin de pluie",
+     "cout_installation_min": 80,
+     "cout_installation_max": 120,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / m²"
+    },
+    {
+     "nom": "Pavés drainants ou à joints élargis",
+     "cout_installation_min": 55,
+     "cout_installation_max": 80,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / m²"
+    },
+    {
+     "nom": "Dalles alvéolées",
+     "cout_installation_min": 40,
+     "cout_installation_max": 60,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / m²"
+    }
+   ],
+   "oups": [
+    {
+     "probleme": "Le revêtement drainant se colmate avec les feuilles et les poussières.",
+     "rattrapage": "Nettoie-le régulièrement et fais curer les ouvrages."
+    },
+    {
+     "probleme": "L'eau stagne encore plusieurs jours après la pluie.",
+     "rattrapage": "Fais inspecter l'ouvrage et vérifier que l'eau circule bien jusqu'au sol."
+    }
+   ],
+   "complementaires": [
+    "jardin-de-pluie",
+    "toiture-vegetalisee",
+    "recup-eau"
+   ]
+  },
+  {
+   "slug": "jardin-de-pluie",
+   "titre": "Jardin de pluie et noue plantée",
+   "categorie": "eau",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Un creux planté qui recueille l'eau de pluie, la ralentit et la laisse s'infiltrer au pied des végétaux.",
+   "mise_en_place": "1 à 3 mois",
+   "impact_ecologie": 3,
+   "impact_social": 2,
+   "impact_economie_locale": 1,
+   "pourquoi": "L'eau de pluie est gérée sur place au lieu de filer à l'égout : elle abreuve les plantations sans arrosage, limite les inondations et rafraîchit l'air.",
+   "point_vigilance": "Les creux accumulent feuilles et déchets : prévois un entretien régulier. Arrose le temps de la reprise, protège l'ouvrage des véhicules, et n'utilise jamais de sel de déneigement à proximité.",
+   "credits": "D'après la fiche « Ouvrage paysager de gestion des eaux pluviales » de Plus fraîche ma ville (ADEME), contenu sous licence ouverte Etalab 2.0. Coûts hors taxes, fourniture et pose, repris de cette fiche. Résumé et adaptation : EVAD.",
+   "source": "https://plusfraichemaville.fr/fiche-solution/gestion-eaux-pluviales",
+   "types": [
+    "jardin-partage",
+    "eco-lieu",
+    "tiers-lieu"
+   ],
+   "etapes": [
+    "Diagnostiquer : trajets de l'eau, nature du sol, réseaux enterrés.",
+    "Ouvrir le sol si la surface est revêtue.",
+    "Creuser une dépression en pente douce.",
+    "Aménager une tranchée d'infiltration au pied des plantations.",
+    "Reprendre les abords pour guider l'eau vers l'ouvrage, puis planter."
+   ],
+   "ressources": [
+    {
+     "nom": "Ouvrage paysager, coût global",
+     "cout_installation_min": 30,
+     "cout_installation_max": 500,
+     "cout_entretien_min": 10,
+     "cout_entretien_max": 30,
+     "unite": "€ HT / m²"
+    },
+    {
+     "nom": "Jardin de pluie",
+     "cout_installation_min": 80,
+     "cout_installation_max": 120,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / m²"
+    },
+    {
+     "nom": "Noue d'infiltration végétalisée",
+     "cout_installation_min": 60,
+     "cout_installation_max": 90,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / mètre linéaire"
+    },
+    {
+     "nom": "Tranchée d'infiltration",
+     "cout_installation_min": 150,
+     "cout_installation_max": 225,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / mètre linéaire"
+    },
+    {
+     "nom": "Géotextile",
+     "cout_installation_min": 4,
+     "cout_installation_max": 5,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / m²"
+    }
+   ],
+   "oups": [],
+   "complementaires": [
+    "mare"
+   ]
+  },
+  {
+   "slug": "toiture-vegetalisee",
+   "titre": "Toiture végétalisée",
+   "categorie": "eco-construction",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Un toit couvert de plantes adaptées, qui garde la fraîcheur, isole le bâtiment et retient une partie de la pluie.",
+   "mise_en_place": "3 à 6 mois",
+   "impact_ecologie": 3,
+   "impact_social": 1,
+   "impact_economie_locale": 1,
+   "pourquoi": "Les plantes et le substrat absorbent moins de chaleur qu'une toiture minérale et améliorent le confort à l'intérieur. Le toit devient aussi un refuge pour les insectes.",
+   "point_vigilance": "Fais vérifier que la structure supporte le poids, ainsi que la pente du toit. L'étanchéité doit être posée par une entreprise qualifiée. Choisis des plantes adaptées au climat local et prévois un entretien régulier.",
+   "credits": "D'après la fiche « Toiture végétalisée » de Plus fraîche ma ville (ADEME), contenu sous licence ouverte Etalab 2.0. Coûts hors taxes, fourniture et pose, repris de cette fiche. Résumé et adaptation : EVAD.",
+   "source": "https://plusfraichemaville.fr/fiche-solution/toiture-vegetalisee",
+   "types": [
+    "tiers-lieu",
+    "eco-lieu",
+    "fablab"
+   ],
+   "etapes": [
+    "Faire vérifier la charpente et la pente par un professionnel.",
+    "Laisser une bande sans végétation pour accéder à l'étanchéité et aux évacuations d'eau.",
+    "Faire poser la membrane étanche résistante aux racines.",
+    "Installer la couche de drainage, le filtre puis le substrat.",
+    "Planter et mettre en place l'entretien."
+   ],
+   "ressources": [
+    {
+     "nom": "Toiture extensive",
+     "cout_installation_min": 60,
+     "cout_installation_max": 90,
+     "cout_entretien_min": 5,
+     "cout_entretien_max": 20,
+     "unite": "€ HT / m²"
+    },
+    {
+     "nom": "Toiture semi-intensive",
+     "cout_installation_min": 100,
+     "cout_installation_max": 150,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / m²"
+    },
+    {
+     "nom": "Toiture intensive",
+     "cout_installation_min": 200,
+     "cout_installation_max": 300,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / m²"
+    },
+    {
+     "nom": "Couche de drainage et filtre",
+     "cout_installation_min": 30,
+     "cout_installation_max": 50,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / m²"
+    }
+   ],
+   "oups": [],
+   "complementaires": [
+    "ventilation-naturelle"
+   ]
+  },
+  {
+   "slug": "ventilation-naturelle",
+   "titre": "Ventilation naturelle",
+   "categorie": "eco-construction",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Rafraîchir un bâtiment sans climatisation, en faisant circuler l'air grâce au vent et aux écarts de température.",
+   "mise_en_place": "1 à 3 mois",
+   "impact_ecologie": 2,
+   "impact_social": 2,
+   "impact_economie_locale": 1,
+   "pourquoi": "La nuit, l'air extérieur est souvent plus frais : le faire entrer suffit à refroidir le bâtiment pour la journée suivante. On évite la climatisation et sa consommation.",
+   "point_vigilance": "Une ventilation traversante demande assez d'ouvertures sur des façades opposées. Les composants sont peu nombreux mais doivent être vérifiés régulièrement.",
+   "credits": "D'après la fiche « Ventilation naturelle » de Plus fraîche ma ville (ADEME), contenu sous licence ouverte Etalab 2.0. Coûts hors taxes, fourniture et pose, repris de cette fiche. Résumé et adaptation : EVAD.",
+   "source": "https://plusfraichemaville.fr/fiche-solution/ventilation-naturelle",
+   "types": [
+    "tiers-lieu",
+    "fablab",
+    "eco-lieu"
+   ],
+   "etapes": [
+    "Étudier le site : vents dominants, relief, bruit, orientation.",
+    "Concevoir avec un architecte et un bureau d'études un circuit d'air simple et court.",
+    "Réaliser les ouvertures et les conduits, en gardant un accès facile pour l'entretien.",
+    "Surveiller l'installation et changer les filtres quand il y en a."
+   ],
+   "ressources": [
+    {
+     "nom": "Ventilation naturelle, coût global",
+     "cout_installation_min": 10,
+     "cout_installation_max": 80,
+     "cout_entretien_min": 1,
+     "cout_entretien_max": 10,
+     "unite": "€ HT / m²"
+    },
+    {
+     "nom": "Grille de ventilation",
+     "cout_installation_min": 15,
+     "cout_installation_max": 23,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / unité"
+    },
+    {
+     "nom": "Extracteur statique",
+     "cout_installation_min": 180,
+     "cout_installation_max": 270,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / unité"
+    },
+    {
+     "nom": "Cheminée de ventilation",
+     "cout_installation_min": 900,
+     "cout_installation_max": 1350,
+     "cout_entretien_min": null,
+     "cout_entretien_max": null,
+     "unite": "€ HT / unité"
+    }
+   ],
+   "oups": [],
+   "complementaires": [
+    "rafraichissement-termitiere",
+    "dalle-chaux-liege"
+   ]
+  },
+  {
+   "slug": "pain-rassis-revalorise",
+   "titre": "Pain rassis revalorisé",
+   "categorie": "reemploi",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Le pain invendu ou rassis est transformé en un ingrédient à cuisiner au lieu de finir à la poubelle.",
+   "mise_en_place": "Quelques semaines",
+   "impact_ecologie": 2,
+   "impact_social": 2,
+   "impact_economie_locale": 2,
+   "pourquoi": "Le pain rassis part presque toujours à la benne. À Bordeaux, Franck Wallet, ancien urbaniste, a mis au point le Crumbler pour lui donner une seconde vie en cuisine. Les invendus des boulangers retrouvent de la valeur. Une piste pour un café associatif ou une cantine de tiers-lieu qui travaille avec les boulangers du quartier.",
+   "point_vigilance": "Cette fiche résume un portrait publié par Shamengo. Les étapes de mise en œuvre ne sont pas encore documentées par un lieu du Commun.",
+   "credits": "D'après le portrait de Franck Wallet publié par Shamengo. Résumé : EVAD.",
+   "source": "https://www.shamengo.com/fr/video/jaide-vos-vieux-croutons-de-pain-a-sevader/",
+   "types": [
+    "tiers-lieu",
+    "eco-lieu"
+   ],
+   "etapes": [],
+   "ressources": [],
+   "oups": [],
+   "complementaires": []
+  },
+  {
+   "slug": "chauffage-solaire-thermique",
+   "titre": "Chauffage solaire thermique",
+   "categorie": "energie",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Des capteurs sur le toit captent la chaleur du soleil et l'envoient directement dans le chauffage du bâtiment.",
+   "mise_en_place": "Plusieurs mois",
+   "impact_ecologie": 3,
+   "impact_social": 1,
+   "impact_economie_locale": 2,
+   "pourquoi": "Le soleil chauffe sans passer par l'électricité. Olivier Godin, ingénieur thermicien, a conçu avec son entreprise Solisart, créée en 2010, un système qui réinjecte la chaleur solaire dans le chauffage et l'ajuste selon l'ensoleillement. Shamengo le présente comme une approche low tech.",
+   "point_vigilance": "Cette fiche résume un portrait publié par Shamengo. Fais dimensionner l'installation par un professionnel. Les étapes de mise en œuvre ne sont pas encore documentées par un lieu du Commun.",
+   "credits": "D'après le portrait d'Olivier Godin publié par Shamengo. Résumé : EVAD.",
+   "source": "https://www.shamengo.com/fr/video/mon-chauffage-solaire-thermique-est-le-plus-efficace-du-marche/",
+   "types": [
+    "eco-lieu",
+    "tiers-lieu"
+   ],
+   "etapes": [],
+   "ressources": [],
+   "oups": [],
+   "complementaires": []
+  },
+  {
+   "slug": "dalle-chaux-liege",
+   "titre": "Dalle isolante en chaux et liège",
+   "categorie": "eco-construction",
+   "niveau_techno": "low",
+   "biomimetique": false,
+   "description_courte": "Une dalle de sol coulée en chaux et liège, pour isoler une bâtisse ancienne avec des matériaux naturels.",
+   "mise_en_place": "Quelques semaines",
+   "impact_ecologie": 2,
+   "impact_social": 2,
+   "impact_economie_locale": 2,
+   "pourquoi": "En mars 2025, Shamengo, l'entreprise Saint-Astier et l'association Echomer ont coulé une dalle isolante de 12 centimètres dans une longère en écorénovation à Latresne, en chantier collaboratif. C'était le premier chantier de cette ampleur pour cette formule.",
+   "point_vigilance": "Cette fiche résume un chantier raconté par Shamengo. La formule est récente : rapproche-toi d'un artisan qui connaît la chaux avant de te lancer. Les étapes de mise en œuvre ne sont pas encore documentées par un lieu du Commun.",
+   "credits": "D'après le récit de chantier « Une dalle de chaux liège pour vos vieilles bâtisses » publié par Shamengo. Résumé : EVAD.",
+   "source": "https://www.shamengo.com/fr/video/une-dalle-de-chaux-liege-pour-vos-vieilles-batisses/",
+   "types": [
+    "eco-lieu",
+    "tiers-lieu"
+   ],
+   "etapes": [],
+   "ressources": [],
+   "oups": [],
+   "complementaires": []
+  },
+  {
+   "slug": "rafraichissement-termitiere",
+   "titre": "Rafraîchissement inspiré des termitières",
+   "categorie": "eco-construction",
+   "niveau_techno": "low",
+   "biomimetique": true,
+   "description_courte": "Un bâtiment qui se rafraîchit seul, en imitant la circulation d'air des termitières.",
+   "mise_en_place": "Plusieurs mois",
+   "impact_ecologie": 3,
+   "impact_social": 1,
+   "impact_economie_locale": 1,
+   "pourquoi": "Les termitières gardent une température stable grâce à leurs conduits d'air. L'architecte Mick Pearce, installé à Harare, s'en est inspiré pour inventer une climatisation écologique. Shamengo le compte parmi ses pionniers.",
+   "point_vigilance": "Cette fiche résume un portrait publié par Shamengo. Le principe demande une conception d'architecte dès le départ. Les étapes de mise en œuvre ne sont pas encore documentées par un lieu du Commun.",
+   "credits": "D'après le portrait de Mick Pearce publié par Shamengo. Résumé : EVAD.",
+   "source": "https://www.shamengo.com/fr/communaute/mick-pearce/",
+   "types": [
+    "tiers-lieu",
+    "eco-lieu",
+    "fablab"
+   ],
+   "etapes": [],
+   "ressources": [],
+   "oups": [],
+   "complementaires": []
+  }
+ ]
+}
